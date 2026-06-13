@@ -1,20 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const BUDGETKEY_API = 'https://next.obudget.org/api/search';
-
-export interface Tender {
-    id: string;
-    title: string;
-    publisher: string;
-    category: string;
-    region: string;
-    deadline: string | null;
-    budget: number | null;
-    description: string;
-    url: string;
-    publishDate: string;
-    status: string;
-  }
+import type { Tender } from '../../types';
 
 function parseTender(raw: Record<string, unknown>): Tender {
     const doc = (raw.source ?? raw) as Record<string, unknown>;
