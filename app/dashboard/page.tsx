@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { Tender } from '../api/tenders/route';
+import type { Tender } from '../types';
 
 function daysLeft(deadline: string | null): number | null {
     if (!deadline) return null;
