@@ -1,15 +1,21 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+
+type FormData = {
+  businessName: string; ownerName: string; email: string; phone: string;
+  category: string; region: string; employees: string; notification: string;
+};
+
 export default function RegisterPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<FormData>({
     businessName: '', ownerName: '', email: '', phone: '',
     category: '', region: '', employees: '', notification: 'whatsapp',
   });
-  const upd = (f, v) => setForm((p) => ({ ...p, [f]: v }));
+  const upd = (f: keyof FormData, v: string) => setForm((p) => ({ ...p, [f]: v }));
   const handleSubmit = async () => {
     setLoading(true);
     try {
@@ -23,7 +29,7 @@ export default function RegisterPage() {
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   };
-  const fields = [
+  const fields: { f: keyof FormData; l: string; t: string }[] = [
     { f: 'businessName', l: 'Business Name', t: 'text' },
     { f: 'ownerName', l: 'Owner Name', t: 'text' },
     { f: 'email', l: 'Email', t: 'email' },
@@ -82,10 +88,9 @@ export default function RegisterPage() {
         {step === 3 && (
           <div className="space-y-4">
             <h2 className="text-2xl font-bold mb-6">Notifications</h2>
-            {[{ v: 'whatsapp', l: 'WhatsApp', i: '📱' }, { v: 'email', l: 'Email', i: '📧' }, { v: 'both', l: 'Both', i: '🔔' }].map(({ v, l, i }) => (
+            {[{ v: 'whatsapp', l: 'WhatsApp' }, { v: 'email', l: 'Email' }, { v: 'both', l: 'Both' }].map(({ v, l }) => (
               <label key={v} className={'flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer ' + (form.notification === v ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200')}>
                 <input type="radio" name="notification" value={v} checked={form.notification === v} onChange={() => upd('notification', v)} className="sr-only" />
-                <span className="text-2xl">{i}</span>
                 <span className="font-medium">{l}</span>
               </label>
             ))}
