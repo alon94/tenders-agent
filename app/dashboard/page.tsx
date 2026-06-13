@@ -2,102 +2,126 @@
 import { useEffect, useState } from 'react';
 import type { Tender } from '../types';
 
+const L = {
+  appName: 'סוכן מכרזים',
+  search: 'חיפוש...',
+  loading: 'טוען מכרזים...',
+  error: 'שגיאה בטעינת המכרזים',
+  noResults: 'לא נמצאו תוצאות',
+  view: 'צפה',
+  publish: 'פורסם:',
+  deadline: 'דדליין:',
+  deadlineUnknown: 'דדליין לא ידוע',
+  closed: 'סגור',
+  urgent: 'דחוף',
+  tenders: 'מכרזים',
+};
+
 function daysLeft(d: string | null): number | null {
-    if (!d) return null;
-    return Math.ceil((new Date(d).getTime() - Date.now()) / 86400000);
+  if (!d) return null;
+  return Math.ceil((new Date(d).getTime() - Date.now()) / 86400000);
 }
 function formatDate(d: string | null): string {
-    if (!d) return '';
-    const date = new Date(d);
-    if (isNaN(date.getTime())) return '';
-    return date.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  if (!d) return '';
+  const date = new Date(d);
+  if (isNaN(date.getTime())) return '';
+  return date.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 function formatBudget(n: number | null): string {
-    if (!n) return '';
-    if (n >= 1000000) return '$' + (n / 1000000).toFixed(1) + 'M';
-    if (n >= 1000) return '$' + (n / 1000).toFixed(0) + 'K';
-    return '$' + n;
+  if (!n) return '';
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(0) + 'K';
+  return String(n);
 }
 function UrgencyBadge({ days }: { days: number | null }) {
-    if (days === null) return null;
-    if (days <= 0) return <span className="bg-red-200 text-red-800 text-xs font-bold px-2 py-1 rounded-full">Closed</span>span>;
-    if (days <= 7) return <span className="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded-full">Urgent {days}d</span>span>;
-    if (days <= 14) return <span className="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-1 rounded-full">{days}d</span>span>;
-    return <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full">{days}d</span>span>;
+  if (days === null) return null;
+  if (days <= 0) return <span className="bg-red-200 text-red-800 text-xs font-bold px-2 py-1 rounded-full">{L.closed}</span>;
+  if (days <= 7) return <span className="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded-full">{L.urgent} {days}d</span>;
+  if (days <= 14) return <span className="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-1 rounded-full">{days}d</span>;
+  return <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full">{days}d</span>;
 }
 
 export default function DashboardPage() {
-    const [tenders, setTenders] = useState<Tender[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-    const [filter, setFilter] = useState('');
-    const [note, setNote] = useState('');
-  
-    useEffect(() => {
-          fetch('/api/tenders?limit=20')
-                  .then((r) => r.json())
-                  .then((d) => { setTenders(d.tenders ?? []); if (d.note) setNote(d.note); })
-                  .catch(() => setError('Could not load tenders'))
-                  .finally(() => setLoading(false));
-    }, []);
-  
-    const filtered = tenders.filter((t) =>
-          !filter || t.title.includes(filter) || t.publisher.includes(filter) || t.category.includes(filter)
-        );
-  
-    return (
-          <main className="min-h-screen bg-gray-50">
-                <header className="bg-indigo-700 text-white px-6 py-4 flex items-center justify-between shadow">
-                        <h1 className="text-xl font-bold">Tenders Agent</h1>h1>
-                        <span className="text-indigo-200 text-sm">{tenders.length} tenders</span>span>
-                </header>header>
-                <div className="max-w-4xl mx-auto p-6">
-                  {note && <div className="mb-4 bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm px-4 py-3 rounded-xl">{note}</div>div>}
-                        <input type="text" value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Search..."
-                                    className="w-full border border-gray-300 rounded-xl px-4 py-3 mb-6 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-                  {loading && <p className="text-center py-20 text-gray-400">Loading tenders...</p>p>}
-                  {error && <p className="text-center py-20 text-red-500">{error}</p>p>}
-                  {!loading && !error && (
-                      <div className="space-y-4">
-                        {filtered.length === 0 ? (
-                                      <p className="text-center text-gray-400 py-12">No results found</p>p>
-                                    ) : (
-                                      filtered.map((t) => {
-                                                        const days = daysLeft(t.deadline);
-                                                        const deadlineStr = formatDate(t.deadline);
-                                                        const publishStr = formatDate(t.publishDate);
-                                                        return (
-                                                                            <div key={t.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
-                                                                                                <div className="flex items-start justify-between gap-4">
-                                                                                                                      <div className="flex-1 min-w-0">
-                                                                                                                                              <h2 className="font-bold text-gray-900 text-lg mb-1">{t.title}</h2>h2>
-                                                                                                                                              <p className="text-sm text-indigo-600 font-medium mb-2">{t.publisher}</p>p>
-                                                                                                                                              <div className="flex flex-wrap gap-2 items-center mb-3">
-                                                                                                                                                                        <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">{t.category}</span>span>
-                                                                                                                                                                        <span className="bg-blue-50 text-blue-600 text-xs px-2 py-1 rounded-full">{t.region}</span>span>
-                                                                                                                                                {t.budget && <span className="bg-green-50 text-green-700 text-xs px-2 py-1 rounded-full">{formatBudget(t.budget)}</span>span>}
-                                                                                                                                                                        <UrgencyBadge days={days} />
-                                                                                                                                                </div>div>
-                                                                                                                                              <div className="flex gap-4 text-xs text-gray-400 flex-wrap">
-                                                                                                                                                {publishStr && <span>Published: {publishStr}</span>span>}
-                                                                                                                                                {deadlineStr
-                                                                                                                                                                              ? <span className="text-red-500 font-semibold">Deadline: {deadlineStr}</span>span>
-                                                                                                                                                                          : <span className="text-gray-400 italic">Deadline: unknown</span>span>
-                                                                                                                                                }
-                                                                                                                                                </div>div>
-                                                                                                                        </div>div>
-                                                                                                                      <a href={t.url} target="_blank" rel="noopener noreferrer"
-                                                                                                                                                className="shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold px-4 py-2 rounded-xl transition-colors">
-                                                                                                                                              View
-                                                                                                                        </a>a>
-                                                                                                  </div>div>
-                                                                            </div>div>
-                                                                          );
-                                      })
-                                    )}
-                      </div>div>
-                        )}
-                </div>div>
-          </main>main>
-        );
-}</span>
+  const [tenders, setTenders] = useState<Tender[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [filter, setFilter] = useState('');
+  const [note, setNote] = useState('');
+
+  useEffect(() => {
+    fetch('/api/tenders?limit=20')
+      .then((r) => r.json())
+      .then((d) => { setTenders(d.tenders ?? []); if (d.note) setNote(d.note); })
+      .catch(() => setError(L.error))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = tenders.filter((t) =>
+    !filter || t.title.includes(filter) || t.publisher.includes(filter) || t.category.includes(filter)
+  );
+
+  return (
+    <main className="min-h-screen bg-gray-50" dir="rtl">
+      <header className="bg-indigo-700 text-white px-6 py-4 flex items-center justify-between shadow">
+        <h1 className="text-xl font-bold">{L.appName}</h1>
+        <span className="text-indigo-200 text-sm">{tenders.length} {L.tenders}</span>
+      </header>
+      <div className="max-w-4xl mx-auto p-6">
+        {note && <div className="mb-4 bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm px-4 py-3 rounded-xl">{note}</div>}
+        <input
+          type="text"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          placeholder={L.search}
+          className="w-full border border-gray-300 rounded-xl px-4 py-3 mb-6 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+        />
+        {loading && <p className="text-center py-20 text-gray-400">{L.loading}</p>}
+        {error && <p className="text-center py-20 text-red-500">{error}</p>}
+        {!loading && !error && (
+          <div className="space-y-4">
+            {filtered.length === 0 ? (
+              <p className="text-center text-gray-400 py-12">{L.noResults}</p>
+            ) : (
+              filtered.map((t) => {
+                const days = daysLeft(t.deadline);
+                const deadlineStr = formatDate(t.deadline);
+                const publishStr = formatDate(t.publishDate);
+                return (
+                  <div key={t.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <h2 className="font-bold text-gray-900 text-lg mb-1">{t.title}</h2>
+                        <p className="text-sm text-indigo-600 font-medium mb-2">{t.publisher}</p>
+                        <div className="flex flex-wrap gap-2 items-center mb-3">
+                          <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">{t.category}</span>
+                          <span className="bg-blue-50 text-blue-600 text-xs px-2 py-1 rounded-full">{t.region}</span>
+                          {t.budget && <span className="bg-green-50 text-green-700 text-xs px-2 py-1 rounded-full">{formatBudget(t.budget)}</span>}
+                          <UrgencyBadge days={days} />
+                        </div>
+                        <div className="flex gap-4 text-xs text-gray-500 flex-wrap">
+                          {publishStr && <span>{L.publish} {publishStr}</span>}
+                          {deadlineStr
+                            ? <span className="text-red-500 font-semibold">{L.deadline} {deadlineStr}</span>
+                            : <span className="text-gray-400 italic">{L.deadlineUnknown}</span>
+                          }
+                        </div>
+                      </div>
+                      <a
+                        href={t.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold px-4 py-2 rounded-xl transition-colors"
+                      >
+                        {L.view}
+                      </a>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+      </div>
+    </main>
+  );
+}
