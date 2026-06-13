@@ -1,26 +1,36 @@
-# סוכן מכרזים אוטומטי לעצמאים ועסקים קטנים
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-סוכן AI אישי שסורק יומית את המכרזים והקולות הקוראים הציבוריים בישראל, מסנן את הלא-רלוונטיים, ושולח לעצמאי או לעסק הקטן 3–5 הזדמנויות מותאמות בעברית פשוטה — ישירות לוואטסאפ או למייל.
+## Getting Started
 
-> סטטוס: אפיון לפני פיתוח (גרסה 1.0, מאי 2026). מסמך לסקירה והחלטה — לא תחליף לבדיקות שוק.
+First, run the development server:
 
-## הבעיה
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-בישראל פועלים כ-450,000 עסקים זעירים, קטנים ובינוניים (99% מכלל העסקים), אך פחות מ-1% מהם מגישים הצעות למכרזים. שלושה מחסומים עיקריים: מחסום מידע (אין דרך נגישה לדעת אילו מכרזים פורסמו ומתאימים; פלטפורמות קיימות עולות 250–500 ₪/חודש), מחסום שפה (מסמכי מכרז בעברית משפטית, 50–100 עמודי PDF), ומחסום תפעולי בשלב ההגשה.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## הפתרון
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-פלטפורמת SaaS בשלוש שכבות:
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-- **איסוף** — שאיבה יומית מ-BudgetKey API ו-data.gov.il (חינמי, מותר מסחרית).
-- **בינה** — LLM שמבצע התאמה אישית לכל משתמש לפי פרופיל מובנה.
-- **הפצה** — וואטסאפ, טלגרם, מייל ודאשבורד מינימלי.
+## Learn More
 
-## תוכן המאגר
+To learn more about Next.js, take a look at the following resources:
 
-- `docs/אפיון_סוכן_מכרזים.docx` — מסמך אפיון המוצר המלא (תקציר מנהלים, קהל יעד, מתחרים, דרישות פונקציונליות, ארכיטקטורה, מודל נתונים, לוגיקת AI, מודל עסקי, מפת דרכים, KPIs, סיכונים).
-- `data/מקורות_מכרזים_בישראל.xlsx` — ריכוז מקורות הנתונים למכרזים בישראל.
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-## הקשר רגולטורי
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-חוק חובת המכרזים, תשנ"ב-1992, ותיקוניו: תיקון 25 (שילוב עסקים זעירים-קטנים-בינוניים), תיקון 15 (העדפה לעסק בשליטת אישה), תיקון 26 (העדפה לעסק בשליטת משרת מילואים).
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
