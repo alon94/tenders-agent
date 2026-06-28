@@ -1,27 +1,19 @@
-import type { Metadata } from "next";
-import { Heebo } from "next/font/google";
-import "./globals.css";
-
-const heebo = Heebo({
-  subsets: ["hebrew", "latin"],
-  variable: "--font-heebo",
-});
+import type { Metadata } from 'next'
+import './globals.css'
 
 export const metadata: Metadata = {
-  title: "שווה מכרזים | נתונים חיים ממינהל הרכש הממשלתי",
-  description: "סריקה יומית של כל המכרזים הממשלתיים והמוניציפליים בישראל",
-};
+  title: 'שווה מכרזים | נתונים חיים ממינהל הרכש הממשלתי',
+  description: 'מנוע מכרזים חכם – עדכון יומי מנמ"ר ומינהל הרכש הממשלתי',
+}
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
     <html lang="he" dir="rtl">
-      <body className={`${heebo.variable} font-heebo antialiased bg-gray-50`}>
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
-  );
+  )
 }

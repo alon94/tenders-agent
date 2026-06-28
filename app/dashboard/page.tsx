@@ -1,127 +1,271 @@
-'use client';
-import { useEffect, useState } from 'react';
-import type { Tender } from '../types';
+'use client'
+import { useEffect, useState, useCallback } from 'react'
 
-const L = {
-  appName: 'סוכן מכרזים',
-  search: 'חיפוש...',
-  loading: 'טוען מכרזים...',
-  error: 'שגיאה בטעינת המכרזים',
-  noResults: 'לא נמצאו תוצאות',
-  view: 'צפה',
-  publish: 'פורסם:',
-  deadline: 'דדליין:',
-  deadlineUnknown: 'דדליין לא ידוע',
-  closed: 'סגור',
-  urgent: 'דחוף',
-  tenders: 'מכרזים',
-};
-
-function daysLeft(d: string | null): number | null {
-  if (!d) return null;
-  return Math.ceil((new Date(d).getTime() - Date.now()) / 86400000);
-}
-function formatDate(d: string | null): string {
-  if (!d) return '';
-  const date = new Date(d);
-  if (isNaN(date.getTime())) return '';
-  return date.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
-function formatBudget(n: number | null): string {
-  if (!n) return '';
-  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
-  if (n >= 1000) return (n / 1000).toFixed(0) + 'K';
-  return String(n);
-}
-function UrgencyBadge({ days }: { days: number | null }) {
-  if (days === null) return null;
-  if (days <= 0) return <span className="bg-red-200 text-red-800 text-xs font-bold px-2 py-1 rounded-full">{L.closed}</span>;
-  if (days <= 7) return <span className="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded-full">{L.urgent} {days}d</span>;
-  if (days <= 14) return <span className="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-1 rounded-full">{days}d</span>;
-  return <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full">{days}d</span>;
+interface Tender {
+  id: string
+  title: string
+  publisher: string
+  publishDate: string
+  deadline: string
+  status: string
+  url: string
+  description?: string
 }
 
-export default function DashboardPage() {
-  const [tenders, setTenders] = useState<Tender[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [filter, setFilter] = useState('');
-  const [note, setNote] = useState('');
+function formatDate(d: string) {
+  if (!d) return '—'
+  try {
+    return new Date(d).toLocaleDateString('he-IL', { day:'2-digit', month:'2-digit', year:'numeric' })
+  } catch { return d }
+}
 
-  useEffect(() => {
-    fetch('/api/tenders?limit=20')
-      .then((r) => r.json())
-      .then((d) => { setTenders(d.tenders ?? []); if (d.note) setNote(d.note); })
-      .catch(() => setError(L.error))
-      .finally(() => setLoading(false));
-  }, []);
+function daysLeft(deadline: string) {
+  if (!deadline) return null
+  const diff = Math.ceil((new Date(deadline).getTime() - Date.now()) / 86400000)
+  return diff
+}
 
-  const filtered = tenders.filter((t) =>
-    !filter || t.title.includes(filter) || t.publisher.includes(filter) || t.category.includes(filter)
-  );
+export default function Dashboard() {
+  const [tenders, setTenders] = useState<Tender[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [search, setSearch] = useState('')
+  const [activeTab, setActiveTab] = useState('all')
+  const [lastUpdate, setLastUpdate] = useState('')
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const res = await fetch('/api/tenders')
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      setTenders(data.tenders || [])
+      setLastUpdate(new Date().toLocaleTimeString('he-IL'))
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'שגיאה בטעינת מכרזים')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  const filtered = tenders.filter(t => {
+    const q = search.toLowerCase()
+    const matchSearch = !q || t.title?.toLowerCase().includes(q) || t.publisher?.toLowerCase().includes(q)
+    if (activeTab === 'closing') {
+      const d = daysLeft(t.deadline)
+      return matchSearch && d !== null && d >= 0 && d <= 7
+    }
+    if (activeTab === 'new') {
+      if (!t.publishDate) return false
+      const diff = Math.ceil((Date.now() - new Date(t.publishDate).getTime()) / 86400000)
+      return matchSearch && diff <= 7
+    }
+    return matchSearch
+  })
+
+  const closing7 = tenders.filter(t => { const d = daysLeft(t.deadline); return d !== null && d >= 0 && d <= 7 }).length
+  const newLast7 = tenders.filter(t => { if (!t.publishDate) return false; const diff = Math.ceil((Date.now() - new Date(t.publishDate).getTime()) / 86400000); return diff <= 7 }).length
 
   return (
-    <main className="min-h-screen bg-gray-50" dir="rtl">
-      <header className="bg-indigo-700 text-white px-6 py-4 flex items-center justify-between shadow">
-        <h1 className="text-xl font-bold">{L.appName}</h1>
-        <span className="text-indigo-200 text-sm">{tenders.length} {L.tenders}</span>
+    <>
+      {/* TOPBAR */}
+      <header className="topbar">
+        <div className="topbar-icons">
+          <div className="avatar">א</div>
+          <button className="icon-btn" title="התראות">🔔</button>
+        </div>
+        <nav className="topbar-nav">
+          <a href="#">מקורות</a>
+          <a href="#">AgentOS</a>
+          <a href="#">ערביות וליווי</a>
+          <a href="#">התראות</a>
+          <a href="#">הגשות שלי</a>
+          <a href="/dashboard" className="active">גילוי מכרזים</a>
+        </nav>
+        <a href="/dashboard" className="topbar-logo">
+          שווה מכרזים
+          <span className="badge">מודול בתוך שווה ביזנס 360</span>
+        </a>
       </header>
-      <div className="max-w-4xl mx-auto p-6">
-        {note && <div className="mb-4 bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm px-4 py-3 rounded-xl">{note}</div>}
-        <input
-          type="text"
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          placeholder={L.search}
-          className="w-full border border-gray-300 rounded-xl px-4 py-3 mb-6 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-        />
-        {loading && <p className="text-center py-20 text-gray-400">{L.loading}</p>}
-        {error && <p className="text-center py-20 text-red-500">{error}</p>}
-        {!loading && !error && (
-          <div className="space-y-4">
-            {filtered.length === 0 ? (
-              <p className="text-center text-gray-400 py-12">{L.noResults}</p>
-            ) : (
-              filtered.map((t) => {
-                const days = daysLeft(t.deadline);
-                const deadlineStr = formatDate(t.deadline);
-                const publishStr = formatDate(t.publishDate);
+
+      {/* STATUS BAR */}
+      <div className="status-bar">
+        <span className="status-dot" />
+        <span>
+          סריקה מוטמעת: <strong>{tenders.length.toLocaleString()}</strong> מכרזים · מקור{' '}
+          <a href="https://next.obudget.org" target="_blank" rel="noopener noreferrer">data.gov.il</a>
+        </span>
+        {lastUpdate && <span>· עודכן: {lastUpdate}</span>}
+        <button className="refresh-btn" onClick={load} disabled={loading}>
+          {loading ? 'טוען...' : 'רענון'}
+        </button>
+      </div>
+
+      {/* MAIN LAYOUT */}
+      <div className="page-wrap">
+        <main>
+          {/* STATS */}
+          <div className="stats-row">
+            <div className="stat-card">
+              <div className="stat-num ink">{loading ? '…' : tenders.length.toLocaleString()}</div>
+              <div className="stat-label">מכרזים פעילים במאגר</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-num teal">{loading ? '…' : closing7.toLocaleString()}</div>
+              <div className="stat-label">נסגרים בשבוע הקרוב</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-num brand">{loading ? '…' : newLast7.toLocaleString()}</div>
+              <div className="stat-label">התאמות לפרופיל שלך (+80%)</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-num amber">0</div>
+              <div className="stat-label">פורסמו ב-7 הימים האחרונים</div>
+            </div>
+          </div>
+
+          {/* SEARCH + TABS */}
+          <div className="search-area">
+            <div className="search-row">
+              <div className="search-input-wrap">
+                <input
+                  className="search-input"
+                  placeholder="חיפוש חופשי: נושא, גוף מפרסם, מספר מכרז..."
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                />
+                <span className="search-icon">🔍</span>
+              </div>
+              <button className="smart-btn" onClick={load}>+ צור התראה מהחיפוש</button>
+            </div>
+            <div className="filter-tabs">
+              <button className={`filter-tab active`} style={activeTab==='all'?{background:'var(--brand)',color:'#fff'}:{}} onClick={() => setActiveTab('all')}>
+                📋 מדריך מפרסמים חי
+              </button>
+              <button className="filter-tab" style={activeTab==='closing'?{background:'var(--red)',color:'#fff',borderColor:'var(--red)'}:{}} onClick={() => setActiveTab('closing')}>
+                🚨 נסגרים השבוע
+              </button>
+              <button className="filter-tab" onClick={() => setActiveTab('tech')}>טכנולוגיה</button>
+              <button className="filter-tab" onClick={() => setActiveTab('new')}>חדשים השבוע</button>
+              <button className="filter-tab">★ התאמה +80%</button>
+              <button className="filter-tab">בינוי ותשתיות</button>
+              <button className="filter-tab">🏢 לעסקים קטנים</button>
+              <button className="filter-tab">ייצוג</button>
+            </div>
+          </div>
+
+          {/* TENDER LIST */}
+          {loading && (
+            <div className="loading-state">
+              <div className="spinner" />
+              <div>טוען מכרזים...</div>
+            </div>
+          )}
+          {error && <div className="error-state">⚠️ {error}</div>}
+          {!loading && !error && (
+            <div className="tender-list">
+              {filtered.length === 0 && (
+                <div className="loading-state">לא נמצאו מכרזים תואמים</div>
+              )}
+              {filtered.map(t => {
+                const days = daysLeft(t.deadline)
+                const isClosingSoon = days !== null && days >= 0 && days <= 7
                 return (
-                  <div key={t.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <h2 className="font-bold text-gray-900 text-lg mb-1">{t.title}</h2>
-                        <p className="text-sm text-indigo-600 font-medium mb-2">{t.publisher}</p>
-                        <div className="flex flex-wrap gap-2 items-center mb-3">
-                          <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">{t.category}</span>
-                          <span className="bg-blue-50 text-blue-600 text-xs px-2 py-1 rounded-full">{t.region}</span>
-                          {t.budget && <span className="bg-green-50 text-green-700 text-xs px-2 py-1 rounded-full">{formatBudget(t.budget)}</span>}
-                          <UrgencyBadge days={days} />
-                        </div>
-                        <div className="flex gap-4 text-xs text-gray-500 flex-wrap">
-                          {publishStr && <span>{L.publish} {publishStr}</span>}
-                          {deadlineStr
-                            ? <span className="text-red-500 font-semibold">{L.deadline} {deadlineStr}</span>
-                            : <span className="text-gray-400 italic">{L.deadlineUnknown}</span>
-                          }
-                        </div>
+                  <div className="tender-card" key={t.id}>
+                    <div className="tender-card-top">
+                      <div className="tender-title">
+                        {t.url ? (
+                          <a href={t.url} target="_blank" rel="noopener noreferrer">{t.title}</a>
+                        ) : t.title}
                       </div>
-                      <a
-                        href={t.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold px-4 py-2 rounded-xl transition-colors"
-                      >
-                        {L.view}
-                      </a>
+                      <div className="tender-tags">
+                        {isClosingSoon && <span className="tag tag-closing">🚨 נסגר בקרוב</span>}
+                        {!isClosingSoon && t.deadline && <span className="tag tag-active">פעיל</span>}
+                        {t.publisher && <span className="tag tag-org">{t.publisher.length > 18 ? t.publisher.slice(0,18)+'…' : t.publisher}</span>}
+                      </div>
+                    </div>
+                    <div className="tender-meta">
+                      {t.publishDate && (
+                        <span>📅 פורסם: <strong>{formatDate(t.publishDate)}</strong></span>
+                      )}
+                      {t.deadline && (
+                        <span className={isClosingSoon ? 'deadline-soon' : 'deadline-ok'}>
+                          ⏰ הגשה עד: <strong>{formatDate(t.deadline)}</strong>
+                          {days !== null && days >= 0 && ` (${days} ימים)`}
+                        </span>
+                      )}
+                      {t.status && t.status !== 'פעיל' && <span>📌 {t.status}</span>}
                     </div>
                   </div>
-                );
-              })
-            )}
+                )
+              })}
+            </div>
+          )}
+        </main>
+
+        {/* SIDEBAR */}
+        <aside className="sidebar">
+          <div className="sidebar-card">
+            <div className="sidebar-title">⚙ סינון | איפוס</div>
+            <div className="filter-group">
+              <label>תחום עיסוק</label>
+              <select className="filter-select">
+                <option>כל התחומים</option>
+                <option>טכנולוגיה</option>
+                <option>בינוי ותשתיות</option>
+                <option>ביטחון ומשטרה</option>
+                <option>בריאות</option>
+                <option>חינוך</option>
+                <option>תחבורה ותשתיות</option>
+                <option>רשויות מקומיות</option>
+              </select>
+            </div>
+            <div className="filter-group">
+              <label>גוף מפרסם</label>
+              <select className="filter-select">
+                <option>כל הגופים</option>
+                <option>מינהל הרכש הממשלתי</option>
+                <option>רשויות מקומיות</option>
+                <option>בתי חולים</option>
+                <option>אוניברסיטאות</option>
+              </select>
+            </div>
+            <div className="filter-group">
+              <label>סוג פרסום</label>
+              <select className="filter-select">
+                <option>כל הסוגים</option>
+                <option>מכרז פומבי</option>
+                <option>מכרז מוגבל</option>
+                <option>קנייה מרוכזת</option>
+              </select>
+            </div>
+            <div className="filter-group">
+              <label>נסגר בתוך</label>
+              <input type="range" className="range-slider" min="1" max="180" defaultValue="90" />
+              <div className="range-label">עד 90 ימים</div>
+            </div>
+            <div className="filter-group">
+              <label className="checkbox-row">
+                <input type="checkbox" />
+                הצג גם מכרזים שנסגרו
+              </label>
+              <label className="checkbox-row">
+                <input type="checkbox" />
+                הצג גם תאריכים ללא מועד אחרון
+              </label>
+            </div>
+            <button className="apply-btn">◄ הסוכן החכם</button>
           </div>
-        )}
+        </aside>
       </div>
-    </main>
-  );
+
+      <footer className="footer">
+        נתונים: <a href="https://next.obudget.org" target="_blank" rel="noopener noreferrer" style={{color:'var(--brand)'}}>BudgetKey / מינהל הרכש הממשלתי</a>
+        {' · '}עדכון יומי ב-06:00
+      </footer>
+    </>
+  )
 }
