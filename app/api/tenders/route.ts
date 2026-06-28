@@ -4,7 +4,7 @@ const API = 'https://next.obudget.org/api/query'
 
 const STATUSES = `('פורסם','עתידי','פורסם ולא התקבלו השגות','פורסם והתקבלו השגות','בעדכון')`
 
-function buildSQL(search: string, offset: number, limit = 1100): string {
+function buildSQL(search: string, offset: number): string {
   const today = new Date().toISOString().split('T')[0]
   const dateFilter = `(claim_date > '${today}' OR (claim_date IS NULL AND publication_date > '2026-01-01'))`
   const searchFilter = search
@@ -19,7 +19,7 @@ function buildSQL(search: string, offset: number, limit = 1100): string {
   AND ${dateFilter}
   ${searchFilter}
   ORDER BY publication_date DESC NULLS LAST, claim_date DESC NULLS LAST
-  LIMIT ${limit} OFFSET ${offset}`
+  LIMIT 1000 OFFSET ${offset}`
 }
 
 interface TenderRow {
@@ -50,8 +50,7 @@ function parseTender(row: TenderRow) {
 
 async function fetchBatch(search: string, offset: number): Promise<TenderRow[]> {
   try {
-    const sql = buildSQL(search, offset, 1100)
-    const url = `${API}?query=${encodeURIComponent(sql)}`
+    const url = `${API}?query=${encodeURIComponent(buildSQL(search, offset))}`
     const res = await fetch(url, { headers: { Accept: 'application/json' }, cache: 'no-store' })
     if (!res.ok) return []
     const data = await res.json()
@@ -69,15 +68,17 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url)
     const search = searchParams.get('q') || ''
 
-    // 3 parallel batches of 1100 → covers all 3010+ tenders
-    const [b0, b1, b2] = await Promise.all([
+    // 4 parallel batches of 1000 → covers all 3010 tenders (API max is 1000/request)
+    const batches = await Promise.all([
       fetchBatch(search, 0),
-      fetchBatch(search, 1100),
-      fetchBatch(search, 2200),
+      fetchBatch(search, 1000),
+      fetchBatch(search, 2000),
+      fetchBatch(search, 3000),
     ])
 
     const seen = new Set<string>()
-    const tenders = [...b0, ...b1, ...b2]
+    const tenders = batches
+      .flat()
       .map(parseTender)
       .filter(t => {
         if (!t.title || t.title === 'מכרז ללא כותרת') return false
