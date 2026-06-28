@@ -17,7 +17,10 @@ export async function GET(req: Request) {
       ? `AND (description ILIKE '%${search.replace(/'/g,"''")}%' OR publisher ILIKE '%${search.replace(/'/g,"''")}%')`
       : ''
 
-    const sql = `SELECT tender_id, description, publisher, publisher_unit, claim_date, publication_date, status, page_url, tender_type_he
+    const sql = `SELECT
+      publication_id, soproc_id, tender_id,
+      description, publisher, publisher_unit,
+      claim_date, publication_date, status, page_url, tender_type_he
     FROM procurement_tenders_processed
     WHERE status IN ${STATUSES} AND ${dateFilter} ${searchFilter}
     ORDER BY publication_date DESC NULLS LAST, claim_date DESC NULLS LAST
@@ -28,12 +31,13 @@ export async function GET(req: Request) {
     })
     if (!res.ok) throw new Error(`API ${res.status}`)
     const data = await res.json()
-    const rows = (data?.rows ?? []) as Record<string,unknown>[]
+    const rows = (data?.rows ?? []) as Record<string, unknown>[]
 
     const tenders = rows
       .filter(r => r.description && r.description !== 'מכרז ללא כותרת')
-      .map(r => ({
-        id: String(r.tender_id || Math.random()),
+      .map((r, i) => ({
+        // Unique key: prefer publication_id, fallback to soproc_id, then offset+index
+        id: String(r.publication_id || r.soproc_id || `${offset}_${i}`),
         title: String(r.description || ''),
         publisher: String(r.publisher || r.publisher_unit || ''),
         publishDate: r.publication_date ? String(r.publication_date).split('T')[0] : '',
