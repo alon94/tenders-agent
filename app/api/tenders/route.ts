@@ -1,63 +1,80 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
 
-const BUDGETKEY_API = 'https://next.obudget.org/api/query';
+const API = 'https://next.obudget.org/api/query'
 
-function buildQuery(keyword: string, limit = 50): string {
-  return `SELECT description,publisher,publication_date,claim_date,page_url,page_title,status,tender_type_he,volume,tender_id,publisher_unit FROM procurement_tenders_processed WHERE description ILIKE '%${keyword}%' AND status='פורסם' AND (claim_date IS NULL OR claim_date >= CURRENT_DATE) ORDER BY publication_date DESC LIMIT ${limit}`;
+function buildSQL(search: string, limit = 200): string {
+  const today = new Date().toISOString().split('T')[0]
+  const activeStatuses = `('פורסם','עתידי','פורסם ולא התקבלו השגות','פורסם והתקבלו השגות','בעדכון')`
+  const dateFilter = `(claim_date > '${today}' OR (claim_date IS NULL AND publication_date > '2026-01-01'))`
+  const searchFilter = search
+    ? `AND (description ILIKE '%${search.replace(/'/g, "''")}%' OR publisher ILIKE '%${search.replace(/'/g, "''")}%')`
+    : ''
+  return `SELECT
+    tender_id, description, publisher, publisher_unit,
+    claim_date, publication_date, status, page_url,
+    tender_type_he, last_update_date, subjects
+  FROM procurement_tenders_processed
+  WHERE status IN ${activeStatuses}
+  AND ${dateFilter}
+  ${searchFilter}
+  ORDER BY publication_date DESC NULLS LAST, claim_date DESC NULLS LAST
+  LIMIT ${limit}`
 }
 
-function parseTender(row: Record<string, unknown>): Record<string, unknown> {
+interface TenderRow {
+  tender_id?: string | number
+  description?: string
+  publisher?: string
+  publisher_unit?: string
+  claim_date?: string
+  publication_date?: string
+  status?: string
+  page_url?: string
+  tender_type_he?: string
+  last_update_date?: string
+  subjects?: string
+}
+
+function parseTender(row: TenderRow) {
   return {
-    id: String(row.tender_id ?? row.page_url ?? Math.random()),
-    title: String(row.page_title ?? row.description ?? 'מכרז ללא כותרת'),
-    publisher: String(row.publisher ?? row.publisher_unit ?? 'גוף לא ידוע'),
-    category: String(row.tender_type_he ?? 'כללי'),
-    region: 'כל הארץ',
-    deadline: row.claim_date ? String(row.claim_date) : null,
-    budget: row.volume ? Number(row.volume) : null,
-    description: String(row.description ?? ''),
-    url: row.page_url ? String(row.page_url) : 'https://www.mr.gov.il/',
-    publishDate: row.publication_date ? String(row.publication_date) : new Date().toISOString(),
-    status: String(row.status ?? 'פורסם'),
-  };
+    id: String(row.tender_id || Math.random()),
+    title: row.description || '',
+    publisher: row.publisher || row.publisher_unit || '',
+    publishDate: row.publication_date ? row.publication_date.split('T')[0] : '',
+    deadline: row.claim_date ? row.claim_date.split('T')[0] : '',
+    status: row.status || '',
+    url: row.page_url || '',
+    type: row.tender_type_he || '',
+    subjects: row.subjects || '',
+  }
 }
 
-export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const customQuery = searchParams.get('q');
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
-  const keywords = customQuery
-    ? [customQuery]
-    : ['מכרז', 'התקשרות', 'הצעת מחיר'];
-
+export async function GET(req: Request) {
   try {
-    const results = await Promise.all(
-      keywords.map(kw =>
-        fetch(`${BUDGETKEY_API}?query=${encodeURIComponent(buildQuery(kw))}&format=json`, {
-          cache: 'no-store',
-        })
-          .then(r => r.json())
-          .catch(() => ({ rows: [] }))
-      )
-    );
+    const { searchParams } = new URL(req.url)
+    const search = searchParams.get('q') || ''
+    const limit = Math.min(parseInt(searchParams.get('limit') || '200'), 500)
 
-    const seen = new Set<string>();
+    const sql = buildSQL(search, limit)
+    const url = `${API}?query=${encodeURIComponent(sql)}`
 
-    const filtered = results
-      .flatMap((d: Record<string, unknown>) =>
-        (d?.rows as Record<string, unknown>[]) ?? []
-      )
-      .map(parseTender)
-      .filter(t => {
-        const id = String(t.id);
-        if (seen.has(id)) return false;
-        seen.add(id);
-        if (!t.title || t.title === 'מכרז ללא כותרת') return false;
-        return true;
-      });
+    const res = await fetch(url, {
+      headers: { 'Accept': 'application/json' },
+      cache: 'no-store',
+    })
 
-    return NextResponse.json({ tenders: filtered, total: filtered.length });
+    if (!res.ok) throw new Error(`BudgetKey API error: ${res.status}`)
+
+    const data = await res.json()
+    const rows: TenderRow[] = (data?.rows as TenderRow[]) ?? []
+
+    const tenders = rows.map(parseTender).filter(t => t.title && t.title !== 'מכרז ללא כותרת')
+
+    return NextResponse.json({ tenders, total: tenders.length })
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: String(err) }, { status: 500 })
   }
 }
