@@ -2,9 +2,10 @@ import { NextResponse } from 'next/server'
 
 const API = 'https://next.obudget.org/api/query'
 
-function buildSQL(search: string, offset: number, limit = 500): string {
+const STATUSES = `('פורסם','עתידי','פורסם ולא התקבלו השגות','פורסם והתקבלו השגות','בעדכון')`
+
+function buildSQL(search: string, offset: number, limit = 1100): string {
   const today = new Date().toISOString().split('T')[0]
-  const activeStatuses = `('פורסם','עתידי','פורסם ולא התקבלו השגות','פורסם והתקבלו השגות','בעדכון')`
   const dateFilter = `(claim_date > '${today}' OR (claim_date IS NULL AND publication_date > '2026-01-01'))`
   const searchFilter = search
     ? `AND (description ILIKE '%${search.replace(/'/g, "''")}%' OR publisher ILIKE '%${search.replace(/'/g, "''")}%')`
@@ -14,7 +15,7 @@ function buildSQL(search: string, offset: number, limit = 500): string {
     claim_date, publication_date, status, page_url,
     tender_type_he, last_update_date
   FROM procurement_tenders_processed
-  WHERE status IN ${activeStatuses}
+  WHERE status IN ${STATUSES}
   AND ${dateFilter}
   ${searchFilter}
   ORDER BY publication_date DESC NULLS LAST, claim_date DESC NULLS LAST
@@ -48,12 +49,16 @@ function parseTender(row: TenderRow) {
 }
 
 async function fetchBatch(search: string, offset: number): Promise<TenderRow[]> {
-  const sql = buildSQL(search, offset, 500)
-  const url = `${API}?query=${encodeURIComponent(sql)}`
-  const res = await fetch(url, { headers: { Accept: 'application/json' }, cache: 'no-store' })
-  if (!res.ok) return []
-  const data = await res.json()
-  return (data?.rows as TenderRow[]) ?? []
+  try {
+    const sql = buildSQL(search, offset, 1100)
+    const url = `${API}?query=${encodeURIComponent(sql)}`
+    const res = await fetch(url, { headers: { Accept: 'application/json' }, cache: 'no-store' })
+    if (!res.ok) return []
+    const data = await res.json()
+    return (data?.rows as TenderRow[]) ?? []
+  } catch {
+    return []
+  }
 }
 
 export const dynamic = 'force-dynamic'
@@ -64,13 +69,15 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url)
     const search = searchParams.get('q') || ''
 
-    // Fetch up to 3500 tenders in 7 parallel batches of 500
-    const offsets = [0, 500, 1000, 1500, 2000, 2500, 3000]
-    const batches = await Promise.all(offsets.map(o => fetchBatch(search, o)))
+    // 3 parallel batches of 1100 → covers all 3010+ tenders
+    const [b0, b1, b2] = await Promise.all([
+      fetchBatch(search, 0),
+      fetchBatch(search, 1100),
+      fetchBatch(search, 2200),
+    ])
 
     const seen = new Set<string>()
-    const tenders = batches
-      .flat()
+    const tenders = [...b0, ...b1, ...b2]
       .map(parseTender)
       .filter(t => {
         if (!t.title || t.title === 'מכרז ללא כותרת') return false
