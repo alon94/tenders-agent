@@ -1,30 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const BUDGETKEY_API = 'https://next.obudget.org/api/search';
+const BUDGETKEY_API = 'https://next.obudget.org/api/query';
 
-// שאילתות מהירות לטעינה ראשונה בדשבורד
-const DEFAULT_QUERIES = [
-  'מכרז עירייה',
-  'מכרז מועצה אזורית',
-  'מכרז ממשלתי',
-  'מכרז רשות מקומית',
-  'מכרז ציבורי',
-];
+function buildQuery(keyword: string, limit = 50): string {
+  return `SELECT description,publisher,publication_date,claim_date,page_url,page_title,status,tender_type_he,volume,tender_id,publisher_unit FROM procurement_tenders_processed WHERE description ILIKE '%${keyword}%' AND status='פורסם' AND (claim_date IS NULL OR claim_date >= CURRENT_DATE) ORDER BY publication_date DESC LIMIT ${limit}`;
+}
 
-function parseTender(raw: Record<string, unknown>): Record<string, unknown> {
-  const doc = (raw.source ?? raw) as Record<string, unknown>;
+function parseTender(row: Record<string, unknown>): Record<string, unknown> {
   return {
-    id: String(doc.tender_id ?? doc.id ?? Math.random()),
-    title: String(doc.tender_name ?? doc.description ?? 'מכרז ללא כותרת'),
-    publisher: String(doc.publisher ?? doc.entity_name ?? 'גוף לא ידוע'),
-    category: String(doc.tender_type ?? doc.sub_kind_he ?? 'כללי'),
-    region: String(doc.city ?? 'כל הארץ'),
-    deadline: doc.date_closed ? String(doc.date_closed) : null,
-    budget: doc.volume ? Number(doc.volume) : null,
-    description: String(doc.description ?? doc.tender_name ?? ''),
-    url: doc.url ? String(doc.url) : 'https://www.mr.gov.il/',
-    publishDate: String(doc.start_date ?? doc.date_updated ?? new Date().toISOString()),
-    status: String(doc.tender_type ?? 'פתוח'),
+    id: String(row.tender_id ?? row.page_url ?? Math.random()),
+    title: String(row.page_title ?? row.description ?? 'מכרז ללא כותרת'),
+    publisher: String(row.publisher ?? row.publisher_unit ?? 'גוף לא ידוע'),
+    category: String(row.tender_type_he ?? 'כללי'),
+    region: 'כל הארץ',
+    deadline: row.claim_date ? String(row.claim_date) : null,
+    budget: row.volume ? Number(row.volume) : null,
+    description: String(row.description ?? ''),
+    url: row.page_url ? String(row.page_url) : 'https://www.mr.gov.il/',
+    publishDate: row.publication_date ? String(row.publication_date) : new Date().toISOString(),
+    status: String(row.status ?? 'פורסם'),
   };
 }
 
@@ -32,35 +26,33 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const customQuery = searchParams.get('q');
 
-  const queries = customQuery ? [customQuery] : DEFAULT_QUERIES;
+  const keywords = customQuery
+    ? [customQuery]
+    : ['מכרז', 'התקשרות', 'הצעת מחיר'];
 
   try {
     const results = await Promise.all(
-      queries.map(q =>
-        fetch(`${BUDGETKEY_API}?query=${encodeURIComponent(q)}&doc_types=tenders&size=50`, {
+      keywords.map(kw =>
+        fetch(`${BUDGETKEY_API}?query=${encodeURIComponent(buildQuery(kw))}&format=json`, {
           cache: 'no-store',
         })
           .then(r => r.json())
-          .catch(() => ({ hits: { hits: [] } }))
+          .catch(() => ({ rows: [] }))
       )
     );
 
     const seen = new Set<string>();
-    const now = new Date();
 
     const filtered = results
-      .flatMap((d: Record<string, unknown>) => {
-        const hits = (d?.hits as Record<string, unknown>)?.hits as Record<string, unknown>[];
-        return hits ?? [];
-      })
+      .flatMap((d: Record<string, unknown>) =>
+        (d?.rows as Record<string, unknown>[]) ?? []
+      )
       .map(parseTender)
       .filter(t => {
         const id = String(t.id);
         if (seen.has(id)) return false;
         seen.add(id);
         if (!t.title || t.title === 'מכרז ללא כותרת') return false;
-        if (t.deadline && new Date(String(t.deadline)) < now) return false;
-        if (t.status === 'סגור') return false;
         return true;
       });
 
