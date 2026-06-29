@@ -1,266 +1,218 @@
-'use client'
-import { useEffect, useState, useCallback } from 'react'
-import Link from 'next/link'
+"use client";
+import { useState, useEffect, useMemo, useCallback } from "react";
 
-interface Tender { id: string; title: string; publisher: string; publishDate: string; deadline: string; status: string; url: string; type?: string }
-interface Profile { businessName?: string; categories?: string[]; regions?: string[]; publishers?: string[]; keywords?: string }
+const BIZ=[
+  {id:'consulting',label:'ייעוץ וניהול',icon:'💼',kw:['ייעוץ','יעוץ','ניהול','אסטרטגיה','הדרכה','הכשרה','ניהול פרויקט']},
+  {id:'tech',label:'טכנולוגיה ותוכנה',icon:'💻',kw:['תוכנה','מערכת מידע','מחשוב','טכנולוגיה','אפליקציה','פיתוח','סייבר','אבטחת מידע','ענן','AI','IT']},
+  {id:'marketing',label:'שיווק ופרסום',icon:'📣',kw:['שיווק','פרסום','קמפיין','יחסי ציבור','מדיה','תקשורת','מיתוג','תוכן','SEO','אתר']},
+  {id:'construction',label:'בינוי ותשתיות',icon:'🏗️',kw:['בינוי','בנייה','תשתיות','קבלן','שיפוץ','ביוב','מים','כבישים','אדריכל','מהנדס']},
+  {id:'legal',label:'משפט וחשבונאות',icon:'⚖️',kw:['משפטי','עורך דין','ייעוץ משפטי','חשבונאות','רואה חשבון','ביקורת','ציות','חוזה']},
+  {id:'education',label:'חינוך והדרכה',icon:'📚',kw:['חינוך','הדרכה','הכשרה','קורס','תוכנית לימודים','מורה','מרצה','אקדמי','בית ספר']},
+  {id:'security',label:'אבטחה ושמירה',icon:'🔒',kw:['אבטחה','שמירה','שומר','מאבטח','סיור','פיקוח','בטיחות','כיבוי אש']},
+  {id:'cleaning',label:'ניקיון ותחזוקה',icon:'🧹',kw:['ניקיון','תחזוקה','חיטוי','הדברה','גינון','גנן','פינוי אשפה']},
+  {id:'catering',label:'קייטרינג ומזון',icon:'🍽️',kw:['קייטרינג','אוכל','מזון','בישול','ספק מזון','ארוחה','קפטריה']},
+  {id:'transport',label:'הסעות ולוגיסטיקה',icon:'🚌',kw:['הסעות','תחבורה','לוגיסטיקה','הובלה','משלוחים','אוטובוס','שינוע']},
+  {id:'health',label:'בריאות ורפואה',icon:'🏥',kw:['בריאות','רפואה','רפואי','סיעוד','אחות','רופא','שיקום','בית חולים','מרפאה']},
+  {id:'environment',label:'איכות סביבה',icon:'🌿',kw:['סביבה','אקולוגי','ירוק','אנרגיה מתחדשת','פסולת','מחזור','זיהום','ניטור']},
+];
+const REGS=[
+  {id:'all',label:'כל האזורים',kw:[]},
+  {id:'national',label:'ארצי / ממשלתי',kw:['משרד','רשות','מינהל','אגף','ממשלת','ממשלה']},
+  {id:'north',label:'צפון',kw:['גליל','צפון','נצרת','עכו','כרמיאל','טבריה','צפת']},
+  {id:'haifa',label:'חיפה',kw:['חיפה','כרמל','נשר','טירת','קריית','זכרון']},
+  {id:'center',label:'מרכז',kw:['פתח תקוה','ראשון','רחובות','כפר סבא','נתניה','הרצליה','רמת גן','בני ברק','מודיעין','לוד','רמלה']},
+  {id:'tlv',label:'תל אביב',kw:['תל אביב','יפו','תל-אביב']},
+  {id:'south',label:'דרום',kw:['דרום','באר שבע','אשדוד','אשקלון','אילת','נגב']},
+  {id:'jerusalem',label:'ירושלים',kw:['ירושלים','בית שמש','מעלה אדומים']},
+];
+const PUBS=[
+  {id:'all',label:'כל המפרסמים',kw:[]},
+  {id:'gov',label:'משרדי ממשלה',kw:['משרד','רשות','מינהל','אגף','ממשלת']},
+  {id:'local',label:'רשויות מקומיות',kw:['עיריית','עירייה','מועצה','מועצת','ועד מקומי']},
+  {id:'health',label:'מערכת הבריאות',kw:['בית חולים','קופת חולים','מאוחדת','לאומית','כללית','מדא','הדסה']},
+  {id:'edu',label:'מוסדות חינוך',kw:['אוניברסיטה','מכללה','בית ספר','מוסד']},
+  {id:'infra',label:'חברות ממשלתיות',kw:['חברת חשמל','מקורות','נמלים','רכבת','נתיבי']},
+];
 
-const CAT_KW: Record<string,string[]> = {
-  tech:['טכנולוגי','תוכנה','מחשב','דיגיטל','סייבר','פיתוח','אפליקצי','מערכת','IT','ענן','בינה מלאכותית'],
-  consulting:['ייעוץ','ניהול','אסטרטגי','כלכל','פרויקט','תכנון'],
-  legal:['משפט','רגולצי','עו"ד','ייצוג','חוזה'],
-  construction:['בניה','תשתית','עבודות','קבלן','שיפוץ','אדריכל'],
-  cleaning:['ניקיון','תחזוקה','חיטוי'],
-  security:['שמירה','אבטחה','מאבטח','בטיחות'],
-  medical:['רפואי','בריאות','רפואה','תרופ','מכשור רפואי'],
-  education:['חינוך','הכשרה','הדרכה','קורס','אקדמי'],
-  food:['מזון','קייטרינג','אוכל','כשר'],
-  transport:['הובלה','תחבורה','רכב','לוגיסטי','הסעות'],
-  marketing:['שיווק','פרסום','מיתוג','יחסי ציבור','קמפיין'],
-  engineering:['הנדסה','ייצור','תעשיה','אלקטרוניקה','חשמל'],
-  environment:['סביבה','קיימות','פסולת','מחזור','אנרגיה ירוקה'],
-  finance:['חשבונאות','ביקורת','פיננסי','מס','ביטוח'],
-  hr:['משאבי אנוש','גיוס','שכר','רווחה'],
-}
-const REG_KW: Record<string,string[]> = {
-  north:['צפון','עכו','נצרת','טבריה','קריית שמונה','גליל'],
-  haifa:['חיפה','קריות','קריית','נשר','קרמל'],
-  center:['מרכז','פתח תקווה','ראשון לציון','רחובות','רמת גן','גבעתיים','בני ברק','חולון','בת ים'],
-  tlv:['תל אביב','תל-אביב','יפו'],
-  jerusalem:['ירושלים','בית שמש','מודיעין'],
-  south:['דרום','באר שבע','אשדוד','אשקלון','נגב','אילת'],
-  national:[],
-}
-const PUB_KW: Record<string,string[]> = {
-  gov:['משרד','ממשלה','מדינה','רשות','מינהל'],
-  local:['עירייה','מועצה','רשות מקומית','אזורית'],
-  hospital:['בית חולים','קופת חולים','מאוחדת','כללית','מכבי','לאומית'],
-  university:['אוניברסיטה','מכללה','טכניון'],
-  defense:['צבא','משטרה','ביטחון'],
-  infra:['חשמל','מים','נתיבי','מקורות'],
-}
+interface T{publication_id:string;tender_id:string;publisher:string;description:string;start_date:string;end_date:string;claim_date:string;page_url:string;}
 
-function scoreMatch(t: Tender, profile: Profile): number {
-  let score = 0
-  const text = (t.title + ' ' + t.publisher).toLowerCase()
-  const kw = (profile.keywords || '').split(',').map(k => k.trim()).filter(Boolean)
-  kw.forEach(k => { if (text.includes(k.toLowerCase())) score += 10 })
-  ;(profile.categories || []).forEach(cat => { CAT_KW[cat]?.forEach(w => { if (text.includes(w.toLowerCase())) score += 5 }) })
-  if ((profile.regions || []).includes('national')) score += 1
-  ;(profile.regions || []).filter(r => r !== 'national').forEach(reg => { REG_KW[reg]?.forEach(w => { if (text.includes(w.toLowerCase())) score += 3 }) })
-  ;(profile.publishers || []).forEach(pub => { PUB_KW[pub]?.forEach(w => { if (text.includes(w.toLowerCase())) score += 4 }) })
-  return score
-}
+function mBiz(t:T,id:string){if(!id)return true;const b=BIZ.find(x=>x.id===id);if(!b)return true;const s=((t.description||'')+(t.publisher||'')).toLowerCase();return b.kw.some(k=>s.includes(k.toLowerCase()));}
+function mReg(t:T,id:string){if(id==='all')return true;const r=REGS.find(x=>x.id===id);if(!r||!r.kw.length)return true;const s=((t.publisher||'')+(t.description||'')).toLowerCase();return r.kw.some(k=>s.includes(k.toLowerCase()));}
+function mPub(t:T,id:string){if(id==='all')return true;const p=PUBS.find(x=>x.id===id);if(!p||!p.kw.length)return true;return p.kw.some(k=>(t.publisher||'').toLowerCase().includes(k.toLowerCase()));}
+function dl(d:string):number|null{if(!d)return null;const x=new Date(d);return isNaN(x.getTime())?null:Math.ceil((x.getTime()-Date.now())/86400000);}
+function fd(d:string){if(!d)return'—';try{return new Date(d).toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric'});}catch{return d;}}
 
-function formatDate(d: string) {
-  if (!d) return '—'
-  try { return new Date(d).toLocaleDateString('he-IL', { day:'2-digit', month:'2-digit', year:'numeric' }) } catch { return d }
-}
-function daysLeft(deadline: string) {
-  if (!deadline) return null
-  return Math.ceil((new Date(deadline).getTime() - Date.now()) / 86400000)
-}
+export default function Dashboard(){
+  const[all,setAll]=useState<T[]>([]);
+  const[loading,setLoading]=useState(true);
+  const[msg,setMsg]=useState('טוען...');
+  const[err,setErr]=useState<string|null>(null);
+  const[biz,setBiz]=useState('');
+  const[reg,setReg]=useState('all');
+  const[pub,setPub]=useState('all');
+  const[maxD,setMaxD]=useState(180);
+  const[q,setQ]=useState('');
+  const[pg,setPg]=useState(1);
+  const PER=25;
 
-export default function Dashboard() {
-  const [tenders, setTenders] = useState<Tender[]>([])
-  const [loading, setLoading] = useState(true)
-  const [loadingMsg, setLoadingMsg] = useState('טוען מכרזים...')
-  const [error, setError] = useState('')
-  const [search, setSearch] = useState('')
-  const [activeTab, setActiveTab] = useState('all')
-  const [lastUpdate, setLastUpdate] = useState('')
-  const [profile, setProfile] = useState<Profile>({})
+  useEffect(()=>{try{const s=localStorage.getItem('businessProfile');if(s){const p=JSON.parse(s);if(p.businessType)setBiz(p.businessType);if(p.region)setReg(p.region);if(p.publisherType)setPub(p.publisherType);}}catch{}},[]);
 
-  useEffect(() => {
-    const saved = localStorage.getItem('tenders_profile')
-    if (saved) { try { setProfile(JSON.parse(saved)) } catch {} }
-  }, [])
+  const load=useCallback(async()=>{
+    setLoading(true);setErr(null);setMsg('מוריד מכרזים...');
+    try{
+      const rs=await Promise.all([0,1000,2000,3000].map(o=>fetch('/api/tenders?offset='+o).then(r=>r.json()).catch(()=>({tenders:[]}))));
+      const seen=new Set<string>();const arr:T[]=[];
+      for(const r of rs)for(const t of(r.tenders||[])){const k=t.publication_id||t.tender_id||(t.description+t.start_date);if(!seen.has(k)){seen.add(k);arr.push(t);}}
+      setAll(arr);
+    }catch{setErr('שגיאה בטעינה');}finally{setLoading(false);}
+  },[]);
 
-  const load = useCallback(async (q = '') => {
-    setLoading(true); setError(''); setTenders([])
-    setLoadingMsg('טוען מכרזים...')
-    try {
-      const qs = q ? '&q=' + encodeURIComponent(q) : ''
-      const [r0,r1,r2,r3] = await Promise.all([
-        fetch('/api/tenders?offset=0'+qs).then(r=>r.json()),
-        fetch('/api/tenders?offset=1000'+qs).then(r=>r.json()),
-        fetch('/api/tenders?offset=2000'+qs).then(r=>r.json()),
-        fetch('/api/tenders?offset=3000'+qs).then(r=>r.json()),
-      ])
-      const seen = new Set<string>()
-      const all: Tender[] = [...(r0.tenders||[]),...(r1.tenders||[]),...(r2.tenders||[]),...(r3.tenders||[])]
-        .filter(t => { if (!t.title||seen.has(t.id)) return false; seen.add(t.id); return true })
-      setTenders(all)
-      setLastUpdate(new Date().toLocaleTimeString('he-IL'))
-    } catch (e: unknown) { setError(e instanceof Error ? e.message : 'שגיאה') }
-    finally { setLoading(false) }
-  }, [])
+  useEffect(()=>{load();},[load]);
 
-  useEffect(() => { load() }, [load])
+  const fil=useMemo(()=>{
+    let r=all;
+    if(biz)r=r.filter(t=>mBiz(t,biz));
+    if(reg!=='all')r=r.filter(t=>mReg(t,reg));
+    if(pub!=='all')r=r.filter(t=>mPub(t,pub));
+    r=r.filter(t=>{const d=dl(t.end_date||t.claim_date);return d===null||(d>=0&&d<=maxD);});
+    if(q.trim()){const ql=q.toLowerCase();r=r.filter(t=>(t.description||'').toLowerCase().includes(ql)||(t.publisher||'').toLowerCase().includes(ql));}
+    return r.sort((a,b)=>(dl(a.end_date||a.claim_date)??9999)-(dl(b.end_date||b.claim_date)??9999));
+  },[all,biz,reg,pub,maxD,q]);
 
-  const matchedTenders = tenders
-    .map(t => ({ ...t, score: scoreMatch(t, profile) }))
-    .filter(t => t.score > 0)
-    .sort((a,b) => b.score - a.score)
+  const tp=Math.ceil(fil.length/PER);
+  const rows=fil.slice((pg-1)*PER,pg*PER);
+  const urg=fil.filter(t=>{const d=dl(t.end_date||t.claim_date);return d!==null&&d<=7;}).length;
+  const bl=BIZ.find(b=>b.id===biz)?.label||'';
 
-  const filtered = (activeTab === 'match' ? matchedTenders : tenders).filter(t => {
-    const q = search.toLowerCase()
-    const ok = !q || t.title?.toLowerCase().includes(q) || t.publisher?.toLowerCase().includes(q)
-    if (activeTab === 'closing') { const d = daysLeft(t.deadline); return ok && d !== null && d >= 0 && d <= 7 }
-    if (activeTab === 'new') { if (!t.publishDate) return false; return ok && Math.ceil((Date.now()-new Date(t.publishDate).getTime())/86400000) <= 7 }
-    if (activeTab === 'tech') return ok && (t.title.includes('טכנולוג')||t.title.includes('תוכנה')||t.title.includes('מחשב'))
-    return ok
-  })
-
-  const closing7 = tenders.filter(t => { const d=daysLeft(t.deadline); return d!==null&&d>=0&&d<=7 }).length
-  const newLast7 = tenders.filter(t => { if(!t.publishDate) return false; return Math.ceil((Date.now()-new Date(t.publishDate).getTime())/86400000)<=7 }).length
-  const hasProfile = !!(profile.categories?.length || profile.keywords)
-
-  const TAB = (id:string,label:string,count:number,color='var(--brand)') => (
-    <button className="filter-tab"
-      style={activeTab===id?{background:color,color:'#fff',borderColor:color}:{}}
-      onClick={()=>setActiveTab(id)}>
-      {label} ({count.toLocaleString()})
-    </button>
-  )
-
-  return (
-    <>
-      <header className="topbar">
-        <div className="topbar-icons">
-          <Link href="/profile"><div className="avatar" title="פרופיל">{profile.businessName?profile.businessName[0]:'א'}</div></Link>
-          <button className="icon-btn">🔔</button>
+  return(
+    <div style={{minHeight:'100vh',background:'#f0f4f8',fontFamily:'Heebo,Arial,sans-serif',direction:'rtl'}}>
+      <header style={{background:'linear-gradient(135deg,#1a3c6e,#2563eb)',color:'white',boxShadow:'0 2px 8px rgba(0,0,0,0.3)'}}>
+        <div style={{maxWidth:1400,margin:'0 auto',padding:'12px 20px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          <div style={{display:'flex',alignItems:'center',gap:12}}>
+            <span style={{fontSize:28,fontWeight:900}}>שווה מכרזים</span>
+            <span style={{background:'rgba(255,255,255,0.15)',borderRadius:6,padding:'2px 10px',fontSize:13}}>BETA</span>
+          </div>
+          <div style={{display:'flex',gap:10}}>
+            <a href="/profile" style={{background:'rgba(255,255,255,0.15)',color:'white',border:'1px solid rgba(255,255,255,0.3)',borderRadius:8,padding:'6px 16px',textDecoration:'none',fontSize:14}}>✏️ פרופיל</a>
+            <button onClick={load} style={{background:'rgba(255,255,255,0.15)',color:'white',border:'1px solid rgba(255,255,255,0.3)',borderRadius:8,padding:'6px 16px',fontSize:14,cursor:'pointer'}}>🔄 רענן</button>
+          </div>
         </div>
-        <nav className="topbar-nav">
-          <a href="#">מקורות</a><a href="#">AgentOS</a><a href="#">ערביות וליווי</a>
-          <a href="#">התראות</a><a href="#">הגשות שלי</a>
-          <a href="/dashboard" className="active">גילוי מכרזים</a>
-        </nav>
-        <a href="/dashboard" className="topbar-logo">שווה מכרזים<span className="badge">מודול בתוך שווה ביזנס 360</span></a>
+        <div style={{background:'rgba(0,0,0,0.2)',padding:'8px 20px'}}>
+          <div style={{maxWidth:1400,margin:'0 auto',display:'flex',gap:24,fontSize:13}}>
+            <span>📋 סה"כ: <strong>{all.length.toLocaleString()}</strong></span>
+            {biz&&<span>🎯 תואמים: <strong>{fil.length.toLocaleString()}</strong></span>}
+            {urg>0&&<span style={{color:'#fbbf24'}}>⚠️ נסגרים השבוע: <strong>{urg}</strong></span>}
+            <span style={{marginRight:'auto',color:'rgba(255,255,255,0.7)'}}>עדכון ב-06:00</span>
+          </div>
+        </div>
       </header>
 
-      <div className="status-bar">
-        <span className="status-dot" />
-        <span>סריקה: <strong>{loading?'...':tenders.length.toLocaleString()}</strong> מכרזים · <a href="https://next.obudget.org" target="_blank" rel="noopener noreferrer">data.gov.il</a></span>
-        {lastUpdate && <span>· עודכן: {lastUpdate}</span>}
-        {profile.businessName && <span>· 👤 {profile.businessName}</span>}
-        <button className="refresh-btn" onClick={()=>load(search)} disabled={loading}>{loading?loadingMsg:'רענון'}</button>
-      </div>
+      <div style={{maxWidth:1400,margin:'0 auto',padding:'20px'}}>
 
-      <div className="page-wrap">
-        <main>
-          <div className="stats-row">
-            <div className="stat-card"><div className="stat-num ink">{loading?'…':tenders.length.toLocaleString()}</div><div className="stat-label">מכרזים פעילים במאגר</div></div>
-            <div className="stat-card"><div className="stat-num brand">{loading?'…':matchedTenders.length.toLocaleString()}</div><div className="stat-label">התאמות לפרופיל שלך</div></div>
-            <div className="stat-card"><div className="stat-num teal">{loading?'…':closing7}</div><div className="stat-label">נסגרים בשבוע הקרוב</div></div>
-            <div className="stat-card"><div className="stat-num amber">{loading?'…':newLast7}</div><div className="stat-label">חדשים ב-7 ימים</div></div>
+        <div style={{background:'white',borderRadius:12,padding:'20px',marginBottom:16,boxShadow:'0 1px 4px rgba(0,0,0,0.08)'}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+            <h2 style={{margin:0,fontSize:16,fontWeight:700,color:'#1a3c6e'}}>1️⃣ סוג עסק — פילטר ראשי</h2>
+            {biz&&<button onClick={()=>{setBiz('');setPg(1);}} style={{background:'#fee2e2',color:'#dc2626',border:'none',borderRadius:6,padding:'4px 12px',cursor:'pointer',fontSize:13}}>✕ הצג הכל</button>}
           </div>
-
-          {!hasProfile && !loading && (
-            <div style={{background:'var(--brand-pale)',border:'1.5px solid var(--brand)',borderRadius:'var(--radius)',padding:'14px 20px',marginBottom:14,display:'flex',alignItems:'center',gap:12}}>
-              <span style={{fontSize:'1.3rem'}}>👤</span>
-              <div style={{flex:1,fontSize:'0.9rem'}}><strong>טרם הגדרת פרופיל עסקי</strong> — הגדר פרופיל לקבל מכרזים מותאמים אישית</div>
-              <Link href="/profile"><button className="smart-btn">הגדר פרופיל ←</button></Link>
-            </div>
-          )}
-
-          <div className="search-area">
-            <div className="search-row">
-              <div className="search-input-wrap">
-                <input className="search-input" placeholder="חיפוש: נושא, גוף מפרסם, מספר מכרז..."
-                  value={search} onChange={e=>setSearch(e.target.value)}
-                  onKeyDown={e=>e.key==='Enter'&&load(search)} />
-                <span className="search-icon">🔍</span>
-              </div>
-              <button className="smart-btn" onClick={()=>load(search)}>חיפוש</button>
-            </div>
-            <div className="filter-tabs">
-              {TAB('all','📋 כל המכרזים',tenders.length)}
-              {TAB('match','⭐ התאמות לפרופיל',matchedTenders.length,'var(--teal)')}
-              {TAB('closing','🚨 נסגרים השבוע',closing7,'var(--red)')}
-              {TAB('new','✨ חדשים',newLast7,'var(--teal)')}
-              {TAB('tech','💻 טכנולוגיה',tenders.filter(t=>t.title.includes('טכנולוג')||t.title.includes('תוכנה')).length)}
-            </div>
+          <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+            {BIZ.map(bt=>{const on=biz===bt.id;return(
+              <button key={bt.id} onClick={()=>{setBiz(on?'':bt.id);setPg(1);}} style={{display:'flex',alignItems:'center',gap:6,padding:'8px 16px',borderRadius:8,border:on?'2px solid #2563eb':'2px solid #e5e7eb',background:on?'#2563eb':'white',color:on?'white':'#374151',cursor:'pointer',fontSize:14,fontWeight:on?700:400}}>
+                <span>{bt.icon}</span><span>{bt.label}</span>
+              </button>
+            );})}
           </div>
+          <p style={{margin:'10px 0 0',fontSize:13,color:biz?'#2563eb':'#6b7280',fontWeight:biz?600:400}}>
+            {biz?`✅ ${fil.length.toLocaleString()} מכרזים — ${bl}`:`מוצגים כל ${all.length.toLocaleString()} המכרזים — בחר סוג עסק לסינון`}
+          </p>
+        </div>
 
-          {loading && <div className="loading-state"><div className="spinner"/><div>{loadingMsg}</div></div>}
-          {error && <div className="error-state">⚠️ {error}</div>}
-          {!loading && !error && (
-            <div className="tender-list">
-              {filtered.length===0 && (
-                <div className="loading-state">
-                  {activeTab==='match'&&!hasProfile
-                    ? <><div style={{marginBottom:12}}>הגדר פרופיל עסקי כדי לראות התאמות</div><Link href="/profile"><button className="smart-btn">הגדר פרופיל ←</button></Link></>
-                    : 'לא נמצאו מכרזים תואמים'}
-                </div>
-              )}
-              {filtered.map(t => {
-                const days = daysLeft(t.deadline)
-                const soon = days!==null&&days>=0&&days<=7
-                const score = (t as Tender&{score?:number}).score
-                return (
-                  <div className="tender-card" key={t.id}>
-                    <div className="tender-card-top">
-                      <div className="tender-title">
-                        {t.url ? <a href={t.url} target="_blank" rel="noopener noreferrer">{t.title}</a> : t.title}
-                      </div>
-                      <div className="tender-tags">
-                        {activeTab==='match'&&score&&score>0&&<span className="tag" style={{background:'#FEF3C7',color:'#92400E'}}>⭐{score>15?'גבוהה':score>8?'טובה':'התאמה'}</span>}
-                        {soon&&<span className="tag tag-closing">🚨 נסגר בקרוב</span>}
-                        {!soon&&t.deadline&&<span className="tag tag-active">פעיל</span>}
-                        {t.publisher&&<span className="tag tag-org">{t.publisher.length>18?t.publisher.slice(0,18)+'…':t.publisher}</span>}
-                      </div>
-                    </div>
-                    <div className="tender-meta">
-                      {t.publishDate&&<span>📅 פורסם: <strong>{formatDate(t.publishDate)}</strong></span>}
-                      {t.deadline&&<span className={soon?'deadline-soon':'deadline-ok'}>⏰ הגשה עד: <strong>{formatDate(t.deadline)}</strong>{days!==null&&days>=0&&' ('+days+' ימים)'}</span>}
-                      {t.status&&<span>📌 {t.status}</span>}
-                    </div>
-                  </div>
-                )
-              })}
+        <div style={{background:'white',borderRadius:12,padding:'14px 20px',marginBottom:16,boxShadow:'0 1px 4px rgba(0,0,0,0.08)'}}>
+          <h2 style={{margin:'0 0 10px',fontSize:14,fontWeight:700,color:'#374151'}}>2️⃣ פילטרים משניים</h2>
+          <div style={{display:'flex',flexWrap:'wrap',gap:14,alignItems:'flex-end'}}>
+            <div style={{flex:'1 1 190px'}}>
+              <label style={{display:'block',fontSize:12,color:'#6b7280',marginBottom:4}}>חיפוש חופשי</label>
+              <input value={q} onChange={e=>{setQ(e.target.value);setPg(1);}} placeholder="מילת מפתח..." style={{width:'100%',padding:'8px 12px',borderRadius:8,border:'1px solid #d1d5db',fontSize:14,boxSizing:'border-box'}}/>
             </div>
-          )}
-        </main>
-
-        <aside className="sidebar">
-          <div className="sidebar-card">
-            <div className="sidebar-title">👤 פרופיל עסקי</div>
-            {hasProfile ? (
-              <div>
-                {profile.businessName&&<div style={{fontWeight:700,marginBottom:8,fontSize:'0.95rem'}}>{profile.businessName}</div>}
-                {!!profile.categories?.length&&<div style={{fontSize:'0.8rem',color:'var(--muted)',marginBottom:4}}>תחומים: {profile.categories.length} נבחרו</div>}
-                {!!profile.regions?.length&&<div style={{fontSize:'0.8rem',color:'var(--muted)',marginBottom:12}}>אזורים: {profile.regions.length} נבחרו</div>}
-                <div style={{background:'var(--brand-pale)',borderRadius:8,padding:'10px 12px',textAlign:'center',marginBottom:12}}>
-                  <div style={{fontSize:'1.6rem',fontWeight:800,color:'var(--brand)'}}>{matchedTenders.length}</div>
-                  <div style={{fontSize:'0.75rem',color:'var(--muted)'}}>מכרזים מותאמים</div>
-                </div>
-                <Link href="/profile"><button className="apply-btn">✏️ עריכת פרופיל</button></Link>
-              </div>
-            ) : (
-              <div style={{textAlign:'center',padding:'8px 0'}}>
-                <div style={{fontSize:'2.5rem',marginBottom:8}}>👤</div>
-                <div style={{fontSize:'0.85rem',color:'var(--muted)',marginBottom:14}}>הגדר פרופיל עסקי לקבל התאמות אישיות</div>
-                <Link href="/profile"><button className="apply-btn">הגדר פרופיל ←</button></Link>
-              </div>
-            )}
-          </div>
-          <div className="sidebar-card">
-            <div className="sidebar-title">⚙ סינון מהיר</div>
-            <div className="filter-group"><label>גוף מפרסם</label>
-              <select className="filter-select">
-                <option>כל הגופים</option><option>ממשלה</option>
-                <option>רשויות מקומיות</option><option>בתי חולים</option>
+            <div style={{flex:'1 1 140px'}}>
+              <label style={{display:'block',fontSize:12,color:'#6b7280',marginBottom:4}}>אזור</label>
+              <select value={reg} onChange={e=>{setReg(e.target.value);setPg(1);}} style={{width:'100%',padding:'8px 12px',borderRadius:8,border:'1px solid #d1d5db',fontSize:14}}>
+                {REGS.map(r=><option key={r.id} value={r.id}>{r.label}</option>)}
               </select>
             </div>
-            <div className="filter-group"><label>נסגר בתוך</label>
-              <input type="range" className="range-slider" min="1" max="180" defaultValue="90" />
-              <div className="range-label">עד 90 ימים</div>
+            <div style={{flex:'1 1 150px'}}>
+              <label style={{display:'block',fontSize:12,color:'#6b7280',marginBottom:4}}>מפרסם</label>
+              <select value={pub} onChange={e=>{setPub(e.target.value);setPg(1);}} style={{width:'100%',padding:'8px 12px',borderRadius:8,border:'1px solid #d1d5db',fontSize:14}}>
+                {PUBS.map(p=><option key={p.id} value={p.id}>{p.label}</option>)}
+              </select>
             </div>
+            <div style={{flex:'1 1 170px'}}>
+              <label style={{display:'block',fontSize:12,color:'#6b7280',marginBottom:4}}>עד {maxD} ימים</label>
+              <input type="range" min={7} max={365} value={maxD} onChange={e=>{setMaxD(Number(e.target.value));setPg(1);}} style={{width:'100%'}}/>
+            </div>
+            <button onClick={()=>{setReg('all');setPub('all');setMaxD(180);setQ('');setPg(1);}} style={{padding:'8px 14px',borderRadius:8,border:'1px solid #d1d5db',background:'#f9fafb',cursor:'pointer',fontSize:13,color:'#6b7280'}}>איפוס</button>
           </div>
-        </aside>
+        </div>
+
+        {loading?(
+          <div style={{textAlign:'center',padding:60,background:'white',borderRadius:12}}>
+            <div style={{fontSize:36,marginBottom:12}}>⏳</div>
+            <div style={{color:'#6b7280'}}>{msg}</div>
+          </div>
+        ):err?(
+          <div style={{textAlign:'center',padding:60,background:'white',borderRadius:12,color:'#dc2626'}}>{err}</div>
+        ):fil.length===0?(
+          <div style={{textAlign:'center',padding:60,background:'white',borderRadius:12}}>
+            <div style={{fontSize:36,marginBottom:8}}>🔍</div>
+            <div style={{color:'#6b7280'}}>לא נמצאו מכרזים — נסה להרחיב פילטרים</div>
+          </div>
+        ):(
+          <>
+            {urg>0&&<div style={{background:'#fef3c7',border:'1px solid #f59e0b',borderRadius:10,padding:'10px 16px',marginBottom:12,display:'flex',alignItems:'center',gap:8}}><span style={{fontSize:18}}>🚨</span><span style={{color:'#92400e',fontWeight:600,fontSize:14}}>{urg} מכרז{urg>1?'ים':''} נסגר{urg>1?'ים':''} תוך 7 ימים!</span></div>}
+            <div style={{background:'white',borderRadius:12,overflow:'hidden',boxShadow:'0 1px 4px rgba(0,0,0,0.08)'}}>
+              <div style={{padding:'10px 16px',borderBottom:'1px solid #e5e7eb',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                <span style={{fontWeight:700,color:'#374151',fontSize:14}}>{fil.length.toLocaleString()} תוצאות{biz?` — ${bl}`:''}</span>
+                <span style={{color:'#9ca3af',fontSize:13}}>עמוד {pg}/{tp}</span>
+              </div>
+              <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+                <thead>
+                  <tr style={{background:'#f8fafc',borderBottom:'2px solid #e5e7eb'}}>
+                    <th style={{padding:'10px 16px',textAlign:'right',fontWeight:700,color:'#374151'}}>כותרת המכרז</th>
+                    <th style={{padding:'10px 12px',textAlign:'right',fontWeight:700,color:'#374151',width:150}}>מפרסם</th>
+                    <th style={{padding:'10px 12px',textAlign:'center',fontWeight:700,color:'#374151',width:105}}>פרסום</th>
+                    <th style={{padding:'10px 12px',textAlign:'center',fontWeight:700,color:'#374151',width:105}}>מועד אחרון</th>
+                    <th style={{padding:'10px 12px',textAlign:'center',fontWeight:700,color:'#374151',width:85}}>ימים</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((t,i)=>{
+                    const d=dl(t.end_date||t.claim_date);
+                    const u=d!==null&&d<=7;const s=d!==null&&d<=30&&d>7;
+                    return(
+                      <tr key={t.publication_id||i} style={{borderBottom:'1px solid #f0f0f0',background:u?'#fff7ed':i%2===0?'white':'#fafafa'}}>
+                        <td style={{padding:'10px 16px'}}>{t.page_url?<a href={t.page_url} target="_blank" rel="noopener noreferrer" style={{color:'#1d4ed8',textDecoration:'none',fontWeight:500,lineHeight:1.4}}>{t.description||'ללא כותרת'}</a>:<span style={{lineHeight:1.4}}>{t.description||'ללא כותרת'}</span>}</td>
+                        <td style={{padding:'10px 12px',color:'#6b7280',fontSize:12}}>{t.publisher||'—'}</td>
+                        <td style={{padding:'10px 12px',textAlign:'center',color:'#6b7280'}}>{fd(t.start_date)}</td>
+                        <td style={{padding:'10px 12px',textAlign:'center',color:u?'#dc2626':'#374151',fontWeight:u?700:400}}>{fd(t.end_date||t.claim_date)}</td>
+                        <td style={{padding:'10px 12px',textAlign:'center'}}>{d===null?'—':<span style={{padding:'3px 8px',borderRadius:12,fontSize:12,fontWeight:700,background:u?'#fee2e2':s?'#fef3c7':'#f0fdf4',color:u?'#dc2626':s?'#92400e':'#166534'}}>{d===0?'היום!':`${d} ימים`}</span>}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              {tp>1&&<div style={{padding:'12px 16px',borderTop:'1px solid #e5e7eb',display:'flex',gap:8,justifyContent:'center'}}>
+                <button onClick={()=>setPg(1)} disabled={pg===1} style={{padding:'6px 12px',borderRadius:6,border:'1px solid #d1d5db',background:pg===1?'#f3f4f6':'white',cursor:pg===1?'default':'pointer'}}>ראשון</button>
+                <button onClick={()=>setPg(p=>Math.max(1,p-1))} disabled={pg===1} style={{padding:'6px 12px',borderRadius:6,border:'1px solid #d1d5db',background:pg===1?'#f3f4f6':'white',cursor:pg===1?'default':'pointer'}}>◀</button>
+                {Array.from({length:Math.min(5,tp)},(_,i)=>{let p=pg-2+i;if(p<1)p=i+1;if(p>tp)p=tp-(4-i);if(p<1||p>tp)return null;return<button key={p} onClick={()=>setPg(p)} style={{padding:'6px 12px',borderRadius:6,border:'1px solid',borderColor:p===pg?'#2563eb':'#d1d5db',background:p===pg?'#2563eb':'white',color:p===pg?'white':'#374151',cursor:'pointer',fontWeight:p===pg?700:400}}>{p}</button>;})}
+                <button onClick={()=>setPg(p=>Math.min(tp,p+1))} disabled={pg===tp} style={{padding:'6px 12px',borderRadius:6,border:'1px solid #d1d5db',background:pg===tp?'#f3f4f6':'white',cursor:pg===tp?'default':'pointer'}}>▶</button>
+                <button onClick={()=>setPg(tp)} disabled={pg===tp} style={{padding:'6px 12px',borderRadius:6,border:'1px solid #d1d5db',background:pg===tp?'#f3f4f6':'white',cursor:pg===tp?'default':'pointer'}}>אחרון</button>
+              </div>}
+            </div>
+          </>
+        )}
+        <footer style={{textAlign:'center',padding:'20px 0',color:'#9ca3af',fontSize:12}}>
+          נתונים: <a href="https://next.obudget.org" target="_blank" rel="noopener noreferrer" style={{color:'#2563eb'}}>BudgetKey</a> · מינהל הרכש הממשלתי
+        </footer>
       </div>
-      <footer className="footer">נתונים: <a href="https://next.obudget.org" target="_blank" rel="noopener noreferrer" style={{color:'var(--brand)'}}>BudgetKey / מינהל הרכש הממשלתי</a>{' · '}עדכון יומי ב-06:00</footer>
-    </>
-  )
+    </div>
+  );
 }
