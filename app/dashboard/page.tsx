@@ -218,7 +218,10 @@ export default function Dashboard(){
                             ?<a href={t.url} target="_blank" rel="noopener noreferrer" style={{color:'#111827',textDecoration:'none',fontWeight:700,fontSize:14,lineHeight:1.4,display:'block'}}>{t.title||'ללא כותרת'}</a>
                             :<span style={{fontWeight:700,fontSize:14,color:'#111827',lineHeight:1.4,display:'block'}}>{t.title||'ללא כותרת'}</span>}
                         </div>
-                        
+            <div className={`score-circle ${score>=80?'score-high':score>=65?'score-mid':'score-low'}`}>
+                            <span className="score-num">{score}</span>
+                            <span className="score-lbl">ציון</span>
+            </div>
                         <div style={{display:'flex',flexDirection:'column',gap:3,alignItems:'flex-end',flexShrink:0,fontSize:12}}>
                           <div style={{color:'#6b7280'}}>📅 פורסם: {fd(t.publishDate)}</div>
                           <div style={{fontWeight:600,color:urgent?'#dc2626':'#374151'}}>
