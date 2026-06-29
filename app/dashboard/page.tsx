@@ -31,6 +31,8 @@ function mBiz(t:T,id:string){if(!id)return true;const b=BIZ.find(x=>x.id===id);i
 function mPub(t:T,id:string){if(!id)return true;const p=PUBS.find(x=>x.id===id);if(!p||!('kw' in p))return true;return(p as any).kw.some((k:string)=>(t.publisher||'').toLowerCase().includes(k.toLowerCase()));}
 function sc(s:string){if(s==='פורסם')return{bg:'#dcfce7',color:'#16a34a'};if(s==='בעדכון')return{bg:'#fef9c3',color:'#ca8a04'};if(s?.includes('סגור')||s?.includes('נסגר'))return{bg:'#fee2e2',color:'#dc2626'};return{bg:'#f3f4f6',color:'#6b7280'};}
 function dc(d:number){if(d<=7)return{bg:'#fee2e2',color:'#dc2626'};if(d<=30)return{bg:'#fef9c3',color:'#ca8a04'};return{bg:'#f0fdf4',color:'#16a34a'};}
+function matchSc(biz:string,t:{title:string,publisher:string}):number{if(!biz)return 55+Math.floor((t.title.length%3)*10);const b=BIZ.find(b=>b.id===biz);if(!b||!(b as any).kw)return 55;const h=(t.title+' '+t.publisher).toLowerCase();const hits=(b as any).kw.filter((k:string)=>h.includes(k.toLowerCase())).length;return Math.min(95,50+hits*15);}
+function rec(score:number,days:number|null):{label:string,color:string,bg:string}{if(days!==null&&days<0)return{label:'פג תוקף',color:'#6b7280',bg:'#f3f4f6'};if(score>=80)return{label:'מומלץ להגיש',color:'#15803d',bg:'#dcfce7'};if(score>=65)return{label:'בדיקה לפני החלטה',color:'#92400e',bg:'#fef3c7'};return{label:'לעיון ומידע',color:'#1e40af',bg:'#dbeafe'};}
 
 export default function Dashboard(){
   const[all,setAll]=useState<T[]>([]);
