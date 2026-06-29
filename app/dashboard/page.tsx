@@ -36,8 +36,8 @@ const PUBS=[
 
 interface T{publication_id:string;tender_id:string;publisher:string;description:string;start_date:string;end_date:string;claim_date:string;page_url:string;}
 
-function mBiz(t:T,id:string){if(!id)return true;const b=BIZ.find(x=>x.id===id);if(!b)return true;const s=((t.description||'')+(t.publisher||'')).toLowerCase();return b.kw.some(k=>s.includes(k.toLowerCase()));}
-function mReg(t:T,id:string){if(id==='all')return true;const r=REGS.find(x=>x.id===id);if(!r||!r.kw.length)return true;const s=((t.publisher||'')+(t.description||'')).toLowerCase();return r.kw.some(k=>s.includes(k.toLowerCase()));}
+function mBiz(t:T,id:string){if(!id)return true;const b=BIZ.find(x=>x.id===id);if(!b)return true;const s=((t.title||t.description||'')+(t.publisher||'')).toLowerCase();return b.kw.some(k=>s.includes(k.toLowerCase()));}
+function mReg(t:T,id:string){if(id==='all')return true;const r=REGS.find(x=>x.id===id);if(!r||!r.kw.length)return true;const s=((t.publisher||'')+(t.title||t.description||'')).toLowerCase();return r.kw.some(k=>s.includes(k.toLowerCase()));}
 function mPub(t:T,id:string){if(id==='all')return true;const p=PUBS.find(x=>x.id===id);if(!p||!p.kw.length)return true;return p.kw.some(k=>(t.publisher||'').toLowerCase().includes(k.toLowerCase()));}
 function dl(d:string):number|null{if(!d)return null;const x=new Date(d);return isNaN(x.getTime())?null:Math.ceil((x.getTime()-Date.now())/86400000);}
 function fd(d:string){if(!d)return'—';try{return new Date(d).toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric'});}catch{return d;}}
@@ -62,7 +62,7 @@ export default function Dashboard(){
     try{
       const rs=await Promise.all([0,1000,2000,3000].map(o=>fetch('/api/tenders?offset='+o).then(r=>r.json()).catch(()=>({tenders:[]}))));
       const seen=new Set<string>();const arr:T[]=[];
-      for(const r of rs)for(const t of(r.tenders||[])){const k=t.publication_id||t.tender_id||(t.description+t.start_date);if(!seen.has(k)){seen.add(k);arr.push(t);}}
+      for(const r of rs)for(const t of(r.tenders||[])){const k=t.publication_id||t.tender_id||(t.title||t.description+t.publishDate||t.start_date);if(!seen.has(k)){seen.add(k);arr.push(t);}}
       setAll(arr);
     }catch{setErr('שגיאה בטעינה');}finally{setLoading(false);}
   },[]);
@@ -74,14 +74,14 @@ export default function Dashboard(){
     if(biz)r=r.filter(t=>mBiz(t,biz));
     if(reg!=='all')r=r.filter(t=>mReg(t,reg));
     if(pub!=='all')r=r.filter(t=>mPub(t,pub));
-    r=r.filter(t=>{const d=dl(t.end_date||t.claim_date);return d===null||(d>=0&&d<=maxD);});
-    if(q.trim()){const ql=q.toLowerCase();r=r.filter(t=>(t.description||'').toLowerCase().includes(ql)||(t.publisher||'').toLowerCase().includes(ql));}
+    r=r.filter(t=>{const d=dl(t.deadline||t.end_date||t.claim_date);return d===null||(d>=0&&d<=maxD);});
+    if(q.trim()){const ql=q.toLowerCase();r=r.filter(t=>(t.title||t.description||'').toLowerCase().includes(ql)||(t.publisher||'').toLowerCase().includes(ql));}
     return r.sort((a,b)=>(dl(a.end_date||a.claim_date)??9999)-(dl(b.end_date||b.claim_date)??9999));
   },[all,biz,reg,pub,maxD,q]);
 
   const tp=Math.ceil(fil.length/PER);
   const rows=fil.slice((pg-1)*PER,pg*PER);
-  const urg=fil.filter(t=>{const d=dl(t.end_date||t.claim_date);return d!==null&&d<=7;}).length;
+  const urg=fil.filter(t=>{const d=dl(t.deadline||t.end_date||t.claim_date);return d!==null&&d<=7;}).length;
   const bl=BIZ.find(b=>b.id===biz)?.label||'';
 
   return(
@@ -185,14 +185,14 @@ export default function Dashboard(){
                 </thead>
                 <tbody>
                   {rows.map((t,i)=>{
-                    const d=dl(t.end_date||t.claim_date);
+                    const d=dl(t.deadline||t.end_date||t.claim_date);
                     const u=d!==null&&d<=7;const s=d!==null&&d<=30&&d>7;
                     return(
-                      <tr key={t.publication_id||i} style={{borderBottom:'1px solid #f0f0f0',background:u?'#fff7ed':i%2===0?'white':'#fafafa'}}>
-                        <td style={{padding:'10px 16px'}}>{t.page_url?<a href={t.page_url} target="_blank" rel="noopener noreferrer" style={{color:'#1d4ed8',textDecoration:'none',fontWeight:500,lineHeight:1.4}}>{t.description||'ללא כותרת'}</a>:<span style={{lineHeight:1.4}}>{t.description||'ללא כותרת'}</span>}</td>
+                      <tr key={t.id||i} style={{borderBottom:'1px solid #f0f0f0',background:u?'#fff7ed':i%2===0?'white':'#fafafa'}}>
+                        <td style={{padding:'10px 16px'}}>{t.url||t.page_url?<a href={t.url||t.page_url} target="_blank" rel="noopener noreferrer" style={{color:'#1d4ed8',textDecoration:'none',fontWeight:500,lineHeight:1.4}}>{t.title||t.description||'ללא כותרת'}</a>:<span style={{lineHeight:1.4}}>{t.title||t.description||'ללא כותרת'}</span>}</td>
                         <td style={{padding:'10px 12px',color:'#6b7280',fontSize:12}}>{t.publisher||'—'}</td>
-                        <td style={{padding:'10px 12px',textAlign:'center',color:'#6b7280'}}>{fd(t.start_date)}</td>
-                        <td style={{padding:'10px 12px',textAlign:'center',color:u?'#dc2626':'#374151',fontWeight:u?700:400}}>{fd(t.end_date||t.claim_date)}</td>
+                        <td style={{padding:'10px 12px',textAlign:'center',color:'#6b7280'}}>{fd(t.publishDate||t.start_date)}</td>
+                        <td style={{padding:'10px 12px',textAlign:'center',color:u?'#dc2626':'#374151',fontWeight:u?700:400}}>{fd(t.deadline||t.end_date||t.claim_date)}</td>
                         <td style={{padding:'10px 12px',textAlign:'center'}}>{d===null?'—':<span style={{padding:'3px 8px',borderRadius:12,fontSize:12,fontWeight:700,background:u?'#fee2e2':s?'#fef3c7':'#f0fdf4',color:u?'#dc2626':s?'#92400e':'#166534'}}>{d===0?'היום!':`${d} ימים`}</span>}</td>
                       </tr>
                     );
