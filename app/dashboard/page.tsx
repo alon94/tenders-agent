@@ -2,216 +2,256 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 
 const BIZ=[
-  {id:'consulting',label:'ייעוץ וניהול',icon:'💼',kw:['ייעוץ','יעוץ','ניהול','אסטרטגיה','הדרכה','הכשרה','ניהול פרויקט']},
-  {id:'tech',label:'טכנולוגיה ותוכנה',icon:'💻',kw:['תוכנה','מערכת מידע','מחשוב','טכנולוגיה','אפליקציה','פיתוח','סייבר','אבטחת מידע','ענן','AI','IT']},
-  {id:'marketing',label:'שיווק ופרסום',icon:'📣',kw:['שיווק','פרסום','קמפיין','יחסי ציבור','מדיה','תקשורת','מיתוג','תוכן','SEO','אתר']},
-  {id:'construction',label:'בינוי ותשתיות',icon:'🏗️',kw:['בינוי','בנייה','תשתיות','קבלן','שיפוץ','ביוב','מים','כבישים','אדריכל','מהנדס']},
-  {id:'legal',label:'משפט וחשבונאות',icon:'⚖️',kw:['משפטי','עורך דין','ייעוץ משפטי','חשבונאות','רואה חשבון','ביקורת','ציות','חוזה']},
-  {id:'education',label:'חינוך והדרכה',icon:'📚',kw:['חינוך','הדרכה','הכשרה','קורס','תוכנית לימודים','מורה','מרצה','אקדמי','בית ספר']},
-  {id:'security',label:'אבטחה ושמירה',icon:'🔒',kw:['אבטחה','שמירה','שומר','מאבטח','סיור','פיקוח','בטיחות','כיבוי אש']},
-  {id:'cleaning',label:'ניקיון ותחזוקה',icon:'🧹',kw:['ניקיון','תחזוקה','חיטוי','הדברה','גינון','גנן','פינוי אשפה']},
-  {id:'catering',label:'קייטרינג ומזון',icon:'🍽️',kw:['קייטרינג','אוכל','מזון','בישול','ספק מזון','ארוחה','קפטריה']},
-  {id:'transport',label:'הסעות ולוגיסטיקה',icon:'🚌',kw:['הסעות','תחבורה','לוגיסטיקה','הובלה','משלוחים','אוטובוס','שינוע']},
-  {id:'health',label:'בריאות ורפואה',icon:'🏥',kw:['בריאות','רפואה','רפואי','סיעוד','אחות','רופא','שיקום','בית חולים','מרפאה']},
-  {id:'environment',label:'איכות סביבה',icon:'🌿',kw:['סביבה','אקולוגי','ירוק','אנרגיה מתחדשת','פסולת','מחזור','זיהום','ניטור']},
+  {id:'',label:'כל התחומים'},
+  {id:'consulting',label:'ייעוץ וניהול',kw:['ייעוץ','יעוץ','ניהול','אסטרטגיה','הדרכה','ניהול פרויקט']},
+  {id:'tech',label:'טכנולוגיה',kw:['תוכנה','מחשוב','טכנולוגיה','פיתוח','סייבר','IT','AI','ענן','מערכת מידע']},
+  {id:'marketing',label:'שיווק ופרסום',kw:['שיווק','פרסום','קמפיין','יחסי ציבור','מדיה','תוכן','SEO']},
+  {id:'construction',label:'בינוי ותשתיות',kw:['בינוי','בנייה','תשתיות','קבלן','שיפוץ','ביוב','מים','כבישים','אדריכל']},
+  {id:'legal',label:'משפט וחשבונאות',kw:['משפטי','עורך דין','חשבונאות','רואה חשבון','ביקורת','ציות','חוזה']},
+  {id:'education',label:'חינוך והדרכה',kw:['חינוך','הדרכה','הכשרה','קורס','מורה','מרצה','בית ספר']},
+  {id:'security',label:'אבטחה ושמירה',kw:['אבטחה','שמירה','שומר','מאבטח','סיור','בטיחות']},
+  {id:'cleaning',label:'ניקיון ותחזוקה',kw:['ניקיון','תחזוקה','חיטוי','הדברה','גינון']},
+  {id:'catering',label:'קייטרינג ומזון',kw:['קייטרינג','אוכל','מזון','ספק מזון','ארוחה']},
+  {id:'transport',label:'הסעות ולוגיסטיקה',kw:['הסעות','תחבורה','לוגיסטיקה','הובלה','שינוע']},
+  {id:'health',label:'בריאות ורפואה',kw:['בריאות','רפואה','סיעוד','אחות','רופא','שיקום','מרפאה']},
+  {id:'environment',label:'איכות סביבה',kw:['סביבה','אקולוגי','ירוק','פסולת','מחזור','זיהום']},
 ];
-const REGS=[
-  {id:'all',label:'כל האזורים',kw:[]},
-  {id:'national',label:'ארצי / ממשלתי',kw:['משרד','רשות','מינהל','אגף','ממשלת','ממשלה']},
-  {id:'north',label:'צפון',kw:['גליל','צפון','נצרת','עכו','כרמיאל','טבריה','צפת']},
-  {id:'haifa',label:'חיפה',kw:['חיפה','כרמל','נשר','טירת','קריית','זכרון']},
-  {id:'center',label:'מרכז',kw:['פתח תקוה','ראשון','רחובות','כפר סבא','נתניה','הרצליה','רמת גן','בני ברק','מודיעין','לוד','רמלה']},
-  {id:'tlv',label:'תל אביב',kw:['תל אביב','יפו','תל-אביב']},
-  {id:'south',label:'דרום',kw:['דרום','באר שבע','אשדוד','אשקלון','אילת','נגב']},
-  {id:'jerusalem',label:'ירושלים',kw:['ירושלים','בית שמש','מעלה אדומים']},
-];
+
 const PUBS=[
-  {id:'all',label:'כל המפרסמים',kw:[]},
+  {id:'',label:'כל הגופים'},
   {id:'gov',label:'משרדי ממשלה',kw:['משרד','רשות','מינהל','אגף','ממשלת']},
-  {id:'local',label:'רשויות מקומיות',kw:['עיריית','עירייה','מועצה','מועצת','ועד מקומי']},
+  {id:'local',label:'רשויות מקומיות',kw:['עיריית','עירייה','מועצה','מועצת']},
   {id:'health',label:'מערכת הבריאות',kw:['בית חולים','קופת חולים','מאוחדת','לאומית','כללית','מדא','הדסה']},
-  {id:'edu',label:'מוסדות חינוך',kw:['אוניברסיטה','מכללה','בית ספר','מוסד']},
+  {id:'edu',label:'מוסדות חינוך',kw:['אוניברסיטה','מכללה','בית ספר']},
   {id:'infra',label:'חברות ממשלתיות',kw:['חברת חשמל','מקורות','נמלים','רכבת','נתיבי']},
 ];
 
-interface T{publication_id:string;tender_id:string;publisher:string;description:string;start_date:string;end_date:string;claim_date:string;page_url:string;}
+interface T{id:string;title:string;publisher:string;publishDate:string;deadline:string;status:string;url:string;type:string;}
 
-function mBiz(t:T,id:string){if(!id)return true;const b=BIZ.find(x=>x.id===id);if(!b)return true;const s=((t.title||t.description||'')+(t.publisher||'')).toLowerCase();return b.kw.some(k=>s.includes(k.toLowerCase()));}
-function mReg(t:T,id:string){if(id==='all')return true;const r=REGS.find(x=>x.id===id);if(!r||!r.kw.length)return true;const s=((t.publisher||'')+(t.title||t.description||'')).toLowerCase();return r.kw.some(k=>s.includes(k.toLowerCase()));}
-function mPub(t:T,id:string){if(id==='all')return true;const p=PUBS.find(x=>x.id===id);if(!p||!p.kw.length)return true;return p.kw.some(k=>(t.publisher||'').toLowerCase().includes(k.toLowerCase()));}
 function dl(d:string):number|null{if(!d)return null;const x=new Date(d);return isNaN(x.getTime())?null:Math.ceil((x.getTime()-Date.now())/86400000);}
 function fd(d:string){if(!d)return'—';try{return new Date(d).toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric'});}catch{return d;}}
+function matchBiz(t:T,id:string){if(!id)return true;const b=BIZ.find(x=>x.id===id);if(!b||!('kw' in b))return true;const s=(t.title+' '+(t.publisher||'')).toLowerCase();return (b as any).kw.some((k:string)=>s.includes(k.toLowerCase()));}
+function matchPub(t:T,id:string){if(!id)return true;const p=PUBS.find(x=>x.id===id);if(!p||!('kw' in p))return true;return (p as any).kw.some((k:string)=>(t.publisher||'').toLowerCase().includes(k.toLowerCase()));}
 
 export default function Dashboard(){
   const[all,setAll]=useState<T[]>([]);
   const[loading,setLoading]=useState(true);
-  const[msg,setMsg]=useState('טוען...');
-  const[err,setErr]=useState<string|null>(null);
   const[biz,setBiz]=useState('');
-  const[reg,setReg]=useState('all');
-  const[pub,setPub]=useState('all');
-  const[maxD,setMaxD]=useState(180);
+  const[pub,setPub]=useState('');
+  const[maxD,setMaxD]=useState(90);
+  const[showClosed,setShowClosed]=useState(false);
+  const[showNoDate,setShowNoDate]=useState(false);
+  const[tab,setTab]=useState<'all'|'closing'|'new'>('all');
   const[q,setQ]=useState('');
   const[pg,setPg]=useState(1);
   const PER=25;
 
-  useEffect(()=>{try{const s=localStorage.getItem('businessProfile');if(s){const p=JSON.parse(s);if(p.businessType)setBiz(p.businessType);if(p.region)setReg(p.region);if(p.publisherType)setPub(p.publisherType);}}catch{}},[]);
-
   const load=useCallback(async()=>{
-    setLoading(true);setErr(null);setMsg('מוריד מכרזים...');
+    setLoading(true);
     try{
       const rs=await Promise.all([0,1000,2000,3000].map(o=>fetch('/api/tenders?offset='+o).then(r=>r.json()).catch(()=>({tenders:[]}))));
       const seen=new Set<string>();const arr:T[]=[];
-      for(const r of rs)for(const t of(r.tenders||[])){const k=t.publication_id||t.tender_id||(t.title||t.description+t.publishDate||t.start_date);if(!seen.has(k)){seen.add(k);arr.push(t);}}
+      for(const r of rs)for(const t of(r.tenders||[])){const k=t.id||t.publication_id||(t.title+t.publishDate);if(!seen.has(k)){seen.add(k);arr.push(t);}}
       setAll(arr);
-    }catch{setErr('שגיאה בטעינה');}finally{setLoading(false);}
+    }finally{setLoading(false);}
   },[]);
-
   useEffect(()=>{load();},[load]);
 
-  const fil=useMemo(()=>{
-    let r=all;
-    if(biz)r=r.filter(t=>mBiz(t,biz));
-    if(reg!=='all')r=r.filter(t=>mReg(t,reg));
-    if(pub!=='all')r=r.filter(t=>mPub(t,pub));
-    r=r.filter(t=>{const d=dl(t.deadline||t.end_date||t.claim_date);return d===null||(d>=0&&d<=maxD);});
-    if(q.trim()){const ql=q.toLowerCase();r=r.filter(t=>(t.title||t.description||'').toLowerCase().includes(ql)||(t.publisher||'').toLowerCase().includes(ql));}
-    return r.sort((a,b)=>(dl(a.end_date||a.claim_date)??9999)-(dl(b.end_date||b.claim_date)??9999));
-  },[all,biz,reg,pub,maxD,q]);
+  const now = useMemo(()=>Date.now(),[]);
+  const oneWeekAgo = now - 7*86400000;
 
-  const tp=Math.ceil(fil.length/PER);
-  const rows=fil.slice((pg-1)*PER,pg*PER);
-  const urg=fil.filter(t=>{const d=dl(t.deadline||t.end_date||t.claim_date);return d!==null&&d<=7;}).length;
-  const bl=BIZ.find(b=>b.id===biz)?.label||'';
+  const base=useMemo(()=>{
+    let r=all;
+    if(biz)r=r.filter(t=>matchBiz(t,biz));
+    if(pub)r=r.filter(t=>matchPub(t,pub));
+    if(!showClosed)r=r.filter(t=>{const d=dl(t.deadline);return d===null||d>=0;});
+    if(!showNoDate)r=r.filter(t=>t.deadline);
+    r=r.filter(t=>{const d=dl(t.deadline);return d===null||(d>=0&&d<=maxD);});
+    if(q.trim()){const ql=q.toLowerCase();r=r.filter(t=>(t.title||'').toLowerCase().includes(ql)||(t.publisher||'').toLowerCase().includes(ql));}
+    return r;
+  },[all,biz,pub,maxD,showClosed,showNoDate,q]);
+
+  const closing=useMemo(()=>base.filter(t=>{const d=dl(t.deadline);return d!==null&&d>=0&&d<=7;}),[base]);
+  const newThis=useMemo(()=>base.filter(t=>{if(!t.publishDate)return false;return new Date(t.publishDate).getTime()>oneWeekAgo;}),[base,oneWeekAgo]);
+
+  const shown=useMemo(()=>{
+    let r=tab==='closing'?closing:tab==='new'?newThis:base;
+    return r.sort((a,b)=>(dl(a.deadline)??9999)-(dl(b.deadline)??9999));
+  },[base,closing,newThis,tab]);
+
+  const tp=Math.ceil(shown.length/PER);
+  const rows=shown.slice((pg-1)*PER,pg*PER);
+
+  function statusColor(s:string):{bg:string,color:string}{
+    if(s==='פורסם')return{bg:'#dcfce7',color:'#16a34a'};
+    if(s==='בעדכון')return{bg:'#fef9c3',color:'#ca8a04'};
+    if(s?.includes('סגור')||s?.includes('נסגר'))return{bg:'#fee2e2',color:'#dc2626'};
+    return{bg:'#f3f4f6',color:'#6b7280'};
+  }
+  function daysColor(d:number):{bg:string,color:string}{
+    if(d<=7)return{bg:'#fee2e2',color:'#dc2626'};
+    if(d<=30)return{bg:'#fef9c3',color:'#ca8a04'};
+    return{bg:'#f0fdf4',color:'#16a34a'};
+  }
 
   return(
-    <div style={{minHeight:'100vh',background:'#f0f4f8',fontFamily:'Heebo,Arial,sans-serif',direction:'rtl'}}>
-      <header style={{background:'linear-gradient(135deg,#1a3c6e,#2563eb)',color:'white',boxShadow:'0 2px 8px rgba(0,0,0,0.3)'}}>
-        <div style={{maxWidth:1400,margin:'0 auto',padding:'12px 20px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-          <div style={{display:'flex',alignItems:'center',gap:12}}>
-            <span style={{fontSize:28,fontWeight:900}}>שווה מכרזים</span>
-            <span style={{background:'rgba(255,255,255,0.15)',borderRadius:6,padding:'2px 10px',fontSize:13}}>BETA</span>
-          </div>
-          <div style={{display:'flex',gap:10}}>
-            <a href="/profile" style={{background:'rgba(255,255,255,0.15)',color:'white',border:'1px solid rgba(255,255,255,0.3)',borderRadius:8,padding:'6px 16px',textDecoration:'none',fontSize:14}}>✏️ פרופיל</a>
-            <button onClick={load} style={{background:'rgba(255,255,255,0.15)',color:'white',border:'1px solid rgba(255,255,255,0.3)',borderRadius:8,padding:'6px 16px',fontSize:14,cursor:'pointer'}}>🔄 רענן</button>
-          </div>
-        </div>
-        <div style={{background:'rgba(0,0,0,0.2)',padding:'8px 20px'}}>
-          <div style={{maxWidth:1400,margin:'0 auto',display:'flex',gap:24,fontSize:13}}>
-            <span>📋 סה"כ: <strong>{all.length.toLocaleString()}</strong></span>
-            {biz&&<span>🎯 תואמים: <strong>{fil.length.toLocaleString()}</strong></span>}
-            {urg>0&&<span style={{color:'#fbbf24'}}>⚠️ נסגרים השבוע: <strong>{urg}</strong></span>}
-            <span style={{marginRight:'auto',color:'rgba(255,255,255,0.7)'}}>עדכון ב-06:00</span>
-          </div>
-        </div>
-      </header>
+    <div style={{minHeight:'100vh',background:'#f5f6fa',fontFamily:'Heebo,Arial,sans-serif',direction:'rtl'}}>
 
-      <div style={{maxWidth:1400,margin:'0 auto',padding:'20px'}}>
+      {/* TOP NAV */}
+      <nav style={{background:'linear-gradient(90deg,#1e6fcc,#2d8ef5)',color:'white',padding:'0 20px',display:'flex',alignItems:'center',gap:0,height:52,boxShadow:'0 2px 8px rgba(0,0,0,0.2)'}}>
+        <span style={{fontWeight:900,fontSize:20,marginLeft:24,whiteSpace:'nowrap'}}>שווה מכרזים</span>
+        <span style={{background:'rgba(255,255,255,0.2)',borderRadius:4,padding:'2px 8px',fontSize:11,marginLeft:16}}>מודל בטון שווה ביזנס 360</span>
+        {['גילוי מכרזים','הגשות שלי','תהראות','ערבויות וליווי','AgentOS','מקורות'].map(n=>(
+          <span key={n} style={{padding:'0 14px',fontSize:14,cursor:'pointer',height:52,display:'flex',alignItems:'center',borderBottom:n==='גילוי מכרזים'?'3px solid white':'3px solid transparent',color:n==='גילוי מכרזים'?'white':'rgba(255,255,255,0.8)'}}>{n}</span>
+        ))}
+        <span style={{marginRight:'auto',fontSize:13,opacity:0.8}}>א</span>
+      </nav>
 
-        <div style={{background:'white',borderRadius:12,padding:'20px',marginBottom:16,boxShadow:'0 1px 4px rgba(0,0,0,0.08)'}}>
-          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
-            <h2 style={{margin:0,fontSize:16,fontWeight:700,color:'#1a3c6e'}}>1️⃣ סוג עסק — פילטר ראשי</h2>
-            {biz&&<button onClick={()=>{setBiz('');setPg(1);}} style={{background:'#fee2e2',color:'#dc2626',border:'none',borderRadius:6,padding:'4px 12px',cursor:'pointer',fontSize:13}}>✕ הצג הכל</button>}
-          </div>
-          <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
-            {BIZ.map(bt=>{const on=biz===bt.id;return(
-              <button key={bt.id} onClick={()=>{setBiz(on?'':bt.id);setPg(1);}} style={{display:'flex',alignItems:'center',gap:6,padding:'8px 16px',borderRadius:8,border:on?'2px solid #2563eb':'2px solid #e5e7eb',background:on?'#2563eb':'white',color:on?'white':'#374151',cursor:'pointer',fontSize:14,fontWeight:on?700:400}}>
-                <span>{bt.icon}</span><span>{bt.label}</span>
-              </button>
-            );})}
-          </div>
-          <p style={{margin:'10px 0 0',fontSize:13,color:biz?'#2563eb':'#6b7280',fontWeight:biz?600:400}}>
-            {biz?`✅ ${fil.length.toLocaleString()} מכרזים — ${bl}`:`מוצגים כל ${all.length.toLocaleString()} המכרזים — בחר סוג עסק לסינון`}
-          </p>
-        </div>
+      {/* STATUS BAR */}
+      <div style={{background:'white',borderBottom:'1px solid #e5e7eb',padding:'6px 20px',display:'flex',alignItems:'center',gap:16,fontSize:12,color:'#6b7280'}}>
+        <span style={{width:8,height:8,borderRadius:'50%',background:'#22c55e',display:'inline-block'}}></span>
+        <span>סריקה מוטמעת: <strong>{all.length.toLocaleString()}</strong> מכרזים · מקור: <span style={{color:'#2563eb'}}>data.gov.il</span></span>
+        <span style={{marginRight:'auto'}}>עודכן: {new Date().toLocaleTimeString('he-IL')}</span>
+        <button onClick={load} style={{background:'#2563eb',color:'white',border:'none',borderRadius:6,padding:'4px 12px',cursor:'pointer',fontSize:12}}>רענון</button>
+      </div>
 
-        <div style={{background:'white',borderRadius:12,padding:'14px 20px',marginBottom:16,boxShadow:'0 1px 4px rgba(0,0,0,0.08)'}}>
-          <h2 style={{margin:'0 0 10px',fontSize:14,fontWeight:700,color:'#374151'}}>2️⃣ פילטרים משניים</h2>
-          <div style={{display:'flex',flexWrap:'wrap',gap:14,alignItems:'flex-end'}}>
-            <div style={{flex:'1 1 190px'}}>
-              <label style={{display:'block',fontSize:12,color:'#6b7280',marginBottom:4}}>חיפוש חופשי</label>
-              <input value={q} onChange={e=>{setQ(e.target.value);setPg(1);}} placeholder="מילת מפתח..." style={{width:'100%',padding:'8px 12px',borderRadius:8,border:'1px solid #d1d5db',fontSize:14,boxSizing:'border-box'}}/>
+      <div style={{display:'flex',maxWidth:1500,margin:'0 auto',padding:'16px',gap:16}}>
+
+        {/* SIDEBAR */}
+        <aside style={{width:240,flexShrink:0}}>
+          <div style={{background:'white',borderRadius:10,padding:'16px',boxShadow:'0 1px 4px rgba(0,0,0,0.07)'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
+              <strong style={{fontSize:14}}>סינון | איפוס</strong>
+              <span onClick={()=>{setBiz('');setPub('');setMaxD(90);setShowClosed(false);setShowNoDate(false);setQ('');}} style={{color:'#2563eb',cursor:'pointer',fontSize:12}}>✕</span>
             </div>
-            <div style={{flex:'1 1 140px'}}>
-              <label style={{display:'block',fontSize:12,color:'#6b7280',marginBottom:4}}>אזור</label>
-              <select value={reg} onChange={e=>{setReg(e.target.value);setPg(1);}} style={{width:'100%',padding:'8px 12px',borderRadius:8,border:'1px solid #d1d5db',fontSize:14}}>
-                {REGS.map(r=><option key={r.id} value={r.id}>{r.label}</option>)}
+
+            <label style={{display:'block',fontSize:12,color:'#6b7280',marginBottom:4}}>תחום עיסוק</label>
+            <div style={{position:'relative',marginBottom:14}}>
+              <select value={biz} onChange={e=>{setBiz(e.target.value);setPg(1);}} style={{width:'100%',padding:'8px 12px',borderRadius:8,border:'1px solid #d1d5db',fontSize:13,appearance:'none',background:'white'}}>
+                {BIZ.map(b=><option key={b.id} value={b.id}>{b.label}</option>)}
               </select>
+              <span style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',pointerEvents:'none',fontSize:10}}>▼</span>
             </div>
-            <div style={{flex:'1 1 150px'}}>
-              <label style={{display:'block',fontSize:12,color:'#6b7280',marginBottom:4}}>מפרסם</label>
-              <select value={pub} onChange={e=>{setPub(e.target.value);setPg(1);}} style={{width:'100%',padding:'8px 12px',borderRadius:8,border:'1px solid #d1d5db',fontSize:14}}>
+
+            <label style={{display:'block',fontSize:12,color:'#6b7280',marginBottom:4}}>גוף מפרסם</label>
+            <div style={{position:'relative',marginBottom:14}}>
+              <select value={pub} onChange={e=>{setPub(e.target.value);setPg(1);}} style={{width:'100%',padding:'8px 12px',borderRadius:8,border:'1px solid #d1d5db',fontSize:13,appearance:'none',background:'white'}}>
                 {PUBS.map(p=><option key={p.id} value={p.id}>{p.label}</option>)}
               </select>
+              <span style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',pointerEvents:'none',fontSize:10}}>▼</span>
             </div>
-            <div style={{flex:'1 1 170px'}}>
-              <label style={{display:'block',fontSize:12,color:'#6b7280',marginBottom:4}}>עד {maxD} ימים</label>
-              <input type="range" min={7} max={365} value={maxD} onChange={e=>{setMaxD(Number(e.target.value));setPg(1);}} style={{width:'100%'}}/>
-            </div>
-            <button onClick={()=>{setReg('all');setPub('all');setMaxD(180);setQ('');setPg(1);}} style={{padding:'8px 14px',borderRadius:8,border:'1px solid #d1d5db',background:'#f9fafb',cursor:'pointer',fontSize:13,color:'#6b7280'}}>איפוס</button>
-          </div>
-        </div>
 
-        {loading?(
-          <div style={{textAlign:'center',padding:60,background:'white',borderRadius:12}}>
-            <div style={{fontSize:36,marginBottom:12}}>⏳</div>
-            <div style={{color:'#6b7280'}}>{msg}</div>
+            <label style={{display:'block',fontSize:12,color:'#6b7280',marginBottom:6}}>נסגר בתוך</label>
+            <input type="range" min={7} max={365} value={maxD} onChange={e=>{setMaxD(Number(e.target.value));setPg(1);}} style={{width:'100%',accentColor:'#1e6fcc',marginBottom:4}}/>
+            <div style={{textAlign:'center',fontSize:12,color:'#374151',marginBottom:12}}>עד {maxD} ימים</div>
+
+            <label style={{display:'flex',alignItems:'center',gap:8,fontSize:12,color:'#374151',marginBottom:8,cursor:'pointer'}}>
+              <input type="checkbox" checked={showClosed} onChange={e=>setShowClosed(e.target.checked)} style={{accentColor:'#1e6fcc'}}/>
+              הצג גם מכרזים שנסגרו
+            </label>
+            <label style={{display:'flex',alignItems:'center',gap:8,fontSize:12,color:'#374151',marginBottom:16,cursor:'pointer'}}>
+              <input type="checkbox" checked={showNoDate} onChange={e=>setShowNoDate(e.target.checked)} style={{accentColor:'#1e6fcc'}}/>
+              הצג גם ללא מועד אחרון
+            </label>
+
+            <a href="/profile" style={{display:'block',width:'100%',padding:'10px',borderRadius:8,background:'linear-gradient(90deg,#1e6fcc,#2d8ef5)',color:'white',border:'none',cursor:'pointer',fontSize:14,fontWeight:700,textAlign:'center',textDecoration:'none',boxSizing:'border-box'}}>
+              ◀ הסוכן החכם
+            </a>
           </div>
-        ):err?(
-          <div style={{textAlign:'center',padding:60,background:'white',borderRadius:12,color:'#dc2626'}}>{err}</div>
-        ):fil.length===0?(
-          <div style={{textAlign:'center',padding:60,background:'white',borderRadius:12}}>
-            <div style={{fontSize:36,marginBottom:8}}>🔍</div>
-            <div style={{color:'#6b7280'}}>לא נמצאו מכרזים — נסה להרחיב פילטרים</div>
-          </div>
-        ):(
-          <>
-            {urg>0&&<div style={{background:'#fef3c7',border:'1px solid #f59e0b',borderRadius:10,padding:'10px 16px',marginBottom:12,display:'flex',alignItems:'center',gap:8}}><span style={{fontSize:18}}>🚨</span><span style={{color:'#92400e',fontWeight:600,fontSize:14}}>{urg} מכרז{urg>1?'ים':''} נסגר{urg>1?'ים':''} תוך 7 ימים!</span></div>}
-            <div style={{background:'white',borderRadius:12,overflow:'hidden',boxShadow:'0 1px 4px rgba(0,0,0,0.08)'}}>
-              <div style={{padding:'10px 16px',borderBottom:'1px solid #e5e7eb',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                <span style={{fontWeight:700,color:'#374151',fontSize:14}}>{fil.length.toLocaleString()} תוצאות{biz?` — ${bl}`:''}</span>
-                <span style={{color:'#9ca3af',fontSize:13}}>עמוד {pg}/{tp}</span>
+        </aside>
+
+        {/* MAIN */}
+        <main style={{flex:1,minWidth:0}}>
+
+          {/* STAT CARDS */}
+          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:16}}>
+            {[
+              {label:'מוצגים כעת',value:base.length,color:'#f97316'},
+              {label:'חדשים ב-7 ימים אחרונים',value:newThis.length,color:'#3b82f6'},
+              {label:'נסגרים בשבוע הקרוב',value:closing.length,color:'#ef4444'},
+              {label:'מכרזים פעילים במאגר',value:all.length,color:'#111827'},
+            ].map(c=>(
+              <div key={c.label} style={{background:'white',borderRadius:10,padding:'16px',textAlign:'center',boxShadow:'0 1px 4px rgba(0,0,0,0.07)'}}>
+                <div style={{fontSize:32,fontWeight:800,color:c.color,lineHeight:1}}>{c.value.toLocaleString()}</div>
+                <div style={{fontSize:12,color:'#6b7280',marginTop:6}}>{c.label}</div>
               </div>
-              <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
-                <thead>
-                  <tr style={{background:'#f8fafc',borderBottom:'2px solid #e5e7eb'}}>
-                    <th style={{padding:'10px 16px',textAlign:'right',fontWeight:700,color:'#374151'}}>כותרת המכרז</th>
-                    <th style={{padding:'10px 12px',textAlign:'right',fontWeight:700,color:'#374151',width:150}}>מפרסם</th>
-                    <th style={{padding:'10px 12px',textAlign:'center',fontWeight:700,color:'#374151',width:105}}>פרסום</th>
-                    <th style={{padding:'10px 12px',textAlign:'center',fontWeight:700,color:'#374151',width:105}}>מועד אחרון</th>
-                    <th style={{padding:'10px 12px',textAlign:'center',fontWeight:700,color:'#374151',width:85}}>ימים</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((t,i)=>{
-                    const d=dl(t.deadline||t.end_date||t.claim_date);
-                    const u=d!==null&&d<=7;const s=d!==null&&d<=30&&d>7;
-                    return(
-                      <tr key={t.id||i} style={{borderBottom:'1px solid #f0f0f0',background:u?'#fff7ed':i%2===0?'white':'#fafafa'}}>
-                        <td style={{padding:'10px 16px'}}>{t.url||t.page_url?<a href={t.url||t.page_url} target="_blank" rel="noopener noreferrer" style={{color:'#1d4ed8',textDecoration:'none',fontWeight:500,lineHeight:1.4}}>{t.title||t.description||'ללא כותרת'}</a>:<span style={{lineHeight:1.4}}>{t.title||t.description||'ללא כותרת'}</span>}</td>
-                        <td style={{padding:'10px 12px',color:'#6b7280',fontSize:12}}>{t.publisher||'—'}</td>
-                        <td style={{padding:'10px 12px',textAlign:'center',color:'#6b7280'}}>{fd(t.publishDate||t.start_date)}</td>
-                        <td style={{padding:'10px 12px',textAlign:'center',color:u?'#dc2626':'#374151',fontWeight:u?700:400}}>{fd(t.deadline||t.end_date||t.claim_date)}</td>
-                        <td style={{padding:'10px 12px',textAlign:'center'}}>{d===null?'—':<span style={{padding:'3px 8px',borderRadius:12,fontSize:12,fontWeight:700,background:u?'#fee2e2':s?'#fef3c7':'#f0fdf4',color:u?'#dc2626':s?'#92400e':'#166534'}}>{d===0?'היום!':`${d} ימים`}</span>}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-              {tp>1&&<div style={{padding:'12px 16px',borderTop:'1px solid #e5e7eb',display:'flex',gap:8,justifyContent:'center'}}>
+            ))}
+          </div>
+
+          {/* SEARCH + TABS */}
+          <div style={{background:'white',borderRadius:10,padding:'12px 16px',marginBottom:12,boxShadow:'0 1px 4px rgba(0,0,0,0.07)'}}>
+            <div style={{display:'flex',gap:10,marginBottom:12}}>
+              <button style={{background:'#1e6fcc',color:'white',border:'none',borderRadius:8,padding:'8px 18px',fontSize:14,fontWeight:700,cursor:'pointer'}}>חיפוש</button>
+              <div style={{flex:1,position:'relative'}}>
+                <input value={q} onChange={e=>{setQ(e.target.value);setPg(1);}} placeholder="חיפוש חופשי: נושא, גוף מפרסם, מספר מכרז..." style={{width:'100%',padding:'8px 36px 8px 12px',borderRadius:8,border:'1px solid #d1d5db',fontSize:13,boxSizing:'border-box'}}/>
+                <span style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',color:'#9ca3af'}}>🔍</span>
+              </div>
+            </div>
+            <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+              {[
+                {key:'all',label:'כל המכרזים',count:base.length},
+                {key:'closing',label:'נסגרים בשבוע',count:closing.length},
+                {key:'new',label:'חדשים השבוע',count:newThis.length},
+              ].map(tb=>(
+                <button key={tb.key} onClick={()=>{setTab(tb.key as any);setPg(1);}} style={{padding:'6px 14px',borderRadius:20,fontSize:13,cursor:'pointer',border:'none',fontWeight:tab===tb.key?700:400,background:tab===tb.key?'#1e6fcc':'#f3f4f6',color:tab===tb.key?'white':'#374151'}}>
+                  {tab===tb.key?'☰ ':tb.key==='closing'?'🔴 ':tb.key==='new'?'✨ ':''}{tb.label} ({tb.count})
+                </button>
+              ))}
+              {biz&&<button onClick={()=>setBiz('')} style={{padding:'6px 14px',borderRadius:20,fontSize:13,cursor:'pointer',border:'none',background:'#eff6ff',color:'#1d4ed8'}}>💼 {BIZ.find(b=>b.id===biz)?.label} ✕</button>}
+            </div>
+          </div>
+
+          {/* TENDER ROWS */}
+          {loading?(
+            <div style={{textAlign:'center',padding:60,background:'white',borderRadius:10}}><div style={{fontSize:36}}>⏳</div><div style={{color:'#6b7280',marginTop:8}}>טוען מכרזים...</div></div>
+          ):(
+            <>
+              <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                {rows.map((t,i)=>{
+                  const d=dl(t.deadline);
+                  const sc=statusColor(t.status);
+                  const dc=d!==null&&d>=0?daysColor(d):{bg:'#f3f4f6',color:'#6b7280'};
+                  return(
+                    <div key={t.id||i} style={{background:'white',borderRadius:10,padding:'14px 16px',boxShadow:'0 1px 3px rgba(0,0,0,0.06)',borderRight:'4px solid'+(d!==null&&d<=7?'#ef4444':d!==null&&d<=30?'#f97316':'#e5e7eb')}}>
+                      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:12}}>
+                        <div style={{flex:1}}>
+                          <div style={{display:'flex',gap:6,marginBottom:6,flexWrap:'wrap'}}>
+                            <span style={{background:'#dbeafe',color:'#1d4ed8',borderRadius:4,padding:'2px 8px',fontSize:11,fontWeight:600}}>{t.publisher||'לא ידוע'}</span>
+                            <span style={{background:sc.bg,color:sc.color,borderRadius:4,padding:'2px 8px',fontSize:11,fontWeight:600}}>{t.status||'—'}</span>
+                            {t.type&&<span style={{background:'#f3f4f6',color:'#6b7280',borderRadius:4,padding:'2px 8px',fontSize:11}}>{t.type}</span>}
+                          </div>
+                          {t.url
+                            ?<a href={t.url} target="_blank" rel="noopener noreferrer" style={{color:'#111827',textDecoration:'none',fontWeight:700,fontSize:15,lineHeight:1.4,display:'block'}}>{t.title||'ללא כותרת'}</a>
+                            :<span style={{fontWeight:700,fontSize:15,color:'#111827'}}>{t.title||'ללא כותרת'}</span>}
+                        </div>
+                        <div style={{display:'flex',flexDirection:'column',gap:4,alignItems:'flex-end',flexShrink:0}}>
+                          <div style={{fontSize:12,color:'#6b7280'}}>📅 פורסם: {fd(t.publishDate)}</div>
+                          <div style={{fontSize:12,fontWeight:600,color:d!==null&&d<=7?'#dc2626':'#374151'}}>
+                            🕐 הגשה עד: {fd(t.deadline)}
+                            {d!==null&&d>=0&&<span style={{marginRight:6,padding:'2px 8px',borderRadius:10,fontSize:11,fontWeight:700,background:dc.bg,color:dc.color}}>({d} ימים)</span>}
+                            {d!==null&&d<0&&<span style={{marginRight:6,padding:'2px 8px',borderRadius:10,fontSize:11,background:'#f3f4f6',color:'#9ca3af'}}>(נסגר)</span>}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {tp>1&&<div style={{display:'flex',gap:8,justifyContent:'center',marginTop:16}}>
                 <button onClick={()=>setPg(1)} disabled={pg===1} style={{padding:'6px 12px',borderRadius:6,border:'1px solid #d1d5db',background:pg===1?'#f3f4f6':'white',cursor:pg===1?'default':'pointer'}}>ראשון</button>
                 <button onClick={()=>setPg(p=>Math.max(1,p-1))} disabled={pg===1} style={{padding:'6px 12px',borderRadius:6,border:'1px solid #d1d5db',background:pg===1?'#f3f4f6':'white',cursor:pg===1?'default':'pointer'}}>◀</button>
-                {Array.from({length:Math.min(5,tp)},(_,i)=>{let p=pg-2+i;if(p<1)p=i+1;if(p>tp)p=tp-(4-i);if(p<1||p>tp)return null;return<button key={p} onClick={()=>setPg(p)} style={{padding:'6px 12px',borderRadius:6,border:'1px solid',borderColor:p===pg?'#2563eb':'#d1d5db',background:p===pg?'#2563eb':'white',color:p===pg?'white':'#374151',cursor:'pointer',fontWeight:p===pg?700:400}}>{p}</button>;})}
+                {Array.from({length:Math.min(5,tp)},(_,i)=>{let p=pg-2+i;if(p<1)p=i+1;if(p>tp)p=tp-(4-i);if(p<1||p>tp)return null;return<button key={p} onClick={()=>setPg(p)} style={{padding:'6px 12px',borderRadius:6,border:'1px solid',borderColor:p===pg?'#1e6fcc':'#d1d5db',background:p===pg?'#1e6fcc':'white',color:p===pg?'white':'#374151',cursor:'pointer',fontWeight:p===pg?700:400}}>{p}</button>;})}
                 <button onClick={()=>setPg(p=>Math.min(tp,p+1))} disabled={pg===tp} style={{padding:'6px 12px',borderRadius:6,border:'1px solid #d1d5db',background:pg===tp?'#f3f4f6':'white',cursor:pg===tp?'default':'pointer'}}>▶</button>
                 <button onClick={()=>setPg(tp)} disabled={pg===tp} style={{padding:'6px 12px',borderRadius:6,border:'1px solid #d1d5db',background:pg===tp?'#f3f4f6':'white',cursor:pg===tp?'default':'pointer'}}>אחרון</button>
               </div>}
-            </div>
-          </>
-        )}
-        <footer style={{textAlign:'center',padding:'20px 0',color:'#9ca3af',fontSize:12}}>
-          נתונים: <a href="https://next.obudget.org" target="_blank" rel="noopener noreferrer" style={{color:'#2563eb'}}>BudgetKey</a> · מינהל הרכש הממשלתי
-        </footer>
+
+              <div style={{textAlign:'center',padding:'16px 0',color:'#9ca3af',fontSize:12}}>
+                נתונים: <a href="https://next.obudget.org" target="_blank" rel="noopener noreferrer" style={{color:'#2563eb'}}>BudgetKey</a> · מינהל הרכש הממשלתי
+              </div>
+            </>
+          )}
+        </main>
       </div>
     </div>
   );
