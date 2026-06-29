@@ -464,3 +464,30 @@ body {
   .topbar-nav { display: none; }
   .page-wrap { padding: 12px 14px; }
 }
+
+.score-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-right: 8px;
+}
+.score-num {
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1;
+}
+.score-lbl {
+    font-size: 8px;
+    color: #6b7280;
+}
+.score-high { background: #dcfce7; }
+.score-mid { background: #fef3c7; }
+.score-low { background: #dbeafe; }
+.score-high .score-num { color: #15803d; }
+.score-mid .score-num { color: #92400e; }
+.score-low .score-num { color: #1e40af; }
