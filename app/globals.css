@@ -7,7 +7,7 @@
   --ink:#1A1A1A;
   --ink-soft:#3D4852;
   --muted:#76838F;
-  --line:#DDE3E8;
+  --line:#DDE3E8
   --brand:#19A5DC;
   --brand-dark:#0E84B5;
   --brand-pale:#E5F5FC;
@@ -231,7 +231,7 @@ body {
   font-family: inherit;
   font-size: 0.9rem;
   color: var(--ink);
-  background: var(--bg2);
+  background: var(--bg);
   outline: none;
   transition: border-color 0.2s;
   direction: rtl;
@@ -273,7 +273,7 @@ body {
   font-weight: 600;
   cursor: pointer;
   border: 1.5px solid transparent;
-  background: var(--bg2);
+  background: var(--bg);
   color: var(--ink-soft);
   font-family: inherit;
   transition: all 0.15s;
@@ -375,7 +375,7 @@ body {
   font-family: inherit;
   font-size: 0.85rem;
   color: var(--ink);
-  background: var(--bg2);
+  background: var(--bg);
   outline: none;
   cursor: pointer;
   direction: rtl;
