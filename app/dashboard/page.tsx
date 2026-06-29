@@ -201,6 +201,7 @@ export default function Dashboard(){
                 {rows.map((t,i)=>{
                   const d=dl(t.deadline);
                   const stc=sc(t.status);
+              const score=matchSc(biz,t);const recommendation=rec(score,d);
                   const urgent=d!==null&&d<=7&&d>=0;
                   const soon=d!==null&&d<=30&&d>7;
                   return(
@@ -211,11 +212,13 @@ export default function Dashboard(){
                             <span style={{background:'#dbeafe',color:'#1d4ed8',borderRadius:4,padding:'2px 7px',fontSize:11,fontWeight:600,whiteSpace:'nowrap'}}>{t.publisher||'לא ידוע'}</span>
                             <span style={{background:stc.bg,color:stc.color,borderRadius:4,padding:'2px 7px',fontSize:11,fontWeight:600}}>{t.status||'—'}</span>
                             {urgent&&<span style={{background:'#fee2e2',color:'#dc2626',borderRadius:4,padding:'2px 7px',fontSize:11,fontWeight:700}}>🔴 נסגר בקרוב</span>}
+                            {recommendation&&<span style={{background:recommendation.bg,color:recommendation.color,borderRadius:4,padding:'2px 7px',fontSize:11,fontWeight:600}}>{recommendation.label}</span>span>}
                           </div>
                           {t.url
                             ?<a href={t.url} target="_blank" rel="noopener noreferrer" style={{color:'#111827',textDecoration:'none',fontWeight:700,fontSize:14,lineHeight:1.4,display:'block'}}>{t.title||'ללא כותרת'}</a>
                             :<span style={{fontWeight:700,fontSize:14,color:'#111827',lineHeight:1.4,display:'block'}}>{t.title||'ללא כותרת'}</span>}
                         </div>
+                        <div style={{display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',width:44,height:44,borderRadius:'50%',background:score>=80?'#dcfce7':score>=65?'#fef3c7':'#dbeafe',marginLeft:8,flexShrink:0}}><span style={{fontSize:13,fontWeight:800,color:score>=80?'#15803d':score>=65?'#92400e':'#1e40af',lineHeight:1}}>{score}</span>span><span style={{fontSize:8,color:'#6b7280'}}>ציון</span>span></div>div>
                         <div style={{display:'flex',flexDirection:'column',gap:3,alignItems:'flex-end',flexShrink:0,fontSize:12}}>
                           <div style={{color:'#6b7280'}}>📅 פורסם: {fd(t.publishDate)}</div>
                           <div style={{fontWeight:600,color:urgent?'#dc2626':'#374151'}}>
