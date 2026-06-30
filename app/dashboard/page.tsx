@@ -215,7 +215,7 @@ export default function Dashboard(){
                             {recommendation&&<span style={{background:recommendation.bg,color:recommendation.color,borderRadius:4,padding:'2px 7px',fontSize:11,fontWeight:600}}>{recommendation.label}</span>}
                           </div>
                           {t.url
-                            ?<a href={t.url} target="_blank" rel="noopener noreferrer" style={{color:'#111827',textDecoration:'none',fontWeight:700,fontSize:14,lineHeight:1.4,display:'block'}}>{t.title||'ללא כותרת'}</a>
+                            ?<a href={`/tender/${t.id}`} style={{color:'#111827',textDecoration:'none',fontWeight:700,fontSize:14,lineHeight:1.4,display:'block'}}>{t.title||'ללא כותרת'}</a>
                             :<span style={{fontWeight:700,fontSize:14,color:'#111827',lineHeight:1.4,display:'block'}}>{t.title||'ללא כותרת'}</span>}
                         </div>
             <div className={`score-circle ${score>=80?'score-high':score>=65?'score-mid':'score-low'}`}>
@@ -241,7 +241,7 @@ export default function Dashboard(){
                 <div style={{display:'flex',gap:6,justifyContent:'center',marginTop:12,flexWrap:'wrap'}}>
                   <button onClick={()=>setPg(1)} disabled={pg===1} style={{padding:'5px 11px',borderRadius:6,border:'1px solid #d1d5db',background:pg===1?'#f3f4f6':'white',cursor:pg===1?'default':'pointer',fontSize:12}}>ראשון</button>
                   <button onClick={()=>setPg(p=>Math.max(1,p-1))} disabled={pg===1} style={{padding:'5px 11px',borderRadius:6,border:'1px solid #d1d5db',background:pg===1?'#f3f4f6':'white',cursor:pg===1?'default':'pointer',fontSize:12}}>◀</button>
-                  {Array.from({length:Math.min(7,tp)},(_,i)=>{let p=pg-3+i;if(p<1)p=i+1;if(p>tp)p=tp-(6-i);if(p<1||p>tp)return null;return<button key={p} onClick={()=>setPg(p)} style={{padding:'5px 10px',borderRadius:6,border:'1px solid',borderColor:p===pg?'#1a56a0':'#d1d5db',background:p===pg?'#1a56a0':'white',color:p===pg?'white':'#374151',cursor:'pointer',fontWeight:p===pg?700:400,fontSize:12}}>{p}</button>;})}
+                  {(()=>{const win=Math.min(7,tp);let start=Math.max(1,pg-3);if(start+win-1>tp)start=Math.max(1,tp-win+1);return Array.from({length:win},(_,i)=>start+i).filter(p=>p>=1&&p<=tp).map(p=>(<button key={p} onClick={()=>setPg(p)} style={{padding:'5px 10px',borderRadius:6,border:'1px solid',borderColor:p===pg?'#1a56a0':'#d1d5db',background:p===pg?'#1a56a0':'white',color:p===pg?'white':'#374151',cursor:'pointer',fontWeight:p===pg?700:400,fontSize:12}}>{p}</button>));})()}
                   <button onClick={()=>setPg(p=>Math.min(tp,p+1))} disabled={pg===tp} style={{padding:'5px 11px',borderRadius:6,border:'1px solid #d1d5db',background:pg===tp?'#f3f4f6':'white',cursor:pg===tp?'default':'pointer',fontSize:12}}>▶</button>
                   <button onClick={()=>setPg(tp)} disabled={pg===tp} style={{padding:'5px 11px',borderRadius:6,border:'1px solid #d1d5db',background:pg===tp?'#f3f4f6':'white',cursor:pg===tp?'default':'pointer',fontSize:12}}>אחרון</button>
                 </div>
