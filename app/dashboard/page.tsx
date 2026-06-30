@@ -35,6 +35,9 @@ function matchSc(biz:string,t:{title:string,publisher:string}):number{if(!biz)re
 function rec(score:number,days:number|null):{label:string,color:string,bg:string}{if(days!==null&&days<0)return{label:'פג תוקף',color:'#6b7280',bg:'#f3f4f6'};if(score>=80)return{label:'מומלץ להגיש',color:'#15803d',bg:'#dcfce7'};if(score>=65)return{label:'בדיקה לפני החלטה',color:'#92400e',bg:'#fef3c7'};return{label:'לעיון ומידע',color:'#1e40af',bg:'#dbeafe'};}
 
 export default function Dashboard(){
+  const [marked,setMarked]=useState<string[]>([]);
+  useEffect(()=>{try{const m=JSON.parse(localStorage.getItem('markedTenders')||'[]');if(Array.isArray(m))setMarked(m);}catch(e){}},[]);
+  const toggleMark=useCallback((id:string,e?:any)=>{if(e){e.preventDefault();e.stopPropagation();}setMarked(prev=>{const has=prev.includes(id);const next=has?prev.filter(x=>x!==id):[...prev,id];try{localStorage.setItem('markedTenders',JSON.stringify(next));}catch(err){}return next;});},[]);
   const[all,setAll]=useState<T[]>([]);
   const[loading,setLoading]=useState(true);
   const[biz,setBiz]=useState('');
@@ -86,7 +89,7 @@ export default function Dashboard(){
       <nav style={{background:'linear-gradient(90deg,#1a56a0,#2d8ef5)',color:'white',padding:'0 16px',display:'flex',alignItems:'center',height:50,boxShadow:'0 2px 6px rgba(0,0,0,0.2)',gap:0}}>
         <span style={{fontWeight:900,fontSize:19,marginLeft:12,whiteSpace:'nowrap'}}>שווה מכרזים</span>
         <span style={{background:'rgba(255,255,255,0.18)',borderRadius:4,padding:'1px 7px',fontSize:10,marginLeft:20,whiteSpace:'nowrap'}}>מודל בטון שווה ביזנס 360</span>
-        {[{l:'גילוי מכרזים',h:'/dashboard'},{l:'הגשות שלי',h:'/profile'},{l:'התראות',h:'/profile'},{l:'ערבויות וליווי',h:'/profile'},{l:'AgentOS',h:'/dashboard'},{l:'מקורות',h:'/dashboard'}].map((it,i)=>(
+        {[{l:'גילוי מכרזים',h:'/dashboard'},{l:'מכרזים מסומנים',h:'/marked'},{l:'סוכן חכם',h:'/agent'},{l:'ערבויות וליווי',h:'/guarantee'},{l:'מקורות',h:'/dashboard'}].map((it,i)=>(
           <a key={it.l} href={it.h} style={{padding:'0 12px',fontSize:13,cursor:'pointer',height:50,display:'flex',alignItems:'center',borderBottom:i===0?'3px solid white':'3px solid transparent',color:i===0?'white':'rgba(255,255,255,0.8)',whiteSpace:'nowrap',textDecoration:'none'}}>{it.l}</a>
         ))}
         <a href='/profile' style={{marginRight:'auto',width:28,height:28,borderRadius:'50%',background:'rgba(255,255,255,0.2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:700,color:'white',textDecoration:'none'}}>א</a>
@@ -205,7 +208,8 @@ export default function Dashboard(){
                   const urgent=d!==null&&d<=7&&d>=0;
                   const soon=d!==null&&d<=30&&d>7;
                   return(
-                    <div key={t.id||i} style={{background:'white',borderRadius:10,padding:'12px 14px',boxShadow:'0 1px 3px rgba(0,0,0,0.06)',borderRight:`4px solid ${urgent?'#ef4444':soon?'#f97316':'#e5e7eb'}`}}>
+                    <div key={t.id||i} style={{position:'relative',background:'white',borderRadius:10,padding:'12px 14px',boxShadow:'0 1px 3px rgba(0,0,0,0.06)',borderRight:`4px solid ${urgent?'#ef4444':soon?'#f97316':'#e5e7eb'}`}}>
+                    <button onClick={(e)=>toggleMark(t.id,e)} title={marked.includes(t.id)?'הסר סימון':'סמן מכרז'} style={{position:'absolute',top:8,left:8,background:'none',border:'none',cursor:'pointer',fontSize:18,lineHeight:1,padding:2,color:marked.includes(t.id)?'#f59e0b':'#cbd5e1'}}>{marked.includes(t.id)?'★':'☆'}</button>
                       <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:10}}>
                         <div style={{flex:1,minWidth:0}}>
                           <div style={{display:'flex',gap:5,marginBottom:6,flexWrap:'wrap',alignItems:'center'}}>
