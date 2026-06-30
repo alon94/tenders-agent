@@ -19,7 +19,7 @@ interface TenderDetail {
   contactName?: string;
   contactEmail?: string;
   topics?: string[];
-  documents?: { name: string; url: string }[];
+  documents?: { date?: string; title: string; description?: string; url: string }[];
   submissionUrl?: string;
   url?: string;
 }
@@ -110,13 +110,39 @@ export default function TenderPage() {
         {tender.documents && tender.documents.length > 0 && (
           <div className={styles.section}>
             <h2 className={styles.sectionTitle}>מסמכים נלווים</h2>
-            <ul className={styles.docs}>
+            <div className={styles.docsGrid}>
               {tender.documents.map((d, i) => (
-                <li key={i}>
-                  <a href={d.url} target="_blank" rel="noopener noreferrer">{d.name}</a>
-                </li>
+                <a
+                  key={i}
+                  href={d.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.docCard}
+                >
+                  {d.date && <span className={styles.docDate}>{d.date}</span>}
+                  <span className={styles.docTitle}>{d.title}</span>
+                  {d.description && (
+                    <span className={styles.docDesc}>{d.description}</span>
+                  )}
+                  <span className={styles.docDownload} aria-hidden="true">
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M12 3v12" />
+                      <path d="m7 10 5 5 5-5" />
+                      <path d="M5 21h14" />
+                    </svg>
+                  </span>
+                </a>
               ))}
-            </ul>
+            </div>
           </div>
         )}
 
