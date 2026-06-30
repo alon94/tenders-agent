@@ -23,6 +23,39 @@ function pick(frags: string[], labels: string[]): string {
   return '';
 }
 
+function extractDocuments(html: string): { date: string; title: string; description: string; url: string }[] {
+  const strip = (s: string) =>
+    s
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&nbsp;/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  const blocks = html.split('winning-bidder-wrapper').slice(1);
+  const seen = new Set<string>();
+  const docs: { date: string; title: string; description: string; url: string }[] = [];
+  for (const b of blocks) {
+    const hrefM = b.match(/href="([^"]*\/p\/attachment\/[^"]*)"/);
+    if (!hrefM) continue;
+    let url = hrefM[1];
+    if (url.startsWith('/')) url = 'https://mr.gov.il' + url;
+    if (seen.has(url)) continue;
+    seen.add(url);
+    const dateM = b.match(/document-date[\s\S]*?<p[^>]*>([\s\S]*?)<\/p>/);
+    const titleM = b.match(/document-head[\s\S]*?<p[^>]*>([\s\S]*?)<\/p>/);
+    const descM = b.match(/attachment-description[\s\S]*?<p[^>]*>([\s\S]*?)<\/p>/);
+    docs.push({
+      date: dateM ? strip(dateM[1]) : '',
+      title: titleM ? strip(titleM[1]) : '',
+      description: descM ? strip(descM[1]) : '',
+      url,
+    });
+  }
+  return docs;
+}
+
 export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
   const sourceUrl = `https://mr.gov.il/ilgstorefront/he/p/${id}`;
@@ -71,7 +104,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
       contactName,
       contactEmail,
       topics: [] as string[],
-      documents: [] as { name: string; url: string }[],
+      documents: extractDocuments(html) as { date: string; title: string; description: string; url: string }[],
       submissionUrl: '',
     };
 
