@@ -86,10 +86,10 @@ export default function Dashboard(){
       <nav style={{background:'linear-gradient(90deg,#1a56a0,#2d8ef5)',color:'white',padding:'0 16px',display:'flex',alignItems:'center',height:50,boxShadow:'0 2px 6px rgba(0,0,0,0.2)',gap:0}}>
         <span style={{fontWeight:900,fontSize:19,marginLeft:12,whiteSpace:'nowrap'}}>שווה מכרזים</span>
         <span style={{background:'rgba(255,255,255,0.18)',borderRadius:4,padding:'1px 7px',fontSize:10,marginLeft:20,whiteSpace:'nowrap'}}>מודל בטון שווה ביזנס 360</span>
-        {['גילוי מכרזים','הגשות שלי','תהראות','ערבויות וליווי','AgentOS','מקורות'].map((n,i)=>(
-          <span key={n} style={{padding:'0 12px',fontSize:13,cursor:'pointer',height:50,display:'flex',alignItems:'center',borderBottom:i===0?'3px solid white':'3px solid transparent',color:i===0?'white':'rgba(255,255,255,0.8)',whiteSpace:'nowrap'}}>{n}</span>
+        {[{l:'גילוי מכרזים',h:'/dashboard'},{l:'הגשות שלי',h:'/profile'},{l:'התראות',h:'/profile'},{l:'ערבויות וליווי',h:'/profile'},{l:'AgentOS',h:'/dashboard'},{l:'מקורות',h:'/dashboard'}].map((it,i)=>(
+          <a key={it.l} href={it.h} style={{padding:'0 12px',fontSize:13,cursor:'pointer',height:50,display:'flex',alignItems:'center',borderBottom:i===0?'3px solid white':'3px solid transparent',color:i===0?'white':'rgba(255,255,255,0.8)',whiteSpace:'nowrap',textDecoration:'none'}}>{it.l}</a>
         ))}
-        <span style={{marginRight:'auto',width:28,height:28,borderRadius:'50%',background:'rgba(255,255,255,0.2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:700}}>א</span>
+        <a href='/profile' style={{marginRight:'auto',width:28,height:28,borderRadius:'50%',background:'rgba(255,255,255,0.2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:700,color:'white',textDecoration:'none'}}>א</a>
       </nav>
 
       {/* STATUS BAR */}
