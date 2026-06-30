@@ -28,10 +28,12 @@
 .section p{margin:4px 0;font-size:14px}
 .section a{color:#1d4ed8}
 .docsGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
-.docCard{border:1px solid #d1d5db;border-radius:8px;padding:14px;background:#f9fafb}
-.docType{font-size:13px;font-weight:600;color:#1d4ed8;margin-bottom:4px}
-.docTitle{font-size:13px;color:#374151;margin-bottom:4px}
-.docDate{font-size:11px;color:#9ca3af}
+.docCard{display:flex;flex-direction:column;min-height:150px;border:1px solid #e5e7eb;border-radius:10px;padding:16px;background:#fff;text-decoration:none;color:inherit;transition:box-shadow 0.15s ease,border-color 0.15s ease}
+.docCard:hover{box-shadow:0 2px 8px rgba(0,0,0,0.08);border-color:#bfdbfe}
+.docDate{color:#6b7280;font-size:13px;text-align:left;margin-bottom:10px}
+.docTitle{color:#1d4ed8;font-size:18px;font-weight:600;margin-bottom:8px}
+.docDesc{color:#4b5563;font-size:13px;line-height:1.4;flex:1}
+.docDownload{margin-top:12px;color:#374151;align-self:flex-start}
 .topicsList{display:flex;flex-wrap:wrap;gap:8px}
 .topicTag{background:#ede9fe;color:#6d28d9;padding:4px 12px;border-radius:20px;font-size:13px}
 .externalRow{text-align:center;margin-top:8px}
