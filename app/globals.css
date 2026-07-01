@@ -667,3 +667,55 @@ body {
     .tender-actions { flex-direction: column; }
     .btn-primary, .btn-secondary { text-align: center; }
 }
+
+
+/* ===== NAV ROW CSS CLASSES ===== */
+.nav-row {
+    background: #fff;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    border-bottom: 1px solid #eef4fa;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 73px;
+    z-index: 100;
+}
+.nav-link {
+    padding: 14px 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #5b7085;
+    border-bottom: 3px solid transparent;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+}
+.nav-link:hover { color: #0b2e52; }
+.nav-link-active {
+    font-weight: 700;
+    color: #0b2e52;
+    border-bottom-color: #2e86de;
+}
+.nav-hamburger { display: none !important; }
+
+@media (max-width: 640px) {
+    .nav-hamburger { display: flex !important; }
+    .nav-row {
+          display: none;
+          flex-direction: column;
+          align-items: flex-start;
+          padding: 8px 16px 12px;
+          top: 65px;
+          gap: 0;
+    }
+    .nav-row.nav-row-open { display: flex; }
+    .nav-link {
+          padding: 10px 0;
+          width: 100%;
+          border-bottom: 1px solid #eef4fa;
+          border-left: none;
+    }
+    .nav-link-active { border-bottom: 1px solid #eef4fa; color: #2e86de; }
+}
