@@ -1,4 +1,4 @@
-'use client';
+גילוימכרזיםמכרזיםמסומניםסוכןחכםערבויותוליווימקורותשווהמכרזיםמועדוןעסקיםרענוןתובנותאישראלסריקהמותאמתמקור'use client';
 import { useEffect, useState } from 'react';
 
 const NAVY = '#0b2e52', BLUE = '#2e86de', LIME = '#cdef4a', PURPLE = '#7c5cf0';
