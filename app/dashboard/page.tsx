@@ -1,5 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { useIsMobile } from "../hooks/useIsMobile";
+import MobileTabBar from "../components/MobileTabBar";
 
 /* ============ עיצוב 2a — אנטרפרייז, טבלת נתונים נקייה ============ */
 
@@ -61,6 +63,7 @@ export default function Dashboard(){
   const[pg,setPg]=useState(1);
   const[showFilters,setShowFilters]=useState(false);
   const PER=25;
+  const isMobile=useIsMobile();
   const now=useMemo(()=>Date.now(),[]);
 
   useEffect(()=>{
@@ -123,7 +126,7 @@ export default function Dashboard(){
       <div style={{display:'flex',minHeight:'100vh',background:'#f6f8fa'}}>
 
         {/* ===== SIDEBAR ===== */}
-        <div style={{flex:'0 0 238px',background:'#fff',borderInlineEnd:`1px solid ${BORDER}`,padding:'22px 16px',display:'flex',flexDirection:'column',gap:3,position:'sticky',top:0,alignSelf:'flex-start',height:'100vh'}}>
+        <div style={{...(isMobile?{display:'none'}:{}),flex:'0 0 238px',background:'#fff',borderInlineEnd:`1px solid ${BORDER}`,padding:'22px 16px',display:'flex',flexDirection:'column',gap:3,position:'sticky',top:0,alignSelf:'flex-start',height:'100vh'}}>
           <a href="/dashboard" style={{display:'flex',alignItems:'center',gap:11,padding:'0 8px 20px',marginBottom:8,borderBottom:'1px solid #eef1f4',textDecoration:'none'}}>
             <div style={{width:34,height:34,borderRadius:8,background:BLUE,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize:16,fontWeight:800}}>ש</div>
             <div style={{lineHeight:1.15}}><div style={{fontWeight:700,fontSize:15.5,color:DARK}}>שווה מכרזים</div><div style={{fontSize:11,color:'#8a97a3'}}>מועדון עסקים 360</div></div>
@@ -145,7 +148,7 @@ export default function Dashboard(){
         </div>
 
         {/* ===== CONTENT ===== */}
-        <div style={{flex:1,minWidth:0,display:'flex',flexDirection:'column'}}>
+        <div style={{flex:1,minWidth:0,display:'flex',flexDirection:'column',...(isMobile?{paddingBottom:72}:{})}}>
           {/* header */}
           <div style={{background:'#fff',borderBottom:`1px solid ${BORDER}`,padding:'15px 26px',display:'flex',alignItems:'center',gap:18,position:'sticky',top:0,zIndex:5}}>
             <div style={{fontWeight:700,fontSize:20,color:DARK,flex:'0 0 auto'}}>גילוי מכרזים</div>
@@ -164,9 +167,9 @@ export default function Dashboard(){
 
           <div style={{padding:'22px 26px 30px'}}>
             {/* KPI strip */}
-            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:1,background:BORDER,border:`1px solid ${BORDER}`,borderRadius:10,overflow:'hidden',marginBottom:22}}>
+            <div style={{display:'grid',gridTemplateColumns:isMobile?undefined:'repeat(4,1fr)',gap:isMobile?10:1,background:isMobile?'transparent':BORDER,border:isMobile?'none':`1px solid ${BORDER}`,borderRadius:10,overflow:isMobile?'auto':'hidden',marginBottom:22,...(isMobile?{display:'flex',overflowX:'auto'}:{})}}>
               {kpis.map(k=>(
-                <div key={k.label} style={{background:'#fff',padding:'16px 18px'}}>
+                <div key={k.label} style={{background:'#fff',padding:'16px 18px',...(isMobile?{minWidth:120,border:'1px solid #e6eaee',borderRadius:12}:{})}}>
                   <div style={{display:'flex',alignItems:'center',gap:8}}><span style={{width:8,height:8,borderRadius:999,background:k.dot}}></span><span style={{fontSize:28,fontWeight:700,color:DARK,lineHeight:1}}>{loading?'…':k.value.toLocaleString()}</span></div>
                   <div style={{fontSize:12.5,color:MUTED,marginTop:8}}>{k.label}</div>
                 </div>
@@ -207,9 +210,9 @@ export default function Dashboard(){
 
             {/* table */}
             <div style={{background:'#fff',border:`1px solid ${BORDER}`,borderRadius:10,overflow:'hidden'}}>
-              <div style={{display:'grid',gridTemplateColumns:'70px 1fr 232px 156px 96px',padding:'12px 18px',background:'#f7f9fb',borderBottom:`1px solid ${BORDER}`,fontSize:12,fontWeight:700,color:'#8a97a3'}}>
+              {!isMobile && (<div style={{display:'grid',gridTemplateColumns:'70px 1fr 232px 156px 96px',padding:'12px 18px',background:'#f7f9fb',borderBottom:`1px solid ${BORDER}`,fontSize:12,fontWeight:700,color:'#8a97a3'}}>
                 <span>ציון</span><span>נושא המכרז</span><span>סטטוס</span><span>מועד הגשה</span><span></span>
-              </div>
+              </div>)}
               {loading?(
                 <div style={{padding:50,textAlign:'center',color:MUTED,fontSize:14}}>טוען מכרזים מ-4 מקורות…</div>
               ):rows.length===0?(
@@ -220,7 +223,30 @@ export default function Dashboard(){
                 const tags=statusTags(t,d);
                 const isMarked=marked.includes(t.id);
                 return(
-                  <div key={t.id||i} style={{display:'grid',gridTemplateColumns:'70px 1fr 232px 156px 96px',padding:'16px 18px',borderBottom:'1px solid #eef1f4',alignItems:'center'}}>
+                  isMobile ? (
+              <a href={`/tender/${t.id}`} key={t.id||i} style={{display:'block',textDecoration:'none',background:'#fff',border:'1px solid #e6eaee',borderRadius:16,padding:'15px 16px',borderBottom:'1px solid #e6eaee'}}>
+                <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:10,marginBottom:11}}>
+                  <div style={{display:'flex',flexWrap:'wrap',gap:6,flex:1}}>
+                    {tags.map((g,gi)=>(<span key={gi} style={{fontSize:11,fontWeight:600,padding:'3px 9px',borderRadius:6,background:g.bg,color:g.fg,border:`1px solid ${g.bd}`}}>{g.label}</span>))}
+                  </div>
+                  <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4,flex:'0 0 auto'}}>
+                    <span style={{fontSize:22,fontWeight:700,color:DARK,lineHeight:1}}>{score}</span>
+                    <span style={{width:26,height:3,borderRadius:2,background:bandColor(score)}}></span>
+                  </div>
+                </div>
+                <div style={{fontSize:15,fontWeight:700,color:DARK,lineHeight:1.45,textAlign:'right'}}>{t.title||'ללא כותרת'}</div>
+                <div style={{fontSize:12,color:'#7a8794',marginTop:8}}>{t.publisher||'לא ידוע'} · פורסם {fd(t.publishDate)}</div>
+                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginTop:13,paddingTop:12,borderTop:'1px solid #eef1f4'}}>
+                  <div style={{fontSize:12.5}}>
+                    <span style={{color:'#7a8794'}}>הגשה עד </span>
+                    <span style={{color:DARK,fontWeight:700}}>{fd(t.deadline)}</span>
+                    {d!==null&&d>=0&&<span style={{color:d<=7?'#b04a34':'#7a8794'}}> · נותרו {d} ימים</span>}
+                  </div>
+                  <button onClick={(e)=>toggleMark(t.id,e)} style={{fontSize:18,color:isMarked?'#d9a520':'#c2ccd6',background:'transparent',border:'none',cursor:'pointer',padding:6}}>{isMarked?'★':'☆'}</button>
+                </div>
+              </a>
+            ) : (
+              <div key={t.id||i} style={{display:'grid',gridTemplateColumns:'70px 1fr 232px 156px 96px',padding:'16px 18px',borderBottom:'1px solid #eef1f4',alignItems:'center'}}>
                     <div style={{display:'flex',flexDirection:'column',alignItems:'flex-start',gap:5}}>
                       <span style={{fontSize:21,fontWeight:700,color:DARK,lineHeight:1}}>{score}</span>
                       <span style={{width:30,height:3,borderRadius:2,background:bandColor(score)}}></span>
@@ -242,6 +268,7 @@ export default function Dashboard(){
                       <button onClick={(e)=>toggleMark(t.id,e)} title={isMarked?'הסר סימון':'סמן מכרז'} style={{fontSize:16,lineHeight:1,color:isMarked?'#d9a520':'#c2ccd6',background:'transparent',border:'none',cursor:'pointer',padding:6}}>{isMarked?'★':'☆'}</button>
                     </div>
                   </div>
+            )
                 );
               })}
             </div>
@@ -263,5 +290,6 @@ export default function Dashboard(){
         </div>
       </div>
     </div>
+    {isMobile && <MobileTabBar/>}
   );
 }
