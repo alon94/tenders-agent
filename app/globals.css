@@ -491,3 +491,179 @@ body {
 .score-high .score-num { color: #15803d; }
 .score-mid .score-num { color: #92400e; }
 .score-low .score-num { color: #1e40af; }
+
+
+/* ===== INNER PAGES ===== */
+.inner-page-wrap {
+    min-height: 100vh;
+    background: var(--bg2);
+    font-family: 'Heebo', sans-serif;
+    direction: rtl;
+    color: var(--ink);
+}
+.inner-page-content {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 28px 20px 48px;
+}
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--brand);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    transition: color 0.15s;
+}
+.back-link:hover { color: var(--brand-dark); }
+
+/* ===== INNER CARD ===== */
+.inner-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 28px 32px;
+    box-shadow: var(--shadow-md);
+}
+.center-text { text-align: center; color: var(--muted); padding: 40px; }
+.error-text { color: var(--red); }
+
+/* ===== TENDER DETAIL ===== */
+.tender-header { margin-bottom: 24px; }
+.status-badge {
+    display: inline-block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: var(--amber-pale);
+    color: var(--amber);
+    margin-bottom: 10px;
+}
+.tender-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.35;
+    margin: 0 0 8px;
+}
+.tender-publisher {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--brand);
+    font-weight: 600;
+}
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0 32px;
+    margin-bottom: 8px;
+}
+.detail-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+}
+.detail-label {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-weight: 600;
+}
+.detail-value {
+    font-size: 0.925rem;
+    color: var(--ink-soft);
+    font-weight: 600;
+}
+
+/* ===== SECTION BLOCKS ===== */
+.section-block { margin-top: 28px; }
+.section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 14px;
+}
+.tags-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.topic-tag {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 5px 13px;
+    border-radius: 999px;
+    background: var(--brand-pale);
+    color: var(--brand-dark);
+}
+
+/* ===== DOCS GRID ===== */
+.docs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+}
+.doc-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px 18px;
+    border-radius: 10px;
+    background: var(--bg2);
+    border: 1px solid var(--line);
+    text-decoration: none;
+    color: var(--ink);
+    position: relative;
+    transition: box-shadow 0.15s;
+}
+.doc-card:hover { box-shadow: var(--shadow-md); }
+.doc-date { font-size: 0.72rem; color: var(--muted); }
+.doc-title { font-size: 0.9rem; font-weight: 600; color: var(--ink); }
+.doc-desc { font-size: 0.78rem; color: var(--muted); }
+.doc-icon {
+    position: absolute;
+    bottom: 14px;
+    left: 16px;
+    color: var(--brand);
+}
+
+/* ===== TENDER ACTIONS ===== */
+.tender-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 32px;
+    flex-wrap: wrap;
+}
+.btn-primary {
+    background: var(--ink);
+    color: #fff;
+    text-decoration: none;
+    border-radius: 10px;
+    padding: 13px 26px;
+    font-size: 0.925rem;
+    font-weight: 700;
+    transition: background 0.15s;
+}
+.btn-primary:hover { background: var(--brand-dark); }
+.btn-secondary {
+    background: var(--card);
+    color: var(--ink-soft);
+    text-decoration: none;
+    border-radius: 10px;
+    padding: 13px 26px;
+    font-size: 0.925rem;
+    font-weight: 600;
+    border: 1px solid var(--line);
+    transition: border-color 0.15s;
+}
+.btn-secondary:hover { border-color: var(--brand); }
+
+/* ===== INNER PAGE RESPONSIVE ===== */
+@media (max-width: 700px) {
+    .inner-page-content { padding: 16px 14px 32px; }
+    .inner-card { padding: 20px 16px; }
+    .detail-grid { grid-template-columns: 1fr; gap: 0; }
+    .tender-title { font-size: 1.2rem; }
+    .docs-grid { grid-template-columns: 1fr; }
+    .tender-actions { flex-direction: column; }
+    .btn-primary, .btn-secondary { text-align: center; }
+}
