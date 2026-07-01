@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&family=Assistant:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Assistant', sans-serif; }
+  .rbk { font-family: 'Rubik', sans-serif; }
+</style>
+</helmet>
+
+<section data-label="Turn 3" style="direction:rtl; font-family:'Assistant',sans-serif; padding:56px; background:#eef1f4; min-height:100vh;">
+  <div style="display:flex; align-items:center; gap:12px; margin-bottom:24px;">
+    <span style="background:#1a2330; color:#fff; font-weight:700; font-size:15px; padding:6px 16px; border-radius:8px;">3a</span>
+    <span style="color:#1a2330; font-weight:700; font-size:17px;">גרסת מובייל — כרטיסים מוערמים + ניווט תחתון</span>
+  </div>
+
+  <div style="display:flex; flex-wrap:wrap; gap:48px; align-items:flex-start;">
+
+    <!-- ===== PHONE 1: list ===== -->
+    <div style="width:390px; height:844px; background:#eef1f4; border-radius:44px; padding:12px; box-shadow:0 24px 60px rgba(26,35,48,.22); flex:0 0 auto; position:relative;">
+      <div style="width:100%; height:100%; background:#eef1f4; border-radius:34px; overflow:hidden; position:relative; display:flex; flex-direction:column;">
+
+        <!-- status + header -->
+        <div style="background:#fff; padding:12px 18px 14px; border-bottom:1px solid #e6eaee;">
+          <div style="display:flex; align-items:center; justify-content:space-between; font-size:13px; font-weight:700; color:#1a2330; margin-bottom:12px;">
+            <span>22:32</span><span style="letter-spacing:1px;">●●● 5G ▮</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:11px;">
+            <div style="width:34px; height:34px; border-radius:8px; background:#2b6fc4; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; flex:0 0 auto;">ש</div>
+            <div style="flex:1; min-width:0; line-height:1.15;"><div style="font-weight:800; font-size:17px; color:#1a2330;">גילוי מכרזים</div><div style="font-size:11px; color:#8a97a3;">2,988 פעילים · עודכן 22:32</div></div>
+            <span style="width:36px; height:36px; border-radius:999px; background:#eef1f4; display:flex; align-items:center; justify-content:center; color:#5b6b7a; font-size:16px; flex:0 0 auto;">🔔</span>
+          </div>
+          <!-- search -->
+          <div style="display:flex; align-items:center; gap:8px; background:#f4f6f8; border:1px solid #e2e7ec; border-radius:12px; padding:11px 14px; margin-top:12px;">
+            <span style="color:#9aa6b2; font-size:15px;">⌕</span><span style="color:#9aa6b2; font-size:13.5px;">חיפוש מכרז, גוף מפרסם…</span>
+            <span style="margin-inline-start:auto; color:#2b6fc4; font-size:16px;">✦</span>
+          </div>
+        </div>
+
+        <!-- KPI horizontal scroll -->
+        <div style="background:#fff; padding:12px 18px 14px; border-bottom:1px solid #e6eaee; display:flex; gap:10px; overflow:hidden;">
+          <sc-for list="{{ kpisBiz }}" as="k" hint-placeholder-count="4">
+            <div style="flex:0 0 auto; min-width:96px; background:#f6f8fa; border:1px solid #e6eaee; border-radius:12px; padding:11px 13px;">
+              <div style="display:flex; align-items:center; gap:6px;"><span style="width:7px; height:7px; border-radius:999px; background:{{ k.dot }};"></span><span style="font-size:22px; font-weight:700; color:#1a2330; line-height:1;">{{ k.value }}</span></div>
+              <div style="font-size:10.5px; color:#667380; margin-top:6px; line-height:1.3;">{{ k.label }}</div>
+            </div>
+          </sc-for>
+        </div>
+
+        <!-- filter chips -->
+        <div style="background:#fff; padding:0 18px 12px; display:flex; gap:8px; overflow:hidden; border-bottom:1px solid #e6eaee;">
+          <span style="flex:0 0 auto; background:#e8f1fb; color:#1e5aa8; font-weight:700; font-size:12.5px; padding:8px 14px; border-radius:999px; border:1px solid #cfe0f4;">הכל · 2,980</span>
+          <span style="flex:0 0 auto; background:#fff; color:#5b6b7a; font-weight:600; font-size:12.5px; padding:8px 14px; border-radius:999px; border:1px solid #e2e7ec;">נסגרים · 16</span>
+          <span style="flex:0 0 auto; background:#fff; color:#5b6b7a; font-weight:600; font-size:12.5px; padding:8px 14px; border-radius:999px; border:1px solid #e2e7ec;">חדשים · 0</span>
+        </div>
+
+        <!-- scrollable card list -->
+        <div style="flex:1; overflow:hidden; padding:14px 16px; display:flex; flex-direction:column; gap:12px;">
+          <sc-for list="{{ tendersMobile }}" as="t" hint-placeholder-count="3">
+            <div style="background:#fff; border:1px solid #e6eaee; border-radius:16px; padding:15px 16px;">
+              <!-- top: score + status -->
+              <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:11px;">
+                <div style="display:flex; flex-wrap:wrap; gap:6px; justify-content:flex-end; flex:1;">
+                  <sc-for list="{{ t.tags }}" as="g" hint-placeholder-count="2">
+                    <span style="font-size:11px; font-weight:600; padding:3px 9px; border-radius:6px; background:{{ g.bg }}; color:{{ g.fg }}; border:1px solid {{ g.bd }};">{{ g.label }}</span>
+                  </sc-for>
+                </div>
+                <div style="flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:4px;">
+                  <span style="font-size:22px; font-weight:700; color:#1a2330; line-height:1;">{{ t.score }}</span>
+                  <span style="width:26px; height:3px; border-radius:2px; background:{{ t.bandColor }};"></span>
+                </div>
+              </div>
+              <!-- title -->
+              <div style="font-size:15px; font-weight:700; color:#1a2330; line-height:1.45; text-align:right;">{{ t.title }}</div>
+              <!-- meta -->
+              <div style="font-size:12px; color:#7a8794; margin-top:8px;">{{ t.publisher }} · פורסם {{ t.published }}</div>
+              <!-- footer -->
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-top:13px; padding-top:12px; border-top:1px solid #eef1f4;">
+                <div style="font-size:12.5px;"><span style="color:#7a8794;">הגשה עד </span><span style="color:#1a2330; font-weight:700;">{{ t.due }}</span> <span style="color:#b04a34;">· {{ t.daysLeft }}</span></div>
+                <span style="background:#1a2330; color:#fff; font-weight:600; font-size:12.5px; padding:8px 16px; border-radius:9px;">לפרטים</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <!-- bottom nav -->
+        <div style="background:#fff; border-top:1px solid #e6eaee; padding:9px 8px 22px; display:flex; justify-content:space-around;">
+          <sc-for list="{{ mobileNav }}" as="m" hint-placeholder-count="5">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:4px; color:{{ m.color }};">
+              <span style="font-size:19px;">{{ m.icon }}</span>
+              <span style="font-size:10px; font-weight:{{ m.weight }};">{{ m.label }}</span>
+            </div>
+          </sc-for>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===== PHONE 2: single tender + filter sheet ===== -->
+    <div style="width:390px; height:844px; background:#eef1f4; border-radius:44px; padding:12px; box-shadow:0 24px 60px rgba(26,35,48,.22); flex:0 0 auto;">
+      <div style="width:100%; height:100%; background:#f6f8fa; border-radius:34px; overflow:hidden; position:relative; display:flex; flex-direction:column;">
+
+        <!-- header -->
+        <div style="background:#fff; padding:12px 18px 14px; border-bottom:1px solid #e6eaee;">
+          <div style="display:flex; align-items:center; justify-content:space-between; font-size:13px; font-weight:700; color:#1a2330; margin-bottom:12px;">
+            <span>22:32</span><span style="letter-spacing:1px;">●●● 5G ▮</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span style="font-size:20px; color:#1a2330;">→</span>
+            <span style="font-weight:700; font-size:16px; color:#1a2330;">פרטי מכרז</span>
+            <span style="margin-inline-start:auto; color:#2b6fc4; font-size:20px;">☆</span>
+          </div>
+        </div>
+
+        <div style="flex:1; overflow:hidden; padding:16px;">
+          <!-- score hero -->
+          <div style="background:#fff; border:1px solid #e6eaee; border-radius:16px; padding:18px; display:flex; align-items:center; gap:16px; margin-bottom:14px;">
+            <div style="flex:0 0 auto; width:64px; height:64px; border-radius:16px; background:#e8f1fb; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+              <span style="font-size:26px; font-weight:800; color:#1e5aa8; line-height:1;">75</span>
+              <span style="font-size:9px; color:#1e5aa8; opacity:.8;">ציון התאמה</span>
+            </div>
+            <div style="flex:1;">
+              <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end; margin-bottom:8px;">
+                <span style="font-size:11px; font-weight:600; padding:3px 9px; border-radius:6px; background:#e8f1fb; color:#1e5aa8; border:1px solid #cfe0f4;">פורסם</span>
+                <span style="font-size:11px; font-weight:600; padding:3px 9px; border-radius:6px; background:#f7ece8; color:#b04a34; border:1px solid #eed7cf;">נסגר בקרוב</span>
+              </div>
+              <div style="font-size:12.5px; color:#7a8794; text-align:right;">החשב הכללי · מכרז 12/2026</div>
+            </div>
+          </div>
+
+          <!-- title card -->
+          <div style="background:#fff; border:1px solid #e6eaee; border-radius:16px; padding:18px; margin-bottom:14px;">
+            <div style="font-size:17px; font-weight:700; color:#1a2330; line-height:1.5; text-align:right;">מכרז לאיתור דיור עבור בית משפט השלום ת"א ומשרדי ממשלה בעיר תל אביב</div>
+            <div style="display:flex; justify-content:space-between; margin-top:16px; padding-top:14px; border-top:1px solid #eef1f4;">
+              <div style="text-align:right;"><div style="font-size:11px; color:#8a97a3;">פורסם</div><div style="font-size:14px; font-weight:700; color:#1a2330; margin-top:3px;">17.05.2026</div></div>
+              <div style="text-align:right;"><div style="font-size:11px; color:#8a97a3;">הגשה עד</div><div style="font-size:14px; font-weight:700; color:#b04a34; margin-top:3px;">01.07.2026</div></div>
+              <div style="text-align:right;"><div style="font-size:11px; color:#8a97a3;">נותרו</div><div style="font-size:14px; font-weight:700; color:#b04a34; margin-top:3px;">היום</div></div>
+            </div>
+          </div>
+
+          <!-- AI insight -->
+          <div style="background:#f0f6fd; border:1px solid #cfe0f4; border-radius:16px; padding:16px;">
+            <div style="display:flex; align-items:center; gap:7px; font-weight:700; font-size:13.5px; color:#1e5aa8; margin-bottom:8px;">✦ תובנת הסוכן החכם</div>
+            <div style="font-size:12.5px; color:#40566e; line-height:1.6; text-align:right;">התאמה גבוהה לפרופיל שלך בתחום הנדל"ן והדיור. שים לב — מועד ההגשה היום. מומלץ להיערך במהירות.</div>
+          </div>
+        </div>
+
+        <!-- sticky action bar -->
+        <div style="background:#fff; border-top:1px solid #e6eaee; padding:14px 16px 22px; display:flex; gap:10px;">
+          <span style="flex:0 0 auto; background:#fff; color:#5b6b7a; font-weight:600; font-size:14px; padding:13px 18px; border-radius:12px; border:1px solid #e2e7ec;">☆ שמירה</span>
+          <span style="flex:1; background:#2b6fc4; color:#fff; font-weight:700; font-size:14px; padding:13px; border-radius:12px; text-align:center;">למכרז המלא ↗</span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===== PHONE 3: saved (מכרזים מסומנים) ===== -->
+    <div style="width:390px; height:844px; background:#eef1f4; border-radius:44px; padding:12px; box-shadow:0 24px 60px rgba(26,35,48,.22); flex:0 0 auto;">
+      <div style="width:100%; height:100%; background:#eef1f4; border-radius:34px; overflow:hidden; display:flex; flex-direction:column;">
+        <div style="background:#fff; padding:12px 18px 14px; border-bottom:1px solid #e6eaee;">
+          <div style="display:flex; align-items:center; justify-content:space-between; font-size:13px; font-weight:700; color:#1a2330; margin-bottom:12px;"><span>22:32</span><span style="letter-spacing:1px;">●●● 5G ▮</span></div>
+          <div style="display:flex; align-items:center; gap:11px;">
+            <div style="flex:1; min-width:0; line-height:1.15;"><div style="font-weight:800; font-size:17px; color:#1a2330;">מכרזים מסומנים</div><div style="font-size:11px; color:#8a97a3;">3 מכרזים שמורים</div></div>
+            <span style="width:36px; height:36px; border-radius:999px; background:#e8f1fb; display:flex; align-items:center; justify-content:center; color:#2b6fc4; font-size:16px; flex:0 0 auto;">☆</span>
+          </div>
+          <div style="display:flex; gap:8px; margin-top:12px;">
+            <span style="flex:0 0 auto; background:#1a2330; color:#fff; font-weight:600; font-size:12.5px; padding:8px 14px; border-radius:999px;">הכל · 3</span>
+            <span style="flex:0 0 auto; background:#fff; color:#5b6b7a; font-weight:600; font-size:12.5px; padding:8px 14px; border-radius:999px; border:1px solid #e2e7ec;">נסגרים בקרוב · 2</span>
+          </div>
+        </div>
+        <div style="flex:1; overflow:hidden; padding:14px 16px; display:flex; flex-direction:column; gap:12px;">
+          <sc-for list="{{ tendersMobile }}" as="t" hint-placeholder-count="3">
+            <div style="background:#fff; border:1px solid #e6eaee; border-radius:16px; padding:15px 16px;">
+              <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px;">
+                <div style="flex:1; min-width:0;">
+                  <div style="font-size:14.5px; font-weight:700; color:#1a2330; line-height:1.45; text-align:right;">{{ t.title }}</div>
+                  <div style="font-size:12px; color:#7a8794; margin-top:7px;">{{ t.publisher }} · הגשה עד {{ t.due }} · <span style="color:#b04a34;">{{ t.daysLeft }}</span></div>
+                </div>
+                <div style="flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:4px;">
+                  <span style="font-size:20px; font-weight:700; color:#1a2330; line-height:1;">{{ t.score }}</span>
+                  <span style="width:24px; height:3px; border-radius:2px; background:{{ t.bandColor }};"></span>
+                </div>
+              </div>
+              <div style="display:flex; gap:8px; margin-top:13px; padding-top:12px; border-top:1px solid #eef1f4;">
+                <span style="flex:1; background:#f6f8fa; color:#5b6b7a; font-weight:600; font-size:12.5px; padding:8px; border-radius:9px; text-align:center; border:1px solid #e6eaee;">✦ החלט עבורי</span>
+                <span style="flex:1; background:#e8f1fb; color:#1e5aa8; font-weight:600; font-size:12.5px; padding:8px; border-radius:9px; text-align:center;">לפרטים</span>
+                <span style="flex:0 0 auto; background:#fff; color:#b04a34; font-weight:600; font-size:12.5px; padding:8px 12px; border-radius:9px; border:1px solid #eed7cf;">✕</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="background:#fff; border-top:1px solid #e6eaee; padding:9px 8px 22px; display:flex; justify-content:space-around;">
+          <sc-for list="{{ mobileNavSaved }}" as="m" hint-placeholder-count="5">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:4px; color:{{ m.color }};"><span style="font-size:19px;">{{ m.icon }}</span><span style="font-size:10px; font-weight:{{ m.weight }};">{{ m.label }}</span></div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PHONE 4: smart agent (סוכן חכם) ===== -->
+    <div style="width:390px; height:844px; background:#eef1f4; border-radius:44px; padding:12px; box-shadow:0 24px 60px rgba(26,35,48,.22); flex:0 0 auto;">
+      <div style="width:100%; height:100%; background:#f6f8fa; border-radius:34px; overflow:hidden; display:flex; flex-direction:column;">
+        <div style="background:#fff; padding:12px 18px 14px; border-bottom:1px solid #e6eaee;">
+          <div style="display:flex; align-items:center; justify-content:space-between; font-size:13px; font-weight:700; color:#1a2330; margin-bottom:12px;"><span>22:32</span><span style="letter-spacing:1px;">●●● 5G ▮</span></div>
+          <div style="display:flex; align-items:center; gap:11px;">
+            <div style="width:34px; height:34px; border-radius:10px; background:#2b6fc4; display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px; flex:0 0 auto;">✦</div>
+            <div style="flex:1; line-height:1.15;"><div style="font-weight:800; font-size:16px; color:#1a2330;">הסוכן החכם</div><div style="font-size:11px; color:#2b6fc4;">● פעיל · סורק 2,988 מכרזים</div></div>
+          </div>
+        </div>
+        <div style="flex:1; overflow:hidden; padding:16px; display:flex; flex-direction:column; gap:12px;">
+          <!-- agent bubble -->
+          <div style="background:#fff; border:1px solid #e6eaee; border-radius:16px 16px 16px 4px; padding:14px 16px; align-self:flex-start; max-width:86%;">
+            <div style="font-size:13px; color:#40566e; line-height:1.6; text-align:right;">מצאתי <b style="color:#1a2330;">6 מכרזים</b> בהתאמה גבוהה לפרופיל שלך. שניים נסגרים היום — כדאי להתחיל מהם.</div>
+          </div>
+          <!-- process steps -->
+          <div style="background:#fff; border:1px solid #e6eaee; border-radius:16px; padding:16px; align-self:flex-start; width:100%;">
+            <div style="font-size:12px; font-weight:700; color:#8a97a3; margin-bottom:12px;">תהליך העבודה</div>
+            <sc-for list="{{ agentSteps }}" as="s" hint-placeholder-count="4">
+              <div style="display:flex; align-items:center; gap:11px; margin-bottom:13px;">
+                <span style="width:26px; height:26px; border-radius:999px; background:{{ s.bg }}; color:{{ s.fg }}; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex:0 0 auto;">{{ s.icon }}</span>
+                <div style="flex:1;"><div style="font-size:13.5px; font-weight:600; color:#1a2330; text-align:right;">{{ s.title }}</div><div style="font-size:11.5px; color:#8a97a3; text-align:right;">{{ s.sub }}</div></div>
+              </div>
+            </sc-for>
+          </div>
+          <!-- result chip -->
+          <div style="background:#e8f1fb; border:1px solid #cfe0f4; border-radius:16px; padding:14px 16px; align-self:flex-start; max-width:86%;">
+            <div style="font-size:13px; color:#1e5aa8; font-weight:600; text-align:right;">רוצה שאכין עבורך סיכום החלטה לכל אחד מ-6 המכרזים?</div>
+          </div>
+        </div>
+        <!-- input -->
+        <div style="background:#fff; border-top:1px solid #e6eaee; padding:12px 16px 22px; display:flex; align-items:center; gap:10px;">
+          <div style="flex:1; background:#f4f6f8; border:1px solid #e2e7ec; border-radius:999px; padding:11px 16px; font-size:13.5px; color:#9aa6b2;">שאל את הסוכן…</div>
+          <span style="width:42px; height:42px; border-radius:999px; background:#2b6fc4; color:#fff; display:flex; align-items:center; justify-content:center; font-size:17px; flex:0 0 auto;">↑</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PHONE 5: guarantees (ערבויות וליווי) ===== -->
+    <div style="width:390px; height:844px; background:#eef1f4; border-radius:44px; padding:12px; box-shadow:0 24px 60px rgba(26,35,48,.22); flex:0 0 auto;">
+      <div style="width:100%; height:100%; background:#eef1f4; border-radius:34px; overflow:hidden; display:flex; flex-direction:column;">
+        <div style="background:#fff; padding:12px 18px 14px; border-bottom:1px solid #e6eaee;">
+          <div style="display:flex; align-items:center; justify-content:space-between; font-size:13px; font-weight:700; color:#1a2330; margin-bottom:12px;"><span>22:32</span><span style="letter-spacing:1px;">●●● 5G ▮</span></div>
+          <div style="line-height:1.15;"><div style="font-weight:800; font-size:17px; color:#1a2330;">ערבויות וליווי</div><div style="font-size:11px; color:#8a97a3;">ניהול ערבויות למכרזים פעילים</div></div>
+        </div>
+        <div style="flex:1; overflow:hidden; padding:16px; display:flex; flex-direction:column; gap:12px;">
+          <!-- summary band -->
+          <div style="display:flex; gap:10px;">
+            <div style="flex:1; background:#fff; border:1px solid #e6eaee; border-radius:14px; padding:14px;"><div style="font-size:24px; font-weight:700; color:#1a2330;">₪420K</div><div style="font-size:11px; color:#667380; margin-top:5px;">סה"כ ערבויות פעילות</div></div>
+            <div style="flex:1; background:#fff; border:1px solid #e6eaee; border-radius:14px; padding:14px;"><div style="font-size:24px; font-weight:700; color:#b04a34;">2</div><div style="font-size:11px; color:#667380; margin-top:5px;">פגות תוקף החודש</div></div>
+          </div>
+          <sc-for list="{{ guarantees }}" as="g" hint-placeholder-count="3">
+            <div style="background:#fff; border:1px solid #e6eaee; border-radius:16px; padding:15px 16px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <div style="flex:1; min-width:0;"><div style="font-size:14px; font-weight:700; color:#1a2330; text-align:right;">{{ g.title }}</div><div style="font-size:11.5px; color:#7a8794; margin-top:5px;">{{ g.type }} · תוקף עד {{ g.expiry }}</div></div>
+                <div style="flex:0 0 auto; text-align:left;"><div style="font-size:16px; font-weight:700; color:#1a2330;">{{ g.amount }}</div></div>
+              </div>
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-top:12px; padding-top:11px; border-top:1px solid #eef1f4;">
+                <span style="font-size:11.5px; font-weight:700; padding:4px 11px; border-radius:6px; background:{{ g.stBg }}; color:{{ g.stFg }}; border:1px solid {{ g.stBd }};">{{ g.status }}</span>
+                <span style="font-size:12.5px; color:#2b6fc4; font-weight:600;">ניהול ›</span>
+              </div>
+            </div>
+          </sc-for>
+          <div style="background:#1a2330; color:#fff; text-align:center; font-weight:700; font-size:14px; padding:14px; border-radius:14px;">+ בקשת ערבות חדשה</div>
+        </div>
+        <div style="background:#fff; border-top:1px solid #e6eaee; padding:9px 8px 22px; display:flex; justify-content:space-around;">
+          <sc-for list="{{ mobileNavGuar }}" as="m" hint-placeholder-count="5">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:4px; color:{{ m.color }};"><span style="font-size:19px;">{{ m.icon }}</span><span style="font-size:10px; font-weight:{{ m.weight }};">{{ m.label }}</span></div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section data-label="Turn 2" style="direction:rtl; font-family:'Assistant',sans-serif; padding:56px; background:#eef1f4; min-height:100vh;">
+  <div style="display:flex; flex-wrap:wrap; gap:64px; align-items:flex-start;">
+
+    <!-- ============ OPTION 2A — enterprise table, white sidebar ============ -->
+    <div id="2a" data-screen-label="Option 2a" style="width:1320px; flex:0 0 auto;">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:18px;">
+        <span style="background:#1a2330; color:#fff; font-weight:700; font-size:15px; padding:6px 16px; border-radius:8px;">2a</span>
+        <span style="color:#1a2330; font-weight:700; font-size:17px;">אנטרפרייז — טבלת נתונים נקייה</span>
+      </div>
+
+      <div style="background:#f6f8fa; border-radius:14px; overflow:hidden; box-shadow:0 16px 40px rgba(26,35,48,.10); border:1px solid #e2e7ec; display:flex; min-height:860px;">
+
+        <!-- sidebar -->
+        <div style="flex:0 0 238px; background:#fff; border-inline-end:1px solid #e6eaee; padding:22px 16px; display:flex; flex-direction:column; gap:3px;">
+          <div style="display:flex; align-items:center; gap:11px; padding:0 8px 20px; margin-bottom:8px; border-bottom:1px solid #eef1f4;">
+            <div style="width:34px; height:34px; border-radius:8px; background:#2b6fc4; display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px; font-weight:800;">ש</div>
+            <div style="line-height:1.15;"><div style="font-weight:700; font-size:15.5px; color:#1a2330;">שווה מכרזים</div><div style="font-size:11px; color:#8a97a3;">מועדון עסקים 360</div></div>
+          </div>
+          <sc-for list="{{ sideNavBiz }}" as="s" hint-placeholder-count="5">
+            <sc-if value="{{ s.active }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex; align-items:center; gap:11px; padding:11px 12px; border-radius:9px; font-size:14.5px; font-weight:700; background:#e8f1fb; color:#1e5aa8; border-inline-start:3px solid #2b6fc4;"><span style="font-size:16px;">{{ s.icon }}</span>{{ s.label }}</div>
+            </sc-if>
+            <sc-if value="{{ s.inactive }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex; align-items:center; gap:11px; padding:11px 12px; border-radius:9px; font-size:14.5px; font-weight:500; color:#5b6b7a;"><span style="font-size:16px; opacity:.65;">{{ s.icon }}</span>{{ s.label }}</div>
+            </sc-if>
+          </sc-for>
+          <div style="margin-top:auto; border:1px solid #e6eaee; border-radius:12px; padding:16px;">
+            <div style="font-weight:700; font-size:14px; color:#1a2330;">◈ הסוכן החכם</div>
+            <div style="font-size:12px; color:#667380; margin:7px 0 12px; line-height:1.5;">קבלו מכרזים מותאמים לפי הפרופיל העסקי שלכם</div>
+            <div style="background:#1a2330; color:#fff; font-weight:600; font-size:13px; text-align:center; padding:9px; border-radius:8px;">הפעלה</div>
+          </div>
+        </div>
+
+        <!-- content -->
+        <div style="flex:1; min-width:0; display:flex; flex-direction:column;">
+          <!-- header -->
+          <div style="background:#fff; border-bottom:1px solid #e6eaee; padding:15px 26px; display:flex; align-items:center; gap:18px;">
+            <div style="font-weight:700; font-size:20px; color:#1a2330;">גילוי מכרזים</div>
+            <div style="flex:1; display:flex; align-items:center; gap:9px; background:#f4f6f8; border:1px solid #e2e7ec; border-radius:8px; padding:9px 14px; max-width:440px;">
+              <span style="color:#9aa6b2; font-size:15px;">⌕</span><span style="color:#9aa6b2; font-size:13.5px;">חיפוש: נושא, גוף מפרסם, מספר מכרז…</span>
+            </div>
+            <span style="margin-inline-start:auto; font-size:12.5px; color:#7a8794; display:inline-flex; align-items:center; gap:7px;"><span style="width:7px; height:7px; border-radius:999px; background:#2b6fc4;"></span>עודכן 8:11 · data.gov.il</span>
+            <span style="background:#2b6fc4; color:#fff; font-weight:600; font-size:13px; padding:9px 16px; border-radius:8px;">פרסום מכרז</span>
+            <span style="width:32px; height:32px; border-radius:8px; background:#eef1f4; color:#1a2330; display:inline-flex; align-items:center; justify-content:center; font-weight:700; font-size:13px;">א</span>
+          </div>
+
+          <div style="padding:22px 26px 30px;">
+            <!-- KPI strip -->
+            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:#e6eaee; border:1px solid #e6eaee; border-radius:10px; overflow:hidden; margin-bottom:22px;">
+              <sc-for list="{{ kpisBiz }}" as="k" hint-placeholder-count="4">
+                <div style="background:#fff; padding:16px 18px;">
+                  <div style="display:flex; align-items:center; gap:8px;"><span style="width:8px; height:8px; border-radius:999px; background:{{ k.dot }};"></span><span style="font-size:28px; font-weight:700; color:#1a2330; line-height:1;">{{ k.value }}</span></div>
+                  <div style="font-size:12.5px; color:#667380; margin-top:8px;">{{ k.label }}</div>
+                </div>
+              </sc-for>
+            </div>
+
+            <!-- toolbar -->
+            <div style="display:flex; align-items:center; gap:9px; margin-bottom:14px; flex-wrap:wrap;">
+              <span style="background:#1a2330; color:#fff; font-weight:600; font-size:13px; padding:8px 15px; border-radius:7px;">כל המכרזים · 2,980</span>
+              <span style="background:#fff; color:#5b6b7a; font-weight:600; font-size:13px; padding:8px 15px; border-radius:7px; border:1px solid #e2e7ec;">נסגרים בשבוע · 16</span>
+              <span style="background:#fff; color:#5b6b7a; font-weight:600; font-size:13px; padding:8px 15px; border-radius:7px; border:1px solid #e2e7ec;">חדשים · 0</span>
+              <span style="margin-inline-start:auto; background:#fff; color:#5b6b7a; font-weight:600; font-size:13px; padding:8px 15px; border-radius:7px; border:1px solid #e2e7ec;">כל התחומים ▾</span>
+              <span style="background:#fff; color:#5b6b7a; font-weight:600; font-size:13px; padding:8px 15px; border-radius:7px; border:1px solid #e2e7ec;">כל הגופים ▾</span>
+              <span style="background:#fff; color:#5b6b7a; font-weight:600; font-size:13px; padding:8px 12px; border-radius:7px; border:1px solid #e2e7ec;">⇅ מיון</span>
+            </div>
+
+            <!-- table -->
+            <div style="background:#fff; border:1px solid #e6eaee; border-radius:10px; overflow:hidden;">
+              <div style="display:grid; grid-template-columns:70px 1fr 232px 156px; padding:12px 18px; background:#f7f9fb; border-bottom:1px solid #e6eaee; font-size:12px; font-weight:700; color:#8a97a3;">
+                <span>ציון</span><span>נושא המכרז</span><span>סטטוס</span><span>מועד הגשה</span>
+              </div>
+              <sc-for list="{{ tendersBiz }}" as="t" hint-placeholder-count="6">
+                <div style="display:grid; grid-template-columns:70px 1fr 232px 156px; padding:16px 18px; border-bottom:1px solid #eef1f4; align-items:center;">
+                  <div style="display:flex; flex-direction:column; align-items:flex-start; gap:5px;">
+                    <span style="font-size:21px; font-weight:700; color:#1a2330; line-height:1;">{{ t.score }}</span>
+                    <span style="width:30px; height:3px; border-radius:2px; background:{{ t.bandColor }};"></span>
+                  </div>
+                  <div style="min-width:0; padding-inline-end:16px;">
+                    <div style="font-size:15px; font-weight:600; color:#1a2330; line-height:1.4;">{{ t.title }}</div>
+                    <div style="font-size:12.5px; color:#7a8794; margin-top:5px;">{{ t.publisher }} · פורסם {{ t.published }}</div>
+                  </div>
+                  <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                    <sc-for list="{{ t.tags }}" as="g" hint-placeholder-count="2">
+                      <span style="font-size:11.5px; font-weight:600; padding:3px 10px; border-radius:6px; background:{{ g.bg }}; color:{{ g.fg }}; border:1px solid {{ g.bd }};">{{ g.label }}</span>
+                    </sc-for>
+                  </div>
+                  <div style="font-size:13px;">
+                    <div style="color:#1a2330; font-weight:600;">{{ t.due }}</div>
+                    <div style="color:#b04a34; font-size:12px; margin-top:3px;">נותרו {{ t.daysLeft }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ OPTION 2B — top nav, airy rows ============ -->
+    <div id="2b" data-screen-label="Option 2b" style="width:1320px; flex:0 0 auto;">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:18px;">
+        <span style="background:#1a2330; color:#fff; font-weight:700; font-size:15px; padding:6px 16px; border-radius:8px;">2b</span>
+        <span style="color:#1a2330; font-weight:700; font-size:17px;">ניווט עליון — שורות אווריריות</span>
+      </div>
+
+      <div style="background:#f6f8fa; border-radius:14px; overflow:hidden; box-shadow:0 16px 40px rgba(26,35,48,.10); border:1px solid #e2e7ec;">
+        <!-- top nav (יפעת style) -->
+        <div style="background:#fff; border-bottom:1px solid #e6eaee; padding:14px 30px; display:flex; align-items:center; gap:28px;">
+          <div style="display:flex; align-items:center; gap:10px; flex:0 0 auto;">
+            <div style="width:34px; height:34px; border-radius:8px; background:#2b6fc4; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800;">ש</div>
+            <div style="font-weight:800; font-size:19px; color:#1a2330;">שווה מכרזים</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:26px;">
+            <sc-for list="{{ nav }}" as="n" hint-placeholder-count="5">
+              <span style="font-size:14.5px; font-weight:{{ n.weight }}; color:{{ n.colorBiz }};">{{ n.label }}</span>
+            </sc-for>
+          </div>
+          <div style="margin-inline-start:auto; display:flex; align-items:center; gap:14px;">
+            <span style="color:#5b6b7a; font-size:14px;">התחברות</span>
+            <span style="background:#2b6fc4; color:#fff; font-weight:600; font-size:13.5px; padding:9px 18px; border-radius:999px;">פרסום מכרז חדש</span>
+          </div>
+        </div>
+
+        <div style="padding:26px 30px 34px;">
+          <!-- title + search -->
+          <div style="display:flex; align-items:center; gap:18px; margin-bottom:22px;">
+            <div><div style="font-weight:800; font-size:24px; color:#1a2330;">גילוי מכרזים</div><div style="font-size:13px; color:#7a8794; margin-top:3px;">2,988 מכרזים פעילים · עודכן היום 8:11 · מקור data.gov.il</div></div>
+            <div style="margin-inline-start:auto; display:flex; align-items:center; gap:9px; background:#fff; border:1px solid #e2e7ec; border-radius:999px; padding:10px 18px; width:420px; box-shadow:0 4px 14px rgba(26,35,48,.04);">
+              <span style="color:#9aa6b2; font-size:16px;">⌕</span><span style="color:#9aa6b2; font-size:14px;">חפש לפי קטגוריה, מפרסם או שם המכרז</span>
+              <span style="margin-inline-start:auto; background:#2b7cd3; color:#fff; font-weight:600; font-size:13px; padding:6px 16px; border-radius:999px;">חיפוש</span>
+            </div>
+          </div>
+
+          <!-- KPI cards -->
+          <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:22px;">
+            <sc-for list="{{ kpisBiz }}" as="k" hint-placeholder-count="4">
+              <div style="background:#fff; border:1px solid #e6eaee; border-radius:12px; padding:18px 20px;">
+                <div style="font-size:30px; font-weight:700; color:#1a2330; line-height:1;">{{ k.value }}</div>
+                <div style="display:flex; align-items:center; gap:7px; margin-top:9px;"><span style="width:7px; height:7px; border-radius:999px; background:{{ k.dot }};"></span><span style="font-size:12.5px; color:#667380;">{{ k.label }}</span></div>
+              </div>
+            </sc-for>
+          </div>
+
+          <!-- filter row -->
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
+            <span style="background:#e8f1fb; color:#1e5aa8; font-weight:700; font-size:13.5px; padding:9px 16px; border-radius:999px; border:1px solid #cfe0f4;">כל המכרזים · 2,980</span>
+            <span style="background:#fff; color:#5b6b7a; font-weight:600; font-size:13.5px; padding:9px 16px; border-radius:999px; border:1px solid #e2e7ec;">נסגרים בשבוע · 16</span>
+            <span style="background:#fff; color:#5b6b7a; font-weight:600; font-size:13.5px; padding:9px 16px; border-radius:999px; border:1px solid #e2e7ec;">חדשים · 0</span>
+            <span style="margin-inline-start:auto; background:#fff; color:#5b6b7a; font-weight:600; font-size:13.5px; padding:9px 16px; border-radius:999px; border:1px solid #e2e7ec;">כל התחומים ▾</span>
+            <span style="background:#fff; color:#5b6b7a; font-weight:600; font-size:13.5px; padding:9px 16px; border-radius:999px; border:1px solid #e2e7ec;">כל הגופים ▾</span>
+          </div>
+
+          <!-- rows -->
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            <sc-for list="{{ tendersBiz }}" as="t" hint-placeholder-count="6">
+              <div style="background:#fff; border:1px solid #e6eaee; border-radius:12px; padding:20px 22px; display:flex; align-items:center; gap:22px;">
+                <div style="flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:6px; width:60px;">
+                  <span style="font-size:26px; font-weight:700; color:#1a2330; line-height:1;">{{ t.score }}</span>
+                  <span style="font-size:10px; color:#8a97a3;">ציון התאמה</span>
+                  <span style="width:44px; height:4px; border-radius:2px; background:{{ t.bandColor }};"></span>
+                </div>
+                <div style="width:1px; align-self:stretch; background:#eef1f4;"></div>
+                <div style="flex:1; min-width:0;">
+                  <div style="font-size:16.5px; font-weight:700; color:#1a2330; line-height:1.4;">{{ t.title }}</div>
+                  <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:10px;">
+                    <span style="font-size:12.5px; color:#667380; font-weight:600;">{{ t.publisher }}</span>
+                    <span style="color:#c7d0d9;">·</span>
+                    <sc-for list="{{ t.tags }}" as="g" hint-placeholder-count="2">
+                      <span style="font-size:11.5px; font-weight:600; padding:3px 10px; border-radius:6px; background:{{ g.bg }}; color:{{ g.fg }}; border:1px solid {{ g.bd }};">{{ g.label }}</span>
+                    </sc-for>
+                  </div>
+                </div>
+                <div style="flex:0 0 auto; text-align:center;">
+                  <div style="font-size:12px; color:#7a8794;">הגשה עד</div>
+                  <div style="font-size:15px; font-weight:700; color:#1a2330; margin-top:2px;">{{ t.due }}</div>
+                  <div style="font-size:12px; color:#b04a34; margin-top:2px;">נותרו {{ t.daysLeft }}</div>
+                </div>
+                <div style="flex:0 0 auto; display:flex; flex-direction:column; gap:8px;">
+                  <span style="background:#1a2330; color:#fff; font-weight:600; font-size:13px; padding:9px 18px; border-radius:8px; text-align:center;">לפרטים</span>
+                  <span style="background:#fff; color:#5b6b7a; font-weight:600; font-size:13px; padding:9px 18px; border-radius:8px; text-align:center; border:1px solid #e2e7ec;">☆ שמירה</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section data-label="Turn 1" style="direction:rtl; font-family:'Assistant',sans-serif; padding:56px; background:#dfeaf5; min-height:100vh;">
+  <div style="display:flex; flex-wrap:wrap; gap:64px; align-items:flex-start;">
+
+    <!-- ============ OPTION 1A ============ -->
+    <div id="1a" data-screen-label="Option 1a" style="width:1320px; flex:0 0 auto;">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:18px;">
+        <span class="rbk" style="background:#0b2e52; color:#fff; font-weight:700; font-size:15px; padding:6px 16px; border-radius:999px;">1a</span>
+        <span class="rbk" style="color:#0b2e52; font-weight:600; font-size:17px;">אימוץ נאמן — ניווט עליון בהיר</span>
+      </div>
+
+      <div style="background:#e9f3fc; border-radius:28px; overflow:hidden; box-shadow:0 24px 60px rgba(11,46,82,.14); border:1px solid #d3e4f4;">
+
+        <!-- top bar -->
+        <div style="background:#fff; padding:16px 32px; display:flex; align-items:center; gap:24px; border-bottom:1px solid #eef4fa;">
+          <div style="display:flex; align-items:center; gap:10px; flex:0 0 auto;">
+            <div style="text-align:right; line-height:1;">
+              <div class="rbk" style="font-weight:800; font-size:26px; color:#0b2e52; letter-spacing:-.5px;">שווה<span style="color:#2e86de;">מכרזים</span></div>
+              <div style="font-size:11px; color:#8aa0b5; font-weight:600; margin-top:3px;">מועדון עסקים 360</div>
+            </div>
+            <div style="width:38px; height:38px; border-radius:12px; background:linear-gradient(135deg,#2e86de,#1a5fa8); display:flex; align-items:center; justify-content:center; color:#cdef4a; font-size:20px;">↻</div>
+          </div>
+
+          <div style="flex:1; display:flex; align-items:center; gap:12px; background:#f2f7fc; border:1px solid #e2ecf6; border-radius:999px; padding:11px 22px;">
+            <span style="color:#9fb2c6; font-size:19px;">⌕</span>
+            <span style="color:#9fb2c6; font-size:15px;">חיפוש חופשי: נושא, גוף מפרסם, מספר מכרז…</span>
+            <span style="margin-inline-start:auto; display:inline-flex; align-items:center; gap:6px; background:#fff; border:1.5px solid #c9b8f7; color:#7c5cf0; font-weight:700; font-size:13px; padding:5px 14px; border-radius:999px;">✦ תובנות AI</span>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:16px; flex:0 0 auto; color:#5b7085; font-size:19px;">
+            <span>🔔</span><span>🎧</span>
+            <span style="display:inline-flex; align-items:center; gap:8px; color:#0b2e52; font-weight:600; font-size:14px;"><span style="width:32px; height:32px; border-radius:999px; background:#cdef4a; display:inline-flex; align-items:center; justify-content:center; color:#0b2e52;">א</span>ישראל ▾</span>
+          </div>
+        </div>
+
+        <!-- nav row -->
+        <div style="background:#fff; padding:0 32px 4px; display:flex; align-items:center; gap:34px; border-bottom:1px solid #eef4fa;">
+          <sc-for list="{{ nav }}" as="n" hint-placeholder-count="5">
+            <span class="rbk" style="padding:14px 2px; font-size:15px; font-weight:{{ n.weight }}; color:{{ n.color }}; border-bottom:3px solid {{ n.border }};">{{ n.label }}</span>
+          </sc-for>
+          <span style="margin-inline-start:auto; display:inline-flex; align-items:center; gap:7px; color:#1e9e5a; font-size:13px; font-weight:600;"><span style="width:8px; height:8px; border-radius:999px; background:#1e9e5a;"></span>סריקה מותאמת · מקור data.gov.il · עודכן 8:11</span>
+        </div>
+
+        <!-- body -->
+        <div style="padding:28px 32px 36px; display:flex; gap:24px;">
+
+          <!-- main -->
+          <div style="flex:1; min-width:0;">
+            <!-- KPIs -->
+            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:22px;">
+              <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+                <div style="background:#fff; border-radius:20px; padding:20px 22px; box-shadow:0 10px 28px rgba(11,46,82,.05);">
+                  <div class="rbk" style="font-size:40px; font-weight:800; color:{{ k.color }}; line-height:1;">{{ k.value }}</div>
+                  <div style="font-size:13.5px; color:#64778a; margin-top:8px; font-weight:600;">{{ k.label }}</div>
+                </div>
+              </sc-for>
+            </div>
+
+            <!-- filter tabs -->
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
+              <span class="rbk" style="background:#0b2e52; color:#fff; font-weight:600; font-size:14px; padding:11px 20px; border-radius:999px; display:inline-flex; align-items:center; gap:8px;">☰ כל המכרזים (2,980)</span>
+              <span style="background:#fff; color:#e0463c; font-weight:600; font-size:14px; padding:11px 18px; border-radius:999px; border:1px solid #f5dada; display:inline-flex; align-items:center; gap:7px;"><span style="width:8px;height:8px;border-radius:999px;background:#e0463c;"></span>נסגרים בשבוע (16)</span>
+              <span style="background:#fff; color:#7c5cf0; font-weight:600; font-size:14px; padding:11px 18px; border-radius:999px; border:1px solid #e4dcfb;">✦ חדשים השבוע (0)</span>
+            </div>
+
+            <!-- tender cards -->
+            <div style="display:flex; flex-direction:column; gap:14px;">
+              <sc-for list="{{ tenders }}" as="t" hint-placeholder-count="5">
+                <div style="background:#fff; border-radius:20px; padding:20px 22px; box-shadow:0 10px 28px rgba(11,46,82,.05); display:flex; gap:20px; align-items:flex-start; border-inline-end:4px solid {{ t.urgentColor }};">
+                  <div style="flex:1; min-width:0; text-align:right;">
+                    <div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; margin-bottom:12px;">
+                      <sc-for list="{{ t.tags }}" as="g" hint-placeholder-count="3">
+                        <span style="font-size:12.5px; font-weight:700; padding:5px 12px; border-radius:999px; background:{{ g.bg }}; color:{{ g.fg }}; display:inline-flex; align-items:center; gap:6px;">{{ g.dot }}{{ g.label }}</span>
+                      </sc-for>
+                    </div>
+                    <div class="rbk" style="font-size:19px; font-weight:600; color:#0b2e52; line-height:1.4;">{{ t.title }}</div>
+                    <div style="display:flex; gap:22px; margin-top:14px; font-size:13px; color:#64778a;">
+                      <span>📅 פורסם: <b style="color:#33475b;">{{ t.published }}</b></span>
+                      <span style="color:#e0463c;">⏱ הגשה עד: <b>{{ t.due }}</b> ({{ t.daysLeft }})</span>
+                    </div>
+                  </div>
+                  <div style="flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:8px;">
+                    <div style="width:58px; height:58px; border-radius:999px; background:{{ t.scoreBg }}; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                      <span class="rbk" style="font-size:22px; font-weight:800; color:{{ t.scoreFg }}; line-height:1;">{{ t.score }}</span>
+                      <span style="font-size:9px; color:{{ t.scoreFg }}; opacity:.75;">ציון</span>
+                    </div>
+                    <span style="font-size:12px; font-weight:700; color:#7c5cf0; background:#f3effe; padding:5px 12px; border-radius:999px; white-space:nowrap;">✦ החלט עבורי</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <!-- filter sidebar -->
+          <div style="flex:0 0 288px; background:#fff; border-radius:22px; padding:22px; box-shadow:0 10px 28px rgba(11,46,82,.05); align-self:flex-start;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
+              <span class="rbk" style="font-weight:700; font-size:17px; color:#0b2e52;">סינון | איפוס</span>
+              <span style="color:#9fb2c6;">✕</span>
+            </div>
+            <div style="font-size:13px; font-weight:600; color:#64778a; margin-bottom:7px;">תחום עיסוק</div>
+            <div style="background:#f2f7fc; border:1px solid #e2ecf6; border-radius:12px; padding:11px 14px; font-size:14px; color:#33475b; display:flex; justify-content:space-between; margin-bottom:16px;"><span>כל התחומים</span><span style="color:#9fb2c6;">▾</span></div>
+            <div style="font-size:13px; font-weight:600; color:#64778a; margin-bottom:7px;">גוף מפרסם</div>
+            <div style="background:#f2f7fc; border:1px solid #e2ecf6; border-radius:12px; padding:11px 14px; font-size:14px; color:#33475b; display:flex; justify-content:space-between; margin-bottom:18px;"><span>כל הגופים</span><span style="color:#9fb2c6;">▾</span></div>
+            <div style="font-size:13px; font-weight:600; color:#64778a; margin-bottom:10px;">נסגר בתוך</div>
+            <div style="height:6px; border-radius:999px; background:#e2ecf6; position:relative; margin-bottom:8px;"><div style="position:absolute; inset:0 0 0 8%; background:#2e86de; border-radius:999px;"></div><div style="position:absolute; left:8%; top:50%; transform:translate(-50%,-50%); width:18px; height:18px; border-radius:999px; background:#fff; border:4px solid #2e86de;"></div></div>
+            <div style="font-size:12px; color:#8aa0b5; margin-bottom:18px;">עד 365 ימים</div>
+            <label style="display:flex; align-items:center; gap:10px; font-size:13.5px; color:#33475b; margin-bottom:12px;"><span style="width:18px; height:18px; border-radius:5px; border:2px solid #c9d6e3;"></span>הצג גם מכרזים שנסגרו</label>
+            <label style="display:flex; align-items:center; gap:10px; font-size:13.5px; color:#33475b; margin-bottom:20px;"><span style="width:18px; height:18px; border-radius:5px; background:#2e86de; color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:12px;">✓</span>הצג גם ללא מועד אחרון</label>
+            <div style="background:linear-gradient(135deg,#7c5cf0,#b44be8); color:#fff; text-align:center; font-weight:700; font-size:15px; padding:14px; border-radius:14px; display:flex; align-items:center; justify-content:center; gap:8px;">✦ הסוכן החכם</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ OPTION 1B ============ -->
+    <div id="1b" data-screen-label="Option 1b" style="width:1320px; flex:0 0 auto;">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:18px;">
+        <span class="rbk" style="background:#0b2e52; color:#fff; font-weight:700; font-size:15px; padding:6px 16px; border-radius:999px;">1b</span>
+        <span class="rbk" style="color:#0b2e52; font-weight:600; font-size:17px;">אפליקציה — סרגל צד כהה</span>
+      </div>
+
+      <div style="background:#e9f3fc; border-radius:28px; overflow:hidden; box-shadow:0 24px 60px rgba(11,46,82,.14); border:1px solid #d3e4f4; display:flex; min-height:820px;">
+
+        <!-- sidebar -->
+        <div style="flex:0 0 244px; background:linear-gradient(180deg,#0b2e52,#0a2540); padding:26px 20px; display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:26px;">
+            <div style="width:40px; height:40px; border-radius:12px; background:#cdef4a; display:flex; align-items:center; justify-content:center; color:#0b2540; font-size:22px;">↻</div>
+            <div class="rbk" style="font-weight:800; font-size:20px; color:#fff; line-height:1.1;">שווה<br><span style="font-size:12px; font-weight:500; color:#8fb4dd;">מכרזים · 360</span></div>
+          </div>
+          <sc-for list="{{ sideNav }}" as="s" hint-placeholder-count="5">
+            <div style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:14px; font-size:15px; font-weight:600; background:{{ s.bg }}; color:{{ s.color }};"><span style="font-size:18px;">{{ s.icon }}</span>{{ s.label }}</div>
+          </sc-for>
+          <div style="margin-top:auto; background:linear-gradient(135deg,#7c5cf0,#b44be8); border-radius:18px; padding:18px; color:#fff;">
+            <div class="rbk" style="font-weight:700; font-size:15px; display:flex; align-items:center; gap:7px;">✦ הסוכן החכם</div>
+            <div style="font-size:12.5px; opacity:.85; margin:8px 0 12px; line-height:1.5;">שאלו את הסוכן וקבלו מכרזים מותאמים בשבילכם</div>
+            <div style="background:#fff; color:#7c5cf0; font-weight:700; font-size:13px; text-align:center; padding:9px; border-radius:10px;">הפעלת סוכן</div>
+          </div>
+        </div>
+
+        <!-- content -->
+        <div style="flex:1; min-width:0; padding:26px 30px 34px;">
+          <!-- header -->
+          <div style="display:flex; align-items:center; gap:18px; margin-bottom:22px;">
+            <div class="rbk" style="font-weight:800; font-size:26px; color:#0b2e52;">גילוי מכרזים</div>
+            <div style="flex:1; display:flex; align-items:center; gap:10px; background:#fff; border:1px solid #e2ecf6; border-radius:999px; padding:11px 20px; box-shadow:0 6px 18px rgba(11,46,82,.04);">
+              <span style="color:#9fb2c6; font-size:18px;">⌕</span>
+              <span style="color:#9fb2c6; font-size:14px;">נושא, גוף מפרסם, מספר מכרז…</span>
+              <span style="margin-inline-start:auto; background:#0b2e52; color:#fff; font-weight:600; font-size:13px; padding:6px 16px; border-radius:999px;">חיפוש</span>
+            </div>
+            <span style="color:#5b7085; font-size:19px;">🔔</span>
+            <span style="width:36px; height:36px; border-radius:999px; background:#cdef4a; display:inline-flex; align-items:center; justify-content:center; color:#0b2e52; font-weight:700;">א</span>
+          </div>
+
+          <!-- KPI band -->
+          <div style="display:flex; gap:0; background:#fff; border-radius:20px; padding:6px; box-shadow:0 10px 28px rgba(11,46,82,.05); margin-bottom:22px;">
+            <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+              <div style="flex:1; padding:16px 20px; border-inline-start:1px solid {{ k.divider }}; text-align:center;">
+                <div class="rbk" style="font-size:34px; font-weight:800; color:{{ k.color }}; line-height:1;">{{ k.value }}</div>
+                <div style="font-size:12.5px; color:#64778a; margin-top:7px; font-weight:600;">{{ k.label }}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <!-- toolbar chips -->
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:18px; flex-wrap:wrap;">
+            <span class="rbk" style="background:#0b2e52; color:#fff; font-weight:600; font-size:13.5px; padding:10px 18px; border-radius:999px;">כל המכרזים (2,980)</span>
+            <span style="background:#fff; color:#e0463c; font-weight:600; font-size:13.5px; padding:10px 16px; border-radius:999px; border:1px solid #f5dada;">● נסגרים בשבוע (16)</span>
+            <span style="background:#fff; color:#7c5cf0; font-weight:600; font-size:13.5px; padding:10px 16px; border-radius:999px; border:1px solid #e4dcfb;">✦ חדשים (0)</span>
+            <span style="margin-inline-start:auto; background:#fff; color:#33475b; font-weight:600; font-size:13.5px; padding:10px 16px; border-radius:999px; border:1px solid #e2ecf6; display:inline-flex; align-items:center; gap:8px;">כל התחומים ▾</span>
+            <span style="background:#fff; color:#33475b; font-weight:600; font-size:13.5px; padding:10px 16px; border-radius:999px; border:1px solid #e2ecf6; display:inline-flex; align-items:center; gap:8px;">כל הגופים ▾</span>
+          </div>
+
+          <!-- tender cards grid -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+            <sc-for list="{{ tenders }}" as="t" hint-placeholder-count="4">
+              <div style="background:#fff; border-radius:20px; padding:20px; box-shadow:0 10px 28px rgba(11,46,82,.05); display:flex; flex-direction:column; gap:12px;">
+                <div style="display:flex; align-items:flex-start; gap:14px;">
+                  <div style="width:52px; height:52px; border-radius:999px; background:{{ t.scoreBg }}; display:flex; flex-direction:column; align-items:center; justify-content:center; flex:0 0 auto;">
+                    <span class="rbk" style="font-size:20px; font-weight:800; color:{{ t.scoreFg }}; line-height:1;">{{ t.score }}</span>
+                    <span style="font-size:8.5px; color:{{ t.scoreFg }}; opacity:.75;">ציון</span>
+                  </div>
+                  <div class="rbk" style="flex:1; font-size:16.5px; font-weight:600; color:#0b2e52; line-height:1.4; text-align:right;">{{ t.title }}</div>
+                </div>
+                <div style="display:flex; flex-wrap:wrap; gap:7px; justify-content:flex-end;">
+                  <sc-for list="{{ t.tags }}" as="g" hint-placeholder-count="3">
+                    <span style="font-size:11.5px; font-weight:700; padding:4px 11px; border-radius:999px; background:{{ g.bg }}; color:{{ g.fg }};">{{ g.dot }}{{ g.label }}</span>
+                  </sc-for>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:space-between; padding-top:12px; border-top:1px solid #eef4fa; font-size:12.5px; color:#64778a;">
+                  <span>הגשה עד <b style="color:#e0463c;">{{ t.due }}</b> · {{ t.daysLeft }}</span>
+                  <span style="color:#7c5cf0; font-weight:700; background:#f3effe; padding:5px 12px; border-radius:999px;">✦ החלט עבורי</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" rx="18" fill="#e8f1fb"/>
+    <rect x="34" y="26" width="38" height="48" rx="5" fill="#fff" stroke="#2b6fc4" stroke-width="2.5"/>
+    <rect x="41" y="35" width="24" height="3.5" rx="1.75" fill="#2b6fc4"/>
+    <rect x="41" y="44" width="24" height="3.5" rx="1.75" fill="#9fb2c6"/>
+    <rect x="41" y="53" width="16" height="3.5" rx="1.75" fill="#9fb2c6"/>
+    <circle cx="60" cy="64" r="12" fill="none" stroke="#1a2330" stroke-width="3"/>
+    <line x1="69" y1="73" x2="78" y2="82" stroke="#1a2330" stroke-width="3.5" stroke-linecap="round"/>
+  </svg>
+</template></x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const nav = [
+      { label: 'גילוי מכרזים', weight: 700, color: '#0b2e52', border: '#2e86de', colorBiz: '#1a2330' },
+      { label: 'מכרזים מסומנים', weight: 500, color: '#5b7085', border: 'transparent', colorBiz: '#5b6b7a' },
+      { label: 'סוכן חכם', weight: 500, color: '#5b7085', border: 'transparent', colorBiz: '#5b6b7a' },
+      { label: 'ערבויות וליווי', weight: 500, color: '#5b7085', border: 'transparent', colorBiz: '#5b6b7a' },
+      { label: 'מקורות', weight: 500, color: '#5b7085', border: 'transparent', colorBiz: '#5b6b7a' },
+    ];
+    const sideNav = [
+      { icon: '◎', label: 'גילוי מכרזים', bg: 'rgba(205,239,74,.16)', color: '#cdef4a' },
+      { icon: '★', label: 'מכרזים מסומנים', bg: 'transparent', color: '#c3d7ec' },
+      { icon: '✦', label: 'סוכן חכם', bg: 'transparent', color: '#c3d7ec' },
+      { icon: '🛡', label: 'ערבויות וליווי', bg: 'transparent', color: '#c3d7ec' },
+      { icon: '⛁', label: 'מקורות', bg: 'transparent', color: '#c3d7ec' },
+    ];
+    const kpis = [
+      { value: '2,988', label: 'מכרזים פעילים במאגר', color: '#0b2e52', divider: 'transparent' },
+      { value: '16', label: 'נסגרים בשבוע הקרוב', color: '#e0463c', divider: '#eef4fa' },
+      { value: '0', label: 'חדשים ב-7 ימים אחרונים', color: '#2e86de', divider: '#eef4fa' },
+      { value: '2,980', label: 'מוצגים כעת', color: '#f0932b', divider: '#eef4fa' },
+    ];
+    const T = {
+      body: (l) => ({ label: l, bg: '#e1effb', fg: '#1f73c4', dot: '' }),
+      pub: { label: 'פורסם', bg: '#e3f6ea', fg: '#1e9e5a', dot: '' },
+      soon: { label: 'נסגר בקרוב', bg: '#fde6e6', fg: '#e0463c', dot: '● ' },
+      review: { label: 'בדיקה לפני החלטה', bg: '#fcf2d0', fg: '#b78a18', dot: '' },
+      update: { label: 'בעדכון', bg: '#fcf2d0', fg: '#b78a18', dot: '' },
+      info: { label: 'לעיון ומידע', bg: '#e1effb', fg: '#1f73c4', dot: '' },
+    };
+    const sc = (n) => n >= 70 ? { scoreBg: '#fcf2d0', scoreFg: '#b78a18' } : { scoreBg: '#e1effb', scoreFg: '#1f73c4' };
+    const tenders = [
+      { title: 'יועץ מחקר יישומי לתחומי הסברה, תודעה ומיתוג עבור אגף דיפלומטיה ציבורית במשרד החוץ', published: '31.05.2026', due: '01.07.2026', daysLeft: 'היום', score: 75, urgentColor: '#e0463c', tags: [T.body('משרד החוץ'), T.pub, T.soon, T.review] },
+      { title: 'מכרז לאיתור דיור עבור בית משפט השלום ת"א ומשרדי ממשלה בעיר תל אביב', published: '17.05.2026', due: '01.07.2026', daysLeft: 'היום', score: 75, urgentColor: '#e0463c', tags: [T.body('החשב הכללי'), T.pub, T.soon, T.review] },
+      { title: 'מכרז מרכזי להקצאת תקינה וניהול השירות הלאומי במשרדי הממשלה וביחידות הסמך', published: '13.08.2025', due: '01.07.2026', daysLeft: 'היום', score: 55, urgentColor: '#e0463c', tags: [T.body('מ.האוצר'), T.update, T.soon, T.info] },
+      { title: 'ייעוץ הנדסי/טכני לנושאי התפלה וטכנולוגיות מים לאגף התפלה ברשות המים', published: '19.05.2026', due: '02.07.2026', daysLeft: 'יום 1', score: 65, urgentColor: '#f0932b', tags: [T.body('רשות המים'), T.update, T.soon, T.review] },
+      { title: 'רכש רכיבי אלקטרוניקה עבור מערך התקשוב של משטרת ישראל', published: '02.06.2026', due: '05.07.2026', daysLeft: '4 ימים', score: 75, urgentColor: '#f0932b', tags: [T.body('משטרת ישראל'), T.update, T.soon, T.review] },
+      { title: 'אספקת ציוד מעבדה וחומרים מתכלים למכוני מחקר ממשלתיים', published: '08.06.2026', due: '10.07.2026', daysLeft: '9 ימים', score: 60, urgentColor: '#1e9e5a', tags: [T.body('משרד הבריאות'), T.pub, T.review] },
+    ].map(t => ({ ...t, ...sc(t.score) }));
+    // ===== Business (muted) palette =====
+    const kpisBiz = [
+      { value: '2,988', label: 'מכרזים פעילים במאגר', dot: '#40566e' },
+      { value: '16', label: 'נסגרים בשבוע הקרוב', dot: '#b04a34' },
+      { value: '0', label: 'חדשים ב-7 ימים אחרונים', dot: '#2f6199' },
+      { value: '2,980', label: 'מוצגים כעת', dot: '#a9772a' },
+    ];
+    const sideNavBiz = [
+      { icon: '◵', label: 'גילוי מכרזים', active: true, inactive: false },
+      { icon: '☆', label: 'מכרזים מסומנים', active: false, inactive: true },
+      { icon: '◈', label: 'סוכן חכם', active: false, inactive: true },
+      { icon: '❏', label: 'ערבויות וליווי', active: false, inactive: true },
+      { icon: '⊟', label: 'מקורות', active: false, inactive: true },
+    ];
+    const B = {
+      body: (l) => ({ label: l, bg: '#eef2f7', fg: '#40566e', bd: '#dde4ee' }),
+      pub: { label: 'פורסם', bg: '#e8f1fb', fg: '#1e5aa8', bd: '#cfe0f4' },
+      soon: { label: 'נסגר בקרוב', bg: '#f7ece8', fg: '#b04a34', bd: '#eed7cf' },
+      review: { label: 'בדיקה לפני החלטה', bg: '#f5efdc', fg: '#8a6d1f', bd: '#e8ddbf' },
+      update: { label: 'בעדכון', bg: '#f5efdc', fg: '#8a6d1f', bd: '#e8ddbf' },
+      info: { label: 'לעיון ומידע', bg: '#eef2f7', fg: '#40566e', bd: '#dde4ee' },
+    };
+    const band = (n) => n >= 75 ? '#2b6fc4' : (n >= 60 ? '#5b93cf' : '#9fb2c6');
+    const tendersBiz = [
+      { title: 'יועץ מחקר יישומי לתחומי הסברה, תודעה ומיתוג עבור אגף דיפלומטיה ציבורית במשרד החוץ', publisher: 'משרד החוץ', published: '31.05.2026', due: '01.07.2026', daysLeft: 'היום', score: 75, tags: [B.pub, B.soon, B.review] },
+      { title: 'מכרז לאיתור דיור עבור בית משפט השלום ת"א ומשרדי ממשלה בעיר תל אביב', publisher: 'החשב הכללי', published: '17.05.2026', due: '01.07.2026', daysLeft: 'היום', score: 75, tags: [B.pub, B.soon, B.review] },
+      { title: 'מכרז מרכזי להקצאת תקינה וניהול השירות הלאומי במשרדי הממשלה וביחידות הסמך', publisher: 'משרד האוצר', published: '13.08.2025', due: '01.07.2026', daysLeft: 'היום', score: 55, tags: [B.update, B.soon, B.info] },
+      { title: 'ייעוץ הנדסי/טכני לנושאי התפלה וטכנולוגיות מים לאגף התפלה ברשות המים', publisher: 'רשות המים', published: '19.05.2026', due: '02.07.2026', daysLeft: 'יום 1', score: 65, tags: [B.update, B.soon, B.review] },
+      { title: 'רכש רכיבי אלקטרוניקה עבור מערך התקשוב של משטרת ישראל', publisher: 'משטרת ישראל', published: '02.06.2026', due: '05.07.2026', daysLeft: '4 ימים', score: 75, tags: [B.update, B.soon, B.review] },
+      { title: 'אספקת ציוד מעבדה וחומרים מתכלים למכוני מחקר ממשלתיים', publisher: 'משרד הבריאות', published: '08.06.2026', due: '10.07.2026', daysLeft: '9 ימים', score: 60, tags: [B.pub, B.review] },
+    ].map(t => ({ ...t, bandColor: band(t.score) }));
+    const tendersMobile = tendersBiz.slice(0, 4);
+    const mobileNav = [
+      { icon: '◵', label: 'גילוי', color: '#2b6fc4', weight: 700 },
+      { icon: '☆', label: 'מסומנים', color: '#8a97a3', weight: 500 },
+      { icon: '◈', label: 'סוכן', color: '#8a97a3', weight: 500 },
+      { icon: '❏', label: 'ערבויות', color: '#8a97a3', weight: 500 },
+      { icon: '≡', label: 'עוד', color: '#8a97a3', weight: 500 },
+    ];
+    const navFor = (active) => mobileNav.map(m => m.label === active
+      ? { ...m, color: '#2b6fc4', weight: 700 }
+      : { ...m, color: '#8a97a3', weight: 500 });
+    const mobileNavSaved = navFor('מסומנים');
+    const mobileNavGuar = navFor('ערבויות');
+    const agentSteps = [
+      { icon: '✓', bg: '#e8f1fb', fg: '#1e5aa8', title: 'איתור מכרזים', sub: 'נסרקו 2,988 מכרזים ממקורות רשמיים' },
+      { icon: '✓', bg: '#e8f1fb', fg: '#1e5aa8', title: 'סינון לפי פרופיל', sub: 'הותאמו לתחומי העיסוק והוותק שלך' },
+      { icon: '✓', bg: '#e8f1fb', fg: '#1e5aa8', title: 'דירוג והתאמה', sub: 'חושב ציון התאמה לכל מכרז' },
+      { icon: '4', bg: '#f5efdc', fg: '#8a6d1f', title: 'הכנת סיכום החלטה', sub: 'ממתין לאישורך' },
+    ];
+    const guarantees = [
+      { title: 'יועץ מחקר — משרד החוץ', type: 'ערבות מכרז', expiry: '15.07.2026', amount: '₪120K', status: 'פעילה', stBg: '#e8f1fb', stFg: '#1e5aa8', stBd: '#cfe0f4' },
+      { title: 'איתור דיור — החשב הכללי', type: 'ערבות ביצוע', expiry: '08.07.2026', amount: '₪200K', status: 'פגה בקרוב', stBg: '#f7ece8', stFg: '#b04a34', stBd: '#eed7cf' },
+      { title: 'רכש אלקטרוניקה — משטרת ישראל', type: 'ערבות מכרז', expiry: '30.09.2026', amount: '₪100K', status: 'פעילה', stBg: '#e8f1fb', stFg: '#1e5aa8', stBd: '#cfe0f4' },
+    ];
+    return { nav, sideNav, kpis, tenders, kpisBiz, sideNavBiz, tendersBiz, tendersMobile, mobileNav, mobileNavSaved, mobileNavGuar, agentSteps, guarantees };
+  }
+}
+</script>
+</body>
+</html>
