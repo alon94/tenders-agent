@@ -126,7 +126,7 @@ export default function Dashboard(){
       <div style={{display:'flex',minHeight:'100vh',background:'#f6f8fa'}}>
 
         {/* ===== SIDEBAR ===== */}
-        <div style={{...(isMobile?{display:'none'}:{}),flex:'0 0 238px',background:'#fff',borderInlineEnd:`1px solid ${BORDER}`,padding:'22px 16px',display:'flex',flexDirection:'column',gap:3,position:'sticky',top:0,alignSelf:'flex-start',height:'100vh'}}>
+        <div style={{flex:'0 0 238px',background:'#fff',borderInlineEnd:`1px solid ${BORDER}`,padding:'22px 16px',display:isMobile?'none':'flex',flexDirection:'column',gap:3,position:'sticky',top:0,alignSelf:'flex-start',height:'100vh'}}>
           <a href="/dashboard" style={{display:'flex',alignItems:'center',gap:11,padding:'0 8px 20px',marginBottom:8,borderBottom:'1px solid #eef1f4',textDecoration:'none'}}>
             <div style={{width:34,height:34,borderRadius:8,background:BLUE,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize:16,fontWeight:800}}>ש</div>
             <div style={{lineHeight:1.15}}><div style={{fontWeight:700,fontSize:15.5,color:DARK}}>שווה מכרזים</div><div style={{fontSize:11,color:'#8a97a3'}}>מועדון עסקים 360</div></div>
@@ -167,7 +167,7 @@ export default function Dashboard(){
 
           <div style={{padding:'22px 26px 30px'}}>
             {/* KPI strip */}
-            <div style={{display:'grid',gridTemplateColumns:isMobile?undefined:'repeat(4,1fr)',gap:isMobile?10:1,background:isMobile?'transparent':BORDER,border:isMobile?'none':`1px solid ${BORDER}`,borderRadius:10,overflow:isMobile?'auto':'hidden',marginBottom:22,...(isMobile?{display:'flex',overflowX:'auto'}:{})}}>
+            <div style={{display:isMobile?'flex':'grid',gridTemplateColumns:isMobile?undefined:'repeat(4,1fr)',gap:isMobile?10:1,background:isMobile?'transparent':BORDER,border:isMobile?'none':`1px solid ${BORDER}`,borderRadius:10,overflow:isMobile?'auto':'hidden',overflowX:isMobile?'auto':undefined,marginBottom:22}}>
               {kpis.map(k=>(
                 <div key={k.label} style={{background:'#fff',padding:'16px 18px',...(isMobile?{minWidth:120,border:'1px solid #e6eaee',borderRadius:12}:{})}}>
                   <div style={{display:'flex',alignItems:'center',gap:8}}><span style={{width:8,height:8,borderRadius:999,background:k.dot}}></span><span style={{fontSize:28,fontWeight:700,color:DARK,lineHeight:1}}>{loading?'…':k.value.toLocaleString()}</span></div>
