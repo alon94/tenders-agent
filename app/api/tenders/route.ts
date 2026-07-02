@@ -18,7 +18,7 @@ export async function GET(req: Request) {
       : ''
 
     const sql = `SELECT
-      publication_id, soproc_id, tender_id,
+      publication_id, tender_id,
       description, publisher, publisher_unit,
       claim_date, publication_date, status, page_url, tender_type_he
     FROM procurement_tenders_all
