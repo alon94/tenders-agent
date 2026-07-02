@@ -289,7 +289,7 @@ export default function Dashboard(){
           </div>
         </div>
       </div>
+      {isMobile && <MobileTabBar/>}
     </div>
-    {isMobile && <MobileTabBar/>}
   );
 }
