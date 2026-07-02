@@ -1,8 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
+import type { CSSProperties } from 'react';
+import MobileTabBar from './MobileTabBar';
 
-const NAVY = '#0b2e52', BLUE = '#2e86de', LIME = '#cdef4a', PURPLE = '#7c5cf0';
+const BLUE = '#2b6fc4', ACTIVE = '#1e5aa8', ACTIVE_BG = '#e8f1fb';
+const MUTED = '#5b6b7a', BORDER = '#e6eaee', DARK = '#1a2330';
 const RBK = "Rubik, 'Assistant', Arial, sans-serif";
 
 const LINKS = [
@@ -11,6 +14,7 @@ const LINKS = [
   { l: 'סוכן חכם', h: '/agent' },
   { l: 'ערבויות וליווי', h: '/guarantee' },
   { l: 'מקורות', h: '/sources' },
+  { l: 'פרופיל עסקי', h: '/profile' },
 ];
 
 export default function SiteNav({
@@ -24,28 +28,20 @@ export default function SiteNav({
   onSearch?: (v: string) => void;
   onRefresh?: () => void;
 }) {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  const path = usePathname();
+  const current = active || path || '';
 
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 8);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const navStyle: React.CSSProperties = {
+  const navStyle: CSSProperties = {
     fontFamily: RBK,
     direction: 'rtl',
     position: 'sticky',
     top: 0,
     zIndex: 100,
-    background: NAVY,
-    borderBottom: `1.5px solid ${BLUE}33`,
-    boxShadow: scrolled ? '0 2px 12px #0002' : 'none',
-    transition: 'box-shadow .2s',
+    background: '#ffffff',
+    borderBottom: '1px solid ' + BORDER,
   };
 
-  const inner: React.CSSProperties = {
+  const inner: CSSProperties = {
     maxWidth: 1200,
     margin: '0 auto',
     padding: '0 20px',
@@ -56,69 +52,80 @@ export default function SiteNav({
     position: 'relative',
   };
 
-  const logoStyle: React.CSSProperties = {
+  const logoStyle: CSSProperties = {
     fontFamily: RBK,
     fontWeight: 800,
-    fontSize: 20,
-    color: LIME,
+    fontSize: 19,
+    color: DARK,
     textDecoration: 'none',
-    letterSpacing: -0.5,
+    letterSpacing: -0.4,
     whiteSpace: 'nowrap',
     paddingInlineEnd: 24,
     display: 'flex',
     alignItems: 'center',
-    gap: 7,
+    gap: 8,
   };
 
   return (
-    <nav style={navStyle} className="site-nav">
-      <div style={inner}>
-        <a href="/dashboard" style={logoStyle}>
-          <span style={{ fontSize: 22 }}>📋</span>
-          <span>שווה</span>
-          <span style={{ color: BLUE, fontWeight: 400, fontSize: 14, marginInlineStart: 2 }}>מכרזים</span>
-        </a>
+    <>
+      <nav style={navStyle} className="site-nav">
+        <div style={inner}>
+          <a href="/dashboard" style={logoStyle}>
+            <span style={{ width: 30, height: 30, borderRadius: 8, background: 'linear-gradient(135deg,#2b6fc4,#1a5fa8)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800 }}>ש</span>
+            <span>שווה</span>
+            <span style={{ color: BLUE, fontWeight: 500, fontSize: 14, marginInlineStart: 2 }}>מכרזים</span>
+          </a>
 
-        <div className="nav-row" style={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
-          {LINKS.map((lk) => (
-            <a
-              key={lk.h}
-              href={lk.h}
-              className={'nav-link' + (active === lk.h ? ' nav-link-active' : '')}
-              style={{
-                color: active === lk.h ? LIME : '#c8d8e8',
-                textDecoration: 'none',
-                fontFamily: RBK,
-                fontWeight: active === lk.h ? 700 : 400,
-                fontSize: 14,
-                padding: '6px 10px',
-                borderRadius: 7,
-                background: active === lk.h ? '#ffffff14' : 'transparent',
-                transition: 'all .15s',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {lk.l}
-            </a>
-          ))}
-        </div>
-
-        {onRefresh ? (
-          <button
-            onClick={onRefresh}
-            title="רעננו"
-            style={{ width: 34, height: 34, borderRadius: 8, background: 'linear-gradient(135deg,#2e86de,#1a5fa8)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', color: '#fff', fontSize: 16 }}
-          >
-            ↻
-          </button>
-        ) : (
-          <div style={{ width: 34, height: 34, borderRadius: 8, background: 'linear-gradient(135deg,#2e86de,#1a5fa8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            📋
+          <div className="nav-row" style={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
+            {LINKS.map((lk) => {
+              const isActive = current === lk.h;
+              return (
+                <a
+                  key={lk.h}
+                  href={lk.h}
+                  className={'nav-link' + (isActive ? ' nav-link-active' : '')}
+                  style={{
+                    color: isActive ? ACTIVE : MUTED,
+                    textDecoration: 'none',
+                    fontFamily: RBK,
+                    fontWeight: isActive ? 700 : 500,
+                    fontSize: 14,
+                    padding: '7px 12px',
+                    borderRadius: 8,
+                    background: isActive ? ACTIVE_BG : 'transparent',
+                    transition: 'all .15s',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {lk.l}
+                </a>
+              );
+            })}
           </div>
-        )}
 
-        {!search && <div style={{ marginInlineStart: 'auto' }} />}
-      </div>
-    </nav>
+          {onRefresh ? (
+            <button
+              onClick={onRefresh}
+              title="רעננו"
+              style={{ width: 34, height: 34, borderRadius: 8, background: '#f2f5f8', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid ' + BORDER, cursor: 'pointer', color: BLUE, fontSize: 16 }}
+            >
+              ↻
+            </button>
+          ) : null}
+
+          {search !== undefined && onSearch ? (
+            <input
+              value={search}
+              onChange={(e) => onSearch(e.target.value)}
+              placeholder="חיפוש מכרזים…"
+              style={{ marginInlineStart: 12, padding: '8px 14px', borderRadius: 8, border: '1px solid ' + BORDER, background: '#f7f9fb', fontSize: 13, fontFamily: RBK, minWidth: 180, color: DARK }}
+            />
+          ) : (
+            <div style={{ marginInlineStart: 'auto' }} />
+          )}
+        </div>
+      </nav>
+      <MobileTabBar />
+    </>
   );
 }
