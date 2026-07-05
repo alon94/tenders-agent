@@ -1,115 +1,123 @@
 'use client';
-
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import SiteNav from '../../components/SiteNav';
+import InternalShell from '../../components/InternalShell';
+import { BORDER, DARK, bandColor, scoreFor, statusTags, daysLeft, fmtDate } from '../../lib/tenderMeta';
 
+interface Doc { name?: string; title?: string; type?: string; date?: string; url: string; description?: string }
 interface TenderDetail {
-    id: string; title?: string; publisher?: string; publicationNumber?: string; status?: string;
-    procedureNumber?: string; publishDate?: string; updateDate?: string; submissionStart?: string;
-    deadline?: string; contactName?: string; contactEmail?: string; topics?: string[];
-    documents?: { date?: string; title: string; description?: string; url: string }[];
-    submissionUrl?: string; url?: string;
+  id: string; title?: string; publisher?: string; publicationNumber?: string; status?: string;
+  procedureNumber?: string; publishDate?: string; updateDate?: string; submissionStart?: string;
+  deadline?: string; contactName?: string; contactEmail?: string; topics?: string[];
+  documents?: Doc[]; submissionUrl?: string; url?: string;
+}
+
+const TABS = ['סקירה', 'דרישות סף', 'מסמכים', 'לוח זמנים'];
+
+function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+  return <div style={{ background: '#fff', border: '1px solid ' + BORDER, borderRadius: 14, padding: 18, ...style }}>{children}</div>;
 }
 
 export default function TenderPage() {
-    const params = useParams();
-    const id = Array.isArray(params.id) ? params.id[0] : params.id;
-    const [tender, setTender] = useState<TenderDetail | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+  const params = useParams();
+  const id = String(params?.id || '');
+  const [t, setT] = useState<TenderDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [tab, setTab] = useState(0);
 
-    useEffect(() => {
-        if (!id) return;
-        setLoading(true);
-        fetch(`/api/tender/${id}`)
-            .then((r) => { if (!r.ok) throw new Error('failed'); return r.json(); })
-            .then((data) => { setTender(data); setLoading(false); })
-            .catch(() => { setError('לא ניתן לטעון את פרטי המכרז'); setLoading(false); });
-    }, [id]);
+  useEffect(() => {
+    if (!id) return;
+    fetch('/api/tender/' + encodeURIComponent(id))
+      .then((r) => r.json())
+      .then((data) => { if (data.error) setError(String(data.error)); else setT(data); })
+      .catch((e) => setError(String(e)))
+      .finally(() => setLoading(false));
+  }, [id]);
 
-    const shell = (children: React.ReactNode) => (
-        <div className="inner-page-wrap">
-            <SiteNav active="/dashboard" />
-            <div className="inner-page-content">
-                <a href="/dashboard" className="back-link">{"← חזרה לרשימת המכרזים"}</a>
-                {children}
-            </div>
-        </div>
-    );
+  if (loading) return <InternalShell title="פרטי מכרז"><div style={{ color: '#7a8794' }}>טוען\u2026</div></InternalShell>;
+  if (error || !t) return <InternalShell title="פרטי מכרז"><div style={{ color: '#b04a34' }}>שגיאה בטעינת המכרז.</div></InternalShell>;
 
-    if (loading) return shell(
-        <div className="inner-card center-text">
-            <div>טוען פרטי מכרז...</div>
-        </div>
-    );
-    if (error || !tender) return shell(
-        <div className="inner-card center-text error-text">{error || 'מכרז לא נמצא'}</div>
-    );
+  const d = daysLeft(t.deadline || '');
+  const score = scoreFor(t.title || '', t.publisher || '');
+  const tags = statusTags(t.status || '', d, undefined);
+  const docs = t.documents || [];
 
-    const row = (label: string, value?: string) => value ? (
-        <div className="detail-row">
-            <span className="detail-label">{label}</span>
-            <span className="detail-value">{value}</span>
-        </div>
-    ) : null;
+  const meta: [string, string][] = [
+    ['גוף מפרסם', t.publisher || '\u2014'],
+    ['מספר מכרז', t.publicationNumber || t.procedureNumber || '\u2014'],
+    ['תחום', (t.topics && t.topics.join(', ')) || '\u2014'],
+    ['תאריך פרסום', fmtDate(t.publishDate || '')],
+    ['עודכן', fmtDate(t.updateDate || '')],
+    ['מועד אחרון', fmtDate(t.deadline || '')],
+  ];
 
-    return shell(
-        <div className="inner-card">
-            <div className="tender-header">
-                {tender.status && <span className="status-badge">{tender.status}</span>}
-                <span className="tender-title">{tender.title || 'מכרז'}</span>
-                {tender.publisher && <div className="tender-publisher">{tender.publisher}</div>}
-            </div>
-            <div className="detail-grid">
-                {row('מסי פרסום', tender.publicationNumber)}
-                {row('מסי הליך', tender.procedureNumber)}
-                {row('תאריך פרסום', tender.publishDate)}
-                {row('תאריך עדכון', tender.updateDate)}
-                {row('מועד תחילת ההגשה', tender.submissionStart)}
-                {row('מועד אחרון להגשה', tender.deadline)}
-                {row('פנייה למפרסם', tender.contactName)}
-                {row('דואל', tender.contactEmail)}
-            </div>
-            {tender.topics && tender.topics.length > 0 && (
-                <div className="section-block">
-                    <h2 className="section-title">נושאים</h2>
-                    <div className="tags-row">
-                        {tender.topics.map((t) => <span key={t} className="topic-tag">{t}</span>)}
-                    </div>
+  return (
+    <InternalShell title="פרטי מכרז" subtitle={t.publisher || undefined}
+      action={<a href="/marked" style={{ color: '#5b6b7a', textDecoration: 'none', fontSize: 13 }}>\u2192 חזרה</a>}>
+      <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        <div style={{ flex: '1 1 480px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <Card>
+            <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+              <div style={{ width: 66, height: 66, borderRadius: 14, background: '#e8f1fb', border: '1px solid #cfe0f4', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
+                <span style={{ fontSize: 24, fontWeight: 700, color: '#1e5aa8', lineHeight: 1 }}>{score}</span>
+                <span style={{ fontSize: 9.5, color: '#1e5aa8' }}>ציון התאמה</span>
+                <span style={{ width: 30, height: 3, borderRadius: 2, background: bandColor(score), marginTop: 3 }} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+                  {tags.map((g, gi) => (<span key={gi} style={{ fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 6, background: g.bg, color: g.fg, border: '1px solid ' + g.bd }}>{g.label}</span>))}
                 </div>
-            )}
-            {tender.documents && tender.documents.length > 0 && (
-                <div className="section-block">
-                    <h2 className="section-title">מסמכים נלווים</h2>
-                    <div className="docs-grid">
-                        {tender.documents.map((doc) => (
-                            <a key={doc.url} href={doc.url} target="_blank" rel="noopener noreferrer" className="doc-card">
-                                {doc.date && <span className="doc-date">{doc.date}</span>}
-                                <span className="doc-title">{doc.title}</span>
-                                {doc.description && <span className="doc-desc">{doc.description}</span>}
-                                <span className="doc-icon" aria-hidden="true">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M5 21h14" />
-                                    </svg>
-                                </span>
-                            </a>
-                        ))}
-                    </div>
-                </div>
-            )}
-            <div className="tender-actions">
-                {tender.submissionUrl && (
-                    <a href={tender.submissionUrl} target="_blank" rel="noopener noreferrer" className="btn-primary">
-                        להגשת הצעה
-                    </a>
-                )}
-                {tender.url && (
-                    <a href={tender.url} target="_blank" rel="noopener noreferrer" className="btn-secondary">
-                        צפייה במקור (mr.gov.il) ↗
-                    </a>
-                )}
+                <div style={{ fontSize: 20, fontWeight: 700, color: DARK, lineHeight: 1.4 }}>{t.title || 'ללא כותרת'}</div>
+              </div>
             </div>
+            <div style={{ display: 'flex', gap: 20, borderBottom: '1px solid ' + BORDER, marginTop: 16 }}>
+              {TABS.map((tb, i) => (
+                <button key={i} onClick={() => setTab(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '10px 0', fontSize: 13.5, fontWeight: tab === i ? 700 : 500, color: tab === i ? '#1e5aa8' : '#7a8794', borderBottom: tab === i ? '2px solid #2b6fc4' : '2px solid transparent' }}>{tb}</button>
+              ))}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 24px', marginTop: 16 }}>
+              {meta.map(([k, v], i) => (
+                <div key={i}>
+                  <div style={{ fontSize: 11.5, color: '#8a97a3', marginBottom: 2 }}>{k}</div>
+                  <div style={{ fontSize: 13.5, color: k === 'מועד אחרון' ? '#b04a34' : DARK, fontWeight: 600 }}>{v}</div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <Card>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12, color: DARK }}>מסמכים מצורפים</div>
+            {docs.length === 0 ? (
+              <div style={{ fontSize: 13, color: '#7a8794' }}>אין מסמכים מצורפים.</div>
+            ) : docs.map((doc, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderTop: i ? '1px solid #eef1f4' : 'none' }}>
+                <span style={{ fontSize: 18, color: '#5b6b7a' }}>\u25A4</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 600, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.name || doc.title || 'מסמך'}</div>
+                  <div style={{ fontSize: 11.5, color: '#8a97a3' }}>{[doc.type, doc.date && fmtDate(doc.date)].filter(Boolean).join(' \u00B7 ')}</div>
+                </div>
+                <a href={doc.url} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: '#2b6fc4', fontWeight: 600, textDecoration: 'none', flex: '0 0 auto' }}>הורדה \u2193</a>
+              </div>
+            ))}
+          </Card>
         </div>
-    );
+
+        <div style={{ flex: '0 0 300px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <Card>
+            <div style={{ fontSize: 11.5, color: '#8a97a3' }}>מועד אחרון להגשה</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: '#b04a34', margin: '4px 0 2px' }}>{fmtDate(t.deadline || '')}</div>
+            {d !== null && d >= 0 && <div style={{ fontSize: 12.5, color: '#7a8794' }}>נותרו {d} ימים</div>}
+            <a href={t.submissionUrl || t.url || '#'} target="_blank" rel="noreferrer" style={{ display: 'block', textAlign: 'center', marginTop: 12, background: '#2b6fc4', color: '#fff', borderRadius: 10, padding: '11px', fontSize: 13.5, fontWeight: 600, textDecoration: 'none' }}>הגשת הצעה \u2197</a>
+            <button style={{ display: 'block', width: '100%', marginTop: 8, background: '#fff', color: '#5b6b7a', border: '1px solid ' + BORDER, borderRadius: 10, padding: '10px', fontSize: 13, cursor: 'pointer' }}>\u2606 שמירה למעקב</button>
+          </Card>
+          <Card style={{ background: '#f0f6fd', border: '1px solid #cfe0f4' }}>
+            <div style={{ fontSize: 13.5, fontWeight: 700, color: '#1e5aa8', marginBottom: 6 }}>\u2726 תובנת הסוכן החכם</div>
+            <div style={{ fontSize: 12.5, color: '#40566e', lineHeight: 1.5 }}>ציון ההתאמה למכרז זה הוא {score}. מומלץ לבדוק את דרישות הסף לפני הגשה.</div>
+            <button style={{ marginTop: 10, background: '#2b6fc4', color: '#fff', border: 'none', borderRadius: 9, padding: '9px 14px', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>\u2726 הפק סיכום החלטה</button>
+          </Card>
+        </div>
+      </div>
+    </InternalShell>
+  );
 }

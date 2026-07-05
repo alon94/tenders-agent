@@ -1,59 +1,88 @@
-"use client";
-import { useState, useEffect } from "react";
-import SiteNav from "../components/SiteNav";
+'use client';
+import { useEffect, useState } from 'react';
+import InternalShell from '../components/InternalShell';
+import { BORDER, DARK, bandColor, scoreFor, statusTags, daysLeft, fmtDate } from '../lib/tenderMeta';
 
-interface Tender { id:string; title?:string; publisher?:string; publishDate?:string; deadline?:string; status?:string; url?:string; type?:string; }
+interface Tender {
+  id: string; title?: string; publisher?: string;
+  publishDate?: string; deadline?: string; status?: string; url?: string; type?: string;
+}
 
-const NAVY="#0b2e52",BLUE="#2e86de",MUTED="#64778a",GOLD="#b78a18";
-const RBK="Rubik,'Assistant',Arial,sans-serif";
+export default function MarkedPage() {
+  const [all, setAll] = useState<Tender[]>([]);
+  const [marked, setMarked] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<'all' | 'closing'>('all');
 
-export default function MarkedPage(){
-  const [items,setItems]=useState<Tender[]>([]);
-  const [loading,setLoading]=useState(true);
-  const [marked,setMarked]=useState<string[]>([]);
-  useEffect(()=>{
-    let ids:string[]=[];
-    try{const m=JSON.parse(localStorage.getItem("markedTenders")||"[]");if(Array.isArray(m))ids=m;}catch(e){}
-    setMarked(ids);
-    if(ids.length===0){setLoading(false);return;}
-    fetch("/api/tenders?offset=0").then(r=>r.json()).then(d=>{
-      const all:Tender[]=(d&&d.tenders)?d.tenders:[];
-      setItems(all.filter(t=>ids.includes(String(t.id))));
-      setLoading(false);
-    }).catch(()=>setLoading(false));
-  },[]);
-  function unmark(id:string){
-    const next=marked.filter(x=>x!==id);
+  useEffect(() => {
+    try { setMarked(JSON.parse(localStorage.getItem('markedTenders') || '[]')); } catch {}
+    fetch('/api/tenders?offset=0')
+      .then((r) => r.json())
+      .then((d) => setAll(Array.isArray(d) ? d : d.items || d.tenders || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  function remove(id: string) {
+    const next = marked.filter((m) => m !== id);
     setMarked(next);
-    try{localStorage.setItem("markedTenders",JSON.stringify(next));}catch(e){}
-    setItems(prev=>prev.filter(t=>String(t.id)!==id));
+    try { localStorage.setItem('markedTenders', JSON.stringify(next)); } catch {}
   }
-  return(
-    <div style={{minHeight:'100vh',background:'#e9f3fc',fontFamily:"'Assistant',Arial,sans-serif",direction:'rtl',color:NAVY}}>
-      <SiteNav active="/marked"/>
-      <div style={{maxWidth:900,margin:'0 auto',padding:'28px 16px 40px'}}>
-        <h1 style={{fontFamily:RBK,fontSize:26,fontWeight:800,color:NAVY,marginBottom:6}}>★ מכרזים מסומנים</h1>
-        <div style={{color:MUTED,fontSize:14,marginBottom:22}}>המכרזים ששמרת לעיון מאוחר יותר</div>
-        {loading?(<div style={{color:MUTED}}>טוען...</div>):items.length===0?(
-          <div style={{background:'#fff',borderRadius:20,padding:40,color:MUTED,textAlign:'center',boxShadow:'0 10px 28px rgba(11,46,82,.05)'}}>אין מכרזים מסומנים עדיין. סמנו מכרזים בדף הבית כדי לראותם כאן.</div>
-        ):(
-          <div style={{display:'flex',flexDirection:'column',gap:14}}>
-            {items.map(t=>(
-              <div key={t.id} style={{background:'#fff',borderRadius:20,padding:'20px 22px',boxShadow:'0 10px 28px rgba(11,46,82,.05)',borderInlineEnd:'4px solid #f0932b',display:'flex',gap:20,alignItems:'flex-start'}}>
-                <div style={{flex:1,minWidth:0,textAlign:'right'}}>
-                  <div style={{display:'flex',flexWrap:'wrap',gap:8,justifyContent:'flex-end',marginBottom:12}}>
-                    {t.status&&<span style={{fontSize:12.5,fontWeight:700,padding:'5px 12px',borderRadius:999,background:'#fcf2d0',color:GOLD}}>{t.status}</span>}
-                    <span style={{fontSize:12.5,fontWeight:700,padding:'5px 12px',borderRadius:999,background:'#e1effb',color:'#1f73c4'}}>{t.publisher||'לא ידוע'}</span>
-                  </div>
-                  <a href={`/tender/${t.id}`} style={{fontFamily:RBK,fontSize:19,fontWeight:600,color:NAVY,lineHeight:1.4,textDecoration:'none',display:'block'}}>{t.title||'ללא כותרת'}</a>
-                  {t.deadline&&<div style={{fontSize:13,color:MUTED,marginTop:12}}>⏱ מועד אחרון: <b style={{color:'#33475b'}}>{t.deadline}</b></div>}
+
+  const rows = all.filter((t) => marked.includes(t.id));
+  const closing = rows.filter((t) => { const d = daysLeft(t.deadline || ''); return d !== null && d >= 0 && d <= 7; });
+  const shown = tab === 'closing' ? closing : rows;
+
+  return (
+    <InternalShell
+      title="מכרזים מסומנים"
+      subtitle={rows.length + ' מכרזים שמורים למעקב'}
+      action={<button style={{ background: '#fff', color: '#1e5aa8', border: '1px solid ' + BORDER, borderRadius: 10, padding: '9px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>ייצוא ל-Excel \u2193</button>}
+    >
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+        <button onClick={() => setTab('all')} style={{ border: '1px solid ' + (tab === 'all' ? DARK : BORDER), background: tab === 'all' ? DARK : '#fff', color: tab === 'all' ? '#fff' : '#5b6b7a', borderRadius: 999, padding: '7px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>הכל \u00B7 {rows.length}</button>
+        <button onClick={() => setTab('closing')} style={{ border: '1px solid ' + (tab === 'closing' ? '#b04a34' : BORDER), background: tab === 'closing' ? '#fbe9e7' : '#fff', color: '#b04a34', borderRadius: 999, padding: '7px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>נסגרים בקרוב \u00B7 {closing.length}</button>
+      </div>
+
+      <div style={{ background: '#fff', border: '1px solid ' + BORDER, borderRadius: 12, overflow: 'hidden' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '70px 1fr 232px 150px 120px', padding: '12px 16px', fontSize: 12, fontWeight: 600, color: '#7a8794', borderBottom: '1px solid ' + BORDER, background: '#f6f8fa' }}>
+          <span>ציון</span><span>נושא</span><span>סטטוס</span><span>מועד</span><span>פעולות</span>
+        </div>
+        {loading ? (
+          <div style={{ padding: 20, color: '#7a8794' }}>טוען\u2026</div>
+        ) : shown.length === 0 ? (
+          <div style={{ padding: 24, color: '#7a8794', textAlign: 'center' }}>אין מכרזים מסומנים עדיין. סמנו מכרזים \u2606 מדף הגילוי.</div>
+        ) : (
+          shown.map((t) => {
+            const d = daysLeft(t.deadline || '');
+            const score = scoreFor(t.title || '', t.publisher || '');
+            const tags = statusTags(t.status || '', d, t.publisher);
+            return (
+              <div key={t.id} style={{ display: 'grid', gridTemplateColumns: '70px 1fr 232px 150px 120px', padding: '14px 16px', alignItems: 'center', borderBottom: '1px solid ' + BORDER }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                  <span style={{ fontSize: 20, fontWeight: 700, color: DARK, lineHeight: 1 }}>{score}</span>
+                  <span style={{ width: 26, height: 3, borderRadius: 2, background: bandColor(score) }} />
                 </div>
-                <button onClick={()=>unmark(String(t.id))} title="הסר מסימונים" style={{flex:'0 0 auto',fontSize:12,fontWeight:700,color:GOLD,background:'#fcf2d0',padding:'8px 14px',borderRadius:999,border:'none',cursor:'pointer',whiteSpace:'nowrap'}}>★ הסר</button>
+                <div style={{ paddingInlineEnd: 10 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: DARK, lineHeight: 1.4 }}>{t.title || 'ללא כותרת'}</div>
+                  <div style={{ fontSize: 12, color: '#7a8794', marginTop: 3 }}>{t.publisher || 'לא ידוע'} \u00B7 פורסם {fmtDate(t.publishDate || '')}</div>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                  {tags.slice(0, 3).map((g, gi) => (<span key={gi} style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 6, background: g.bg, color: g.fg, border: '1px solid ' + g.bd }}>{g.label}</span>))}
+                </div>
+                <div style={{ fontSize: 13 }}>
+                  <div style={{ color: DARK, fontWeight: 600 }}>{fmtDate(t.deadline || '')}</div>
+                  {d !== null && d >= 0 && <div style={{ color: d <= 7 ? '#b04a34' : '#7a8794', fontSize: 12 }}>נותרו {d} ימים</div>}
+                </div>
+                <div style={{ display: 'flex', gap: 12, fontSize: 13 }}>
+                  <a href={'/tender/' + t.id} style={{ color: '#2b6fc4', fontWeight: 600, textDecoration: 'none' }}>פרטים</a>
+                  <button onClick={() => remove(t.id)} style={{ color: '#b04a34', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}>הסר</button>
+                </div>
               </div>
-            ))}
-          </div>
+            );
+          })
         )}
       </div>
-    </div>
+    </InternalShell>
   );
 }

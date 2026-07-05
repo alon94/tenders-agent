@@ -1,45 +1,80 @@
-"use client";
-import SiteNav from "../components/SiteNav";
+'use client';
+import { useEffect, useState } from 'react';
+import InternalShell from '../components/InternalShell';
+import { BORDER, DARK, fmtDate } from '../lib/tenderMeta';
 
-const NAVY="#0b2e52",BLUE="#2e86de",PURPLE="#7c5cf0",MUTED="#64778a";
-const RBK="Rubik,'Assistant',Arial,sans-serif";
+type Guarantee = {
+  id: string; tenderTitle: string; type: string;
+  amount: number; expiry: string; status: 'active' | 'expiring' | 'pending';
+};
+type Kpi = { totalAmount: number; active: number; expiring: number; pending: number };
 
-export default function GuaranteePage(){
-  const services=[
-    {icon:'🛡',title:'ערבויות מכרז וביצוע',desc:'הנפקת ערבויות בנקאיות ומוסדיות במהירות, בהתאמה לדרישות המכרז — ללא בירוקרטיה מיותרת.'},
-    {icon:'📋',title:'ליווי בהגשת ההצעה',desc:'בדיקת עמידה בתנאי הסף, ארגון המסמכים והגשה מסודרת במועד — כדי שלא תיפסלו על טכניקה.'},
-    {icon:'⚖️',title:'ייעוץ משפטי ומקצועי',desc:'חוות דעת על תנאי המכרז, ליווי בשאלות הבהרה ובהשגות מול הגוף המפרסם.'},
-    {icon:'💰',title:'מימון וגישור פיננסי',desc:'פתרונות מימון להון חוזר ולעמידה בדרישות איתנות פיננסית של מכרזים גדולים.'},
+const STATUS: Record<Guarantee['status'], { label: string; bg: string; fg: string; bd: string }> = {
+  active:   { label: 'פעילה',       bg: '#e8f1fb', fg: '#1e5aa8', bd: '#cfe0f4' },
+  expiring: { label: 'פגה בקרוב',   bg: '#fbe9e7', fg: '#b04a34', bd: '#f2cfc8' },
+  pending:  { label: 'בתהליך אישור', bg: '#fbf3d8', fg: '#96731a', bd: '#f0e3b0' },
+};
+
+function shekel(n: number) { return '\u20AA' + n.toLocaleString('he-IL'); }
+
+export default function GuaranteePage() {
+  const [items, setItems] = useState<Guarantee[]>([]);
+  const [kpi, setKpi] = useState<Kpi>({ totalAmount: 0, active: 0, expiring: 0, pending: 0 });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/guarantees')
+      .then((r) => r.json())
+      .then((d) => { setItems(d.items || []); if (d.kpi) setKpi(d.kpi); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const kpiCells = [
+    { v: shekel(kpi.totalAmount), l: 'סה"כ ערבויות', c: DARK },
+    { v: String(kpi.active), l: 'פעילות', c: '#1e7d45' },
+    { v: String(kpi.expiring), l: 'פגות החודש', c: '#b04a34' },
+    { v: String(kpi.pending), l: 'בתהליך אישור', c: '#2b6fc4' },
   ];
-  return(
-    <div style={{minHeight:'100vh',background:'#e9f3fc',fontFamily:"'Assistant',Arial,sans-serif",direction:'rtl',color:NAVY}}>
-      <SiteNav active="/guarantee"/>
-      <div style={{maxWidth:900,margin:'0 auto',padding:'28px 16px 40px'}}>
-        {/* hero */}
-        <div style={{background:'linear-gradient(135deg,#0b2e52,#1a5fa8)',borderRadius:22,padding:'32px 34px',color:'#fff',marginBottom:24}}>
-          <div style={{fontFamily:RBK,fontSize:28,fontWeight:800,marginBottom:8}}>🛡 ערבויות וליווי</div>
-          <div style={{fontSize:15,opacity:.9,lineHeight:1.6,maxWidth:560}}>מרגע שמצאתם מכרז מתאים — אנחנו איתכם עד ההגשה. ערבויות, ליווי מקצועי ומימון, הכול תחת קורת גג אחת.</div>
-          <a href="/agent" style={{display:'inline-block',marginTop:18,background:'#cdef4a',color:NAVY,fontWeight:700,fontSize:14,padding:'11px 22px',borderRadius:999,textDecoration:'none'}}>דברו עם הסוכן החכם ✦</a>
-        </div>
 
-        <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:16}}>
-          {services.map((s,i)=>(
-            <div key={i} style={{background:'#fff',borderRadius:20,padding:'24px 26px',boxShadow:'0 10px 28px rgba(11,46,82,.05)'}}>
-              <div style={{fontSize:28,marginBottom:12}}>{s.icon}</div>
-              <div style={{fontFamily:RBK,fontSize:18,fontWeight:700,color:NAVY,marginBottom:8}}>{s.title}</div>
-              <div style={{fontSize:14,color:'#4b5f72',lineHeight:1.6}}>{s.desc}</div>
-            </div>
-          ))}
-        </div>
-
-        <div style={{background:'#fff',borderRadius:20,padding:'26px 28px',boxShadow:'0 10px 28px rgba(11,46,82,.05)',marginTop:16,display:'flex',alignItems:'center',gap:20,flexWrap:'wrap'}}>
-          <div style={{flex:1,minWidth:220}}>
-            <div style={{fontFamily:RBK,fontSize:18,fontWeight:700,color:NAVY}}>רוצים ליווי למכרז ספציפי?</div>
-            <div style={{fontSize:14,color:MUTED,marginTop:6}}>השאירו פרטים ונחזור אליכם עם הצעה מותאמת תוך יום עסקים.</div>
+  return (
+    <InternalShell
+      title="ערבויות וליווי"
+      subtitle="ניהול ערבויות ומעקב תוקף"
+      action={<button style={{ background: '#2b6fc4', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 16px', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>+ בקשת ערבות חדשה</button>}
+    >
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', background: '#fff', border: '1px solid ' + BORDER, borderRadius: 10, overflow: 'hidden', marginBottom: 20 }}>
+        {kpiCells.map((k, i) => (
+          <div key={i} style={{ padding: '16px 18px', borderInlineEnd: i < 3 ? '1px solid ' + BORDER : 'none' }}>
+            <div style={{ fontSize: 22, fontWeight: 700, color: k.c }}>{k.v}</div>
+            <div style={{ fontSize: 12, color: '#7a8794', marginTop: 3 }}>{k.l}</div>
           </div>
-          <a href="/register" style={{background:NAVY,color:'#fff',fontWeight:700,fontSize:15,padding:'13px 26px',borderRadius:12,textDecoration:'none',fontFamily:RBK}}>יצירת קשר</a>
-        </div>
+        ))}
       </div>
-    </div>
+
+      <div style={{ background: '#fff', border: '1px solid ' + BORDER, borderRadius: 12, overflow: 'hidden' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px 130px 150px 120px', padding: '12px 16px', fontSize: 12, fontWeight: 600, color: '#7a8794', borderBottom: '1px solid ' + BORDER, background: '#f6f8fa' }}>
+          <span>מכרז</span><span>סוג ערבות</span><span>סכום</span><span>תוקף עד</span><span>סטטוס</span>
+        </div>
+        {loading ? (
+          <div style={{ padding: 20, color: '#7a8794' }}>טוען\u2026</div>
+        ) : items.length === 0 ? (
+          <div style={{ padding: 20, color: '#7a8794' }}>אין ערבויות להצגה</div>
+        ) : (
+          items.map((g) => {
+            const s = STATUS[g.status];
+            return (
+              <div key={g.id} style={{ display: 'grid', gridTemplateColumns: '1fr 150px 130px 150px 120px', padding: '14px 16px', fontSize: 13.5, alignItems: 'center', borderBottom: '1px solid ' + BORDER }}>
+                <span style={{ fontWeight: 600, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingInlineEnd: 10 }}>{g.tenderTitle}</span>
+                <span style={{ color: '#5b6b7a' }}>{g.type}</span>
+                <span style={{ fontWeight: 700, color: DARK }}>{shekel(g.amount)}</span>
+                <span style={{ color: '#5b6b7a' }}>{fmtDate(g.expiry)}</span>
+                <span><span style={{ fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 6, background: s.bg, color: s.fg, border: '1px solid ' + s.bd }}>{s.label}</span></span>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </InternalShell>
   );
 }
