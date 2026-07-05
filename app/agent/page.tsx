@@ -1,71 +1,85 @@
-"use client";
-import { useState, useEffect, useMemo } from "react";
-import SiteNav from "../components/SiteNav";
+'use client';
+import { useEffect, useState } from 'react';
+import InternalShell from '../components/InternalShell';
+import { BORDER, DARK } from '../lib/tenderMeta';
 
-interface Tender { id:string; title?:string; publisher?:string; publishDate?:string; deadline?:string; status?:string; url?:string; type?:string; }
+type Step = { icon: string; title: string; sub: string; state: 'done' | 'active' | 'pending' };
+type Msg = { role: 'agent' | 'user'; text: string };
 
-const NAVY="#0b2e52",BLUE="#2e86de",PURPLE="#7c5cf0",MUTED="#64778a";
-const RBK="Rubik,'Assistant',Arial,sans-serif";
+const STEP_STYLE = {
+  done:    { bg: '#e8f1fb', fg: '#1e5aa8', mark: '\u2713' },
+  active:  { bg: '#fbf3d8', fg: '#8a6d1f', mark: '\u25CF' },
+  pending: { bg: '#eef1f4', fg: '#8a97a3', mark: '\u25CB' },
+};
 
-export default function AgentPage(){
-  const [items,setItems]=useState<Tender[]>([]);
-  const [loading,setLoading]=useState(true);
-  const [date,setDate]=useState<string>("");
-  useEffect(()=>{
-    fetch("/api/tenders?offset=0").then(r=>r.json()).then(d=>{
-      const all:Tender[]=(d&&d.tenders)?d.tenders:[];
-      setItems(all);
-      const dates=all.map(t=>(t.publishDate||"").slice(0,10)).filter(Boolean).sort();
-      if(dates.length)setDate(dates[dates.length-1]);
-      setLoading(false);
-    }).catch(()=>setLoading(false));
-  },[]);
-  const dateOptions=useMemo(()=>{
-    const set=new Set<string>();
-    items.forEach(t=>{const d=(t.publishDate||"").slice(0,10);if(d)set.add(d);});
-    return Array.from(set).sort().reverse();
-  },[items]);
-  const dayItems=useMemo(()=>items.filter(t=>(t.publishDate||"").slice(0,10)===date),[items,date]);
-  return(
-    <div style={{minHeight:'100vh',background:'#e9f3fc',fontFamily:"'Assistant',Arial,sans-serif",direction:'rtl',color:NAVY}}>
-      <SiteNav active="/agent"/>
-      <div style={{maxWidth:900,margin:'0 auto',padding:'28px 16px 40px'}}>
-        {/* AI hero */}
-        <div style={{background:'linear-gradient(135deg,#7c5cf0,#b44be8)',borderRadius:22,padding:'24px 26px',color:'#fff',marginBottom:22}}>
-          <div style={{fontFamily:RBK,fontSize:24,fontWeight:800,display:'flex',alignItems:'center',gap:10}}>✦ הסוכן החכם</div>
-          <div style={{fontSize:14,opacity:.9,marginTop:6}}>כל מה שהסוכן מצא עבור התאריך הנבחר</div>
+export default function AgentPage() {
+  const [scanning, setScanning] = useState(0);
+  const [steps, setSteps] = useState<Step[]>([]);
+  const [messages, setMessages] = useState<Msg[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [input, setInput] = useState('');
+
+  useEffect(() => {
+    fetch('/api/agent')
+      .then((r) => r.json())
+      .then((d) => { setScanning(d.scanning || 0); setSteps(d.steps || []); setMessages(d.messages || []); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  function send() {
+    const text = input.trim();
+    if (!text) return;
+    setMessages((m) => [...m, { role: 'user', text }, { role: 'agent', text: 'קיבלתי \u2014 אני מעבד את השאלה על בסיס המכרזים שסרקתי.' }]);
+    setInput('');
+  }
+
+  return (
+    <InternalShell
+      title="הסוכן החכם"
+      subtitle={loading ? 'טוען\u2026' : '\u25CF פעיל \u00B7 סורק ' + scanning.toLocaleString('he-IL') + ' מכרזים'}
+    >
+      <div style={{ maxWidth: 760 }}>
+        <div style={{ background: '#fff', border: '1px solid ' + BORDER, borderRadius: 14, padding: 18, marginBottom: 18 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14, color: DARK }}>\u2699 תהליך העבודה של הסוכן</div>
+          {steps.map((s, i) => {
+            const st = STEP_STYLE[s.state];
+            return (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '9px 0', borderTop: i ? '1px solid #eef1f4' : 'none' }}>
+                <span style={{ width: 26, height: 26, borderRadius: 999, background: st.bg, color: st.fg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, flex: '0 0 auto' }}>{st.mark}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 600, color: DARK }}>{s.title}</div>
+                  <div style={{ fontSize: 12, color: '#7a8794' }}>{s.sub}</div>
+                </div>
+              </div>
+            );
+          })}
         </div>
-        {loading?(<div style={{color:MUTED}}>הסוכן סורק מכרזים...</div>):(
-          <>
-            <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:20,background:'#fff',padding:'16px 20px',borderRadius:18,boxShadow:'0 10px 28px rgba(11,46,82,.05)',flexWrap:'wrap'}}>
-              <label style={{fontSize:14,fontWeight:700,color:'#33475b'}}>בחרו תאריך:</label>
-              <div style={{position:'relative'}}>
-                <select value={date} onChange={e=>setDate(e.target.value)} style={{padding:'10px 14px',paddingLeft:34,borderRadius:12,border:'1px solid #e2ecf6',background:'#f2f7fc',color:'#33475b',fontSize:14,appearance:'none' as const,WebkitAppearance:'none' as const,fontFamily:'inherit'}}>
-                  {dateOptions.map(d=>(<option key={d} value={d}>{d}</option>))}
-                </select>
-                <span style={{position:'absolute',left:14,top:'50%',transform:'translateY(-50%)',fontSize:11,color:'#9fb2c6',pointerEvents:'none'}}>▾</span>
-              </div>
-              <span style={{marginInlineStart:'auto',background:'#e3f6ea',color:'#1e9e5a',borderRadius:999,padding:'7px 16px',fontSize:13,fontWeight:700}}>נמצאו {dayItems.length} מכרזים</span>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 18 }}>
+          {messages.map((m, i) => (
+            <div key={i} style={{ display: 'flex', justifyContent: m.role === 'user' ? 'flex-start' : 'flex-end' }}>
+              <div style={{
+                maxWidth: '80%', fontSize: 13.5, lineHeight: 1.5, padding: '11px 14px',
+                background: m.role === 'user' ? '#2b6fc4' : '#f4f6f8',
+                color: m.role === 'user' ? '#fff' : DARK,
+                borderRadius: m.role === 'user' ? '12px 12px 4px 12px' : '12px 12px 12px 4px',
+              }}>{m.text}</div>
             </div>
-            {dayItems.length===0?(
-              <div style={{background:'#fff',borderRadius:20,padding:40,color:MUTED,textAlign:'center',boxShadow:'0 10px 28px rgba(11,46,82,.05)'}}>הסוכן לא מצא מכרזים לתאריך זה.</div>
-            ):(
-              <div style={{display:'flex',flexDirection:'column',gap:14}}>
-                {dayItems.map(t=>(
-                  <div key={t.id} style={{background:'#fff',borderRadius:20,padding:'20px 22px',boxShadow:'0 10px 28px rgba(11,46,82,.05)',borderInlineEnd:`4px solid ${BLUE}`,textAlign:'right'}}>
-                    <div style={{display:'flex',flexWrap:'wrap',gap:8,justifyContent:'flex-end',marginBottom:12}}>
-                      {t.status&&<span style={{fontSize:12.5,fontWeight:700,padding:'5px 12px',borderRadius:999,background:'#fcf2d0',color:'#b78a18'}}>{t.status}</span>}
-                      <span style={{fontSize:12.5,fontWeight:700,padding:'5px 12px',borderRadius:999,background:'#e1effb',color:'#1f73c4'}}>{t.publisher||'לא ידוע'}</span>
-                    </div>
-                    <a href={`/tender/${t.id}`} style={{fontFamily:RBK,fontSize:19,fontWeight:600,color:NAVY,lineHeight:1.4,textDecoration:'none',display:'block'}}>{t.title||'ללא כותרת'}</a>
-                    {t.deadline&&<div style={{fontSize:13,color:MUTED,marginTop:12}}>⏱ מועד אחרון: <b style={{color:'#33475b'}}>{t.deadline}</b></div>}
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        )}
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, position: 'sticky', bottom: 0, background: '#eef1f4', paddingTop: 8 }}>
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') send(); }}
+            placeholder="שאל את הסוכן\u2026"
+            style={{ flex: 1, padding: '12px 18px', borderRadius: 999, border: '1px solid ' + BORDER, fontSize: 14, outline: 'none', background: '#fff' }}
+          />
+          <button onClick={send} aria-label="שלח" style={{ width: 44, height: 44, borderRadius: 999, background: '#2b6fc4', color: '#fff', border: 'none', fontSize: 18, cursor: 'pointer', flex: '0 0 auto' }}>\u2191</button>
+        </div>
       </div>
-    </div>
+    </InternalShell>
   );
 }
