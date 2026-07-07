@@ -21,7 +21,7 @@ export async function GET(req: Request) {
       publication_id, tender_id,
       description, publisher, publisher_unit,
       claim_date, publication_date, status, page_url, tender_type_he
-    FROM procurement_tenders_all
+    FROM procurement_tenders_processed
     WHERE status IN ${STATUSES} AND ${dateFilter} ${searchFilter}
     ORDER BY publication_date DESC NULLS LAST, claim_date DESC NULLS LAST
     LIMIT 1000 OFFSET ${offset}`
