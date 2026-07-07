@@ -12,7 +12,8 @@ export async function GET(req: Request) {
     const search = searchParams.get('q') || ''
     const offset = parseInt(searchParams.get('offset') || '0')
     const today = new Date().toISOString().split('T')[0]
-    const dateFilter = `(claim_date > '${today}' OR (claim_date IS NULL AND publication_date > '2026-01-01'))`
+    const cutoffDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+    const dateFilter = `(claim_date > '${today}' OR (claim_date IS NULL AND publication_date > '${cutoffDate}'))`
     const searchFilter = search
       ? `AND (description ILIKE '%${search.replace(/'/g,"''")}%' OR publisher ILIKE '%${search.replace(/'/g,"''")}%')`
       : ''

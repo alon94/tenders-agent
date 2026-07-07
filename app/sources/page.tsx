@@ -1,33 +1,76 @@
-"use client";
-import SiteNav from "../components/SiteNav";
+'use client';
 
-const NAVY="#0b2e52",BLUE="#2e86de",MUTED="#64778a";
-const RBK="Rubik,'Assistant',Arial,sans-serif";
+import { useEffect, useState } from 'react';
+import InternalShell from '../components/InternalShell';
+import { DARK, BLUE, MUTED, BORDER } from '../lib/tenderMeta';
 
-export default function SourcesPage(){
-  const sources=[
-    {name:'מינהל הרכש הממשלתי',desc:'המקור הרשמי למכרזים ממשלתיים. ממנו נשאבים פרטי המכרז והמסמכים הנלווים',url:'https://mr.gov.il'},
-    {name:'מפתח התקציב',desc:'מאגר נתונים פתוח המאגד את נתוני המכרזים הממשלתיים בצורה מובנית',url:'https://next.obudget.org'},
+const SOURCES = [
+  {
+    name: "מינהל הרכש הממשלתי",
+    desc: "מקור פרטי המכרז החי — פרטים מלאים, אנשי קשר ומסמכים",
+    host: 'mr.gov.il',
+    url: 'https://mr.gov.il/ilgstorefront/he/',
+    icon: '🏛️',
+  },
+  {
+    name: "obudget – התקציב הפתוח",
+    desc: "מקור רשימת המכרזים — רשימה, סטטוסים ותאריכים",
+    host: 'next.obudget.org',
+    url: 'https://next.obudget.org/',
+    icon: '📊',
+  },
+];
+
+export default function SourcesPage() {
+  const [count, setCount] = useState<number | null>(null);
+  const [updated, setUpdated] = useState<string>('—');
+
+  useEffect(() => {
+    let total = 0;
+    const load = async (offset: number) => {
+      const res = await fetch('/api/' + 'tenders?offset=' + offset);
+      const data = await res.json();
+      const batch = (data.tenders || []).length;
+      total += batch;
+      if (batch === 1000) return load(offset + 1000);
+      setCount(total);
+    };
+    load(0).catch(() => setCount(0));
+    setUpdated(new Date().toLocaleDateString('he-IL'));
+  }, []);
+
+  const kpiCells = [
+    { v: count === null ? '…' : count.toLocaleString('he-IL'), l: "מכרזים זמינים", c: DARK },
+    { v: String(SOURCES.length), l: "מקורות פעילים", c: '#1e7d45' },
+    { v: updated, l: "עדכון אחרון", c: BLUE },
   ];
-  return(
-    <div style={{minHeight:'100vh',background:'#e9f3fc',fontFamily:"'Assistant',Arial,sans-serif",direction:'rtl',color:NAVY}}>
-      <SiteNav active="/sources"/>
-      <div style={{maxWidth:760,margin:'0 auto',padding:'28px 16px 40px'}}>
-        <h1 style={{fontFamily:RBK,fontSize:26,fontWeight:800,color:NAVY,marginBottom:6}}>⛁ מקורות</h1>
-        <div style={{color:MUTED,fontSize:14,marginBottom:22}}>רשימת המקורות הרשמיים שמהם אנו סורקים ואוספים מכרזים</div>
-        <div style={{display:'flex',flexDirection:'column',gap:14}}>
-          {sources.map((s,i)=>(
-            <div key={i} style={{background:'#fff',borderRadius:20,padding:'22px 24px',boxShadow:'0 10px 28px rgba(11,46,82,.05)',borderInlineEnd:`4px solid ${BLUE}`}}>
-              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
-                <span style={{fontFamily:RBK,fontSize:19,fontWeight:700,color:NAVY}}>{s.name}</span>
-                <span style={{marginInlineStart:'auto',display:'inline-flex',alignItems:'center',gap:6,background:'#e3f6ea',color:'#1e9e5a',borderRadius:999,padding:'5px 12px',fontSize:12,fontWeight:700}}><span style={{width:7,height:7,borderRadius:999,background:'#1e9e5a'}}></span>סריקה פעילה</span>
-              </div>
-              <div style={{color:'#4b5f72',fontSize:14,lineHeight:1.6,marginBottom:16}}>{s.desc}</div>
-              <a href={s.url} target="_blank" rel="noopener noreferrer" style={{display:'inline-block',background:NAVY,color:'#fff',textDecoration:'none',borderRadius:10,padding:'10px 20px',fontSize:13,fontWeight:600}}>מעבר למקור ↗</a>
-            </div>
-          ))}
-        </div>
+
+  return (
+    <InternalShell title={"מקורות נתונים"} subtitle={"המקורות שמזינים את הפלטפורמה בזמן אמת"}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', background: '#fff', border: '1px solid ' + BORDER, borderRadius: 10, overflow: 'hidden', marginBottom: 20 }}>
+        {kpiCells.map((k, i) => (
+          <div key={i} style={{ padding: '16px 18px', borderInlineEnd: i < kpiCells.length - 1 ? '1px solid ' + BORDER : 'none' }}>
+            <div style={{ fontSize: 22, fontWeight: 700, color: k.c }}>{k.v}</div>
+            <div style={{ fontSize: 12, color: MUTED, marginTop: 3 }}>{k.l}</div>
+          </div>
+        ))}
       </div>
-    </div>
+
+      <div style={{ display: 'grid', gap: 14 }}>
+        {SOURCES.map((s, i) => (
+          <div key={i} style={{ background: '#fff', border: '1px solid ' + BORDER, borderRadius: 10, padding: '18px 20px', display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+            <div style={{ fontSize: 26, lineHeight: 1 }}>{s.icon}</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                <span style={{ fontSize: 15.5, fontWeight: 700, color: DARK }}>{s.name}</span>
+                <span style={{ fontSize: 11.5, fontWeight: 600, color: '#1e7d45', background: '#e7f6ec', borderRadius: 6, padding: '2px 8px' }}>{"פעיל"}</span>
+              </div>
+              <div style={{ fontSize: 13.5, color: MUTED, marginBottom: 10, lineHeight: 1.5 }}>{s.desc}</div>
+              <a href={s.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, fontWeight: 600, color: BLUE, textDecoration: 'none' }}>{"לצפייה במקור"} ← {s.host}</a>
+            </div>
+          </div>
+        ))}
+      </div>
+    </InternalShell>
   );
 }
