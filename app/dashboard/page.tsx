@@ -52,6 +52,7 @@ const DARK='#1a2330', BLUE='#2b6fc4', MUTED='#667380', BORDER='#e6eaee';
 export default function Dashboard(){
   const[all,setAll]=useState<T[]>([]);
   const[loading,setLoading]=useState(true);
+  const[fetchedAt,setFetchedAt]=useState('');
   const[marked,setMarked]=useState<string[]>([]);
   const[biz,setBiz]=useState('');
   const[pub,setPub]=useState('');
@@ -74,10 +75,17 @@ export default function Dashboard(){
   const load=useCallback(async()=>{
     setLoading(true);
     try{
-      const rs=await Promise.all([0,1000,2000,3000].map(o=>fetch('/api/tenders?offset='+o).then(r=>r.json()).catch(()=>({tenders:[]}))));
-      const seen=new Set<string>();const arr:T[]=[];
-      for(const r of rs)for(const t of(r.tenders||[])){const k=t.id||t.publication_id||(t.title+t.publishDate);if(!seen.has(k)){seen.add(k);arr.push(t);}}
+      const seen=new Set<string>();const arr:T[]=[];let lastFetchedAt='';
+      const loadPage=async(offset:number):Promise<void>=>{
+        const r=await fetch('/api/tenders?offset='+offset).then(r=>r.json()).catch(()=>({tenders:[]}));
+        if(r.fetchedAt)lastFetchedAt=r.fetchedAt;
+        const batch=r.tenders||[];
+        for(const t of batch){const k=t.id||t.publication_id||(t.title+t.publishDate);if(!seen.has(k)){seen.add(k);arr.push(t);}}
+        if(batch.length===1000)await loadPage(offset+1000);
+      };
+      await loadPage(0);
       setAll(arr);
+      setFetchedAt(lastFetchedAt);
     }finally{setLoading(false);}
   },[]);
   useEffect(()=>{load();},[load]);
@@ -158,7 +166,7 @@ export default function Dashboard(){
             </div>
             <span style={{marginInlineStart:'auto',fontSize:12.5,color:'#7a8794',display:'inline-flex',alignItems:'center',gap:7,flex:'0 0 auto'}}>
               <span style={{width:7,height:7,borderRadius:999,background:BLUE}}></span>
-              {loading?'טוען…':`עודכן ${new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})} · `}
+              {loading?(<><style>{`@keyframes dashSpin{to{transform:rotate(360deg);}}`}</style><span style={{display:'inline-flex',alignItems:'center',gap:6}}><span style={{width:9,height:9,border:'2px solid '+BORDER,borderTopColor:BLUE,borderRadius:'50%',display:'inline-block',animation:'dashSpin 0.7s linear infinite'}}/>טוען…</span></>):`עודכן ${fetchedAt?new Date(fetchedAt).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}):new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})} · `}
               <a href="https://data.gov.il" target="_blank" rel="noopener noreferrer" style={{color:'#7a8794'}}>data.gov.il</a>
             </span>
             <a href="/agent" style={{background:BLUE,color:'#fff',fontWeight:600,fontSize:13,padding:'9px 16px',borderRadius:8,textDecoration:'none',flex:'0 0 auto'}}>✦ תובנות AI</a>
@@ -170,8 +178,7 @@ export default function Dashboard(){
             <div style={{display:isMobile?'flex':'grid',gridTemplateColumns:isMobile?undefined:'repeat(4,1fr)',gap:isMobile?10:1,background:isMobile?'transparent':BORDER,border:isMobile?'none':`1px solid ${BORDER}`,borderRadius:10,overflow:isMobile?'auto':'hidden',overflowX:isMobile?'auto':undefined,marginBottom:22}}>
               {kpis.map(k=>(
                 <div key={k.label} style={{background:'#fff',padding:'16px 18px',...(isMobile?{minWidth:120,border:'1px solid #e6eaee',borderRadius:12}:{})}}>
-                  <div style={{display:'flex',alignItems:'center',gap:8}}><span style={{width:8,height:8,borderRadius:999,background:k.dot}}></span><span style={{fontSize:28,fontWeight:700,color:DARK,lineHeight:1}}>{loading?'…':k.value.toLocaleString()}</span></div>
-                  <div style={{fontSize:12.5,color:MUTED,marginTop:8}}>{k.label}</div>
+                  <div style={{display:'flex',alignItems:'center',gap:8}}><span style={{width:8,height:8,borderRadius:999,background:k.dot}}></span><span style={{fontSize:28,fontWeight:700,color:DARK,lineHeight:1}}>{loading?'…':k.value.toLoca     <div style={{fontSize:12.5,color:MUTED,marginTop:8}}>{k.label}</div>
                 </div>
               ))}
             </div>
