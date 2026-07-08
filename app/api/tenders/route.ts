@@ -36,7 +36,7 @@ export async function GET(req: Request) {
     headers: { Accept: 'application/json' }, cache: 'no-store'
   })
     if (!res.ok) throw new Error(`API ${res.status}`)
-    const data = await res.json()
+  const data = await res.json()
     // The upstream API can return HTTP 200 even when the query failed; in that
   // case it sends back an `error` field and no `rows` array. Treat that as a
   // real failure instead of silently showing 0 tenders.
@@ -58,7 +58,10 @@ export async function GET(req: Request) {
       type: String(r.tender_type_he || ''),
     }))
 
-  return NextResponse.json({ tenders, count: tenders.length })
+  // fetchedAt: real server-side timestamp of this live fetch from obudget,
+  // used by the dashboard and sources page to show an accurate "last scan" time
+  // instead of the client's local render time.
+  return NextResponse.json({ tenders, count: tenders.length, fetchedAt: new Date().toISOString() })
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 })
   }
