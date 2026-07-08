@@ -21,36 +21,49 @@ const SOURCES = [
   },
 ];
 
+function Spinner() {
+  return (
+    <span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid ' + BORDER, borderTopColor: BLUE, borderRadius: '50%', animation: 'sourcesSpin 0.7s linear infinite', verticalAlign: 'middle' }} />
+  );
+}
+
 export default function SourcesPage() {
   const [count, setCount] = useState<number | null>(null);
   const [updated, setUpdated] = useState<string>('—');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let total = 0;
+    let latestFetchedAt = '';
     const load = async (offset: number) => {
       const res = await fetch('/api/' + 'tenders?offset=' + offset);
       const data = await res.json();
       const batch = (data.tenders || []).length;
       total += batch;
+      if (data.fetchedAt) latestFetchedAt = data.fetchedAt;
       if (batch === 1000) return load(offset + 1000);
       setCount(total);
+      setUpdated(latestFetchedAt
+        ? new Date(latestFetchedAt).toLocaleString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+        : new Date().toLocaleDateString('he-IL'));
+      setLoading(false);
     };
-    load(0).catch(() => setCount(0));
-    setUpdated(new Date().toLocaleDateString('he-IL'));
+    load(0).catch(() => { setCount(0); setLoading(false); });
   }, []);
 
   const kpiCells = [
-    { v: count === null ? '…' : count.toLocaleString('he-IL'), l: "מכרזים זמינים", c: DARK },
+    { v: loading ? <Spinner /> : (count === null ? '…' : count.toLocaleString('he-IL')), l: "מכרזים זמינים", c: DARK },
     { v: String(SOURCES.length), l: "מקורות פעילים", c: '#1e7d45' },
-    { v: updated, l: "עדכון אחרון", c: BLUE },
+    { v: loading ? <Spinner /> : updated, l: "עדכון אחרון", c: BLUE },
   ];
 
   return (
     <InternalShell title={"מקורות נתונים"} subtitle={"המקורות שמזינים את הפלטפורמה בזמן אמת"}>
+      <style>{`@keyframes sourcesSpin { to { transform: rotate(360deg); } }`}</style>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', background: '#fff', border: '1px solid ' + BORDER, borderRadius: 10, overflow: 'hidden', marginBottom: 20 }}>
         {kpiCells.map((k, i) => (
           <div key={i} style={{ padding: '16px 18px', borderInlineEnd: i < kpiCells.length - 1 ? '1px solid ' + BORDER : 'none' }}>
-            <div style={{ fontSize: 22, fontWeight: 700, color: k.c }}>{k.v}</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: k.c, minHeight: 28, display: 'flex', alignItems: 'center' }}>{k.v}</div>
             <div style={{ fontSize: 12, color: MUTED, marginTop: 3 }}>{k.l}</div>
           </div>
         ))}
