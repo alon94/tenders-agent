@@ -18,6 +18,22 @@ export async function GET(req: Request) {
       ? `AND (description ILIKE '%${search.replace(/'/g,"''")}%' OR publisher ILIKE '%${search.replace(/'/g,"''")}%')`
       : ''
 
+    // --- count-only fast path: server-side COUNT(*) with identical WHERE clause ---
+    if (searchParams.get('count')) {
+    const countSql = `
+    SELECT COUNT(*) AS total
+    FROM procurement_tenders_processed
+    WHERE status IN ${STATUSES} AND ${dateFilter} ${searchFilter}
+    `;
+    const cRes = await fetch(`${API}?query=${encodeURIComponent(countSql)}`, {
+      headers: { Accept: 'application/json' }, cache: 'no-store'
+    })
+    const cData = await cRes.json()
+    const cRows = (cData?.rows ?? []) as Record<string, unknown>[]
+    const total = Number((cRows && cRows[0] && (cRows[0].total ?? cRows[0].count)) || 0);
+    return NextResponse.json({ total });
+    }
+
     const sql = `SELECT
       publication_id, tender_id,
       description, publisher, publisher_unit,
