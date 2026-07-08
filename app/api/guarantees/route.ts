@@ -4,11 +4,11 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 // ============================================================
-//  /api/guarantees  —  ערבויות וליווי
-//  אין מקור-אב אמיתי לרשומות ערבויות ב-obudget / mr.gov.il.
-//  לכן הרשומות נגזרות מהמכרזים בפועל (אותה טבלה כמו /api/tenders),
-//  ומחושב עבורן סכום ערבות נדרש כאומדן מערך המכרז.
-//  TODO: לחבר מקור אמיתי לרשומות ערבויות כשיהיה זמין.
+// /api/guarantees — ערבויות וליווי
+// אין מקור-אב אמיתי לרשומות ערבויות ב-obudget / mr.gov.il.
+// לכן הרשומות נגזרות מהמכרזים בפועל (אותה טבלה כמו /api/tenders),
+// ומחושב עבורן סכום ערבות נדרש כאומדן מערך המכרז.
+// TODO: לחבר מקור אמיתי לרשומות ערבויות כשיהיה זמין.
 // ============================================================
 
 const API = "https://next.obudget.org/api/query";
@@ -46,14 +46,24 @@ function derive(rows: any[]): Guarantee[] {
 
 export async function GET() {
   try {
+    // Cache-buster: keeps the query string unique on every request so a
+  // stale/empty response cached upstream (obudget) can never be served
+  // back to us again. Always true, does not affect which rows match.
+  const cacheBuster = "AND '" + Date.now() + "' IS NOT NULL";
     const sql =
       "SELECT publication_id, tender_id, description, publisher, claim_date, status " +
       "FROM procurement_tenders_processed " +
-      "WHERE claim_date IS NOT NULL " +
+      "WHERE claim_date IS NOT NULL " + cacheBuster + " " +
       "ORDER BY claim_date DESC NULLS LAST LIMIT 12";
     const res = await fetch(API + "?query=" + encodeURIComponent(sql), { cache: "no-store" });
+    if (!res.ok) throw new Error(`API ${res.status}`);
     const json = await res.json();
-    const rows = json?.rows || json?.result?.records || [];
+    // The upstream API can return HTTP 200 even when the query failed; in
+  // that case it sends back an `error` field and no `rows` array. Treat
+  // that as a real failure instead of silently showing 0 guarantees.
+  if (json?.error) throw new Error(String(json.error));
+    if (!Array.isArray(json?.rows)) throw new Error('Unexpected API response: missing rows');
+    const rows = json.rows;
     const items = derive(rows);
     const totalAmount = items.filter((g) => g.status !== "pending").reduce((s, g) => s + g.amount, 0);
     const active = items.filter((g) => g.status === "active").length;
