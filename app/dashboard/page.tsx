@@ -178,7 +178,8 @@ export default function Dashboard(){
             <div style={{display:isMobile?'flex':'grid',gridTemplateColumns:isMobile?undefined:'repeat(4,1fr)',gap:isMobile?10:1,background:isMobile?'transparent':BORDER,border:isMobile?'none':`1px solid ${BORDER}`,borderRadius:10,overflow:isMobile?'auto':'hidden',overflowX:isMobile?'auto':undefined,marginBottom:22}}>
               {kpis.map(k=>(
                 <div key={k.label} style={{background:'#fff',padding:'16px 18px',...(isMobile?{minWidth:120,border:'1px solid #e6eaee',borderRadius:12}:{})}}>
-                  <div style={{display:'flex',alignItems:'center',gap:8}}><span style={{width:8,height:8,borderRadius:999,background:k.dot}}></span><span style={{fontSize:28,fontWeight:700,color:DARK,lineHeight:1}}>{loading?'…':k.value.toLoca     <div style={{fontSize:12.5,color:MUTED,marginTop:8}}>{k.label}</div>
+                  <div style={{display:'flex',alignItems:'center',gap:8}}><span style={{width:8,height:8,borderRadius:999,background:k.dot}}></span><span style={{fontSize:28,fontWeight:700,color:DARK,lineHeight:1}}>{loading?'…':k.value.toLocaleString()}</span></div>
+                       <div style={{fontSize:12.5,color:MUTED,marginTop:8}}>{k.label}</div>
                 </div>
               ))}
             </div>
