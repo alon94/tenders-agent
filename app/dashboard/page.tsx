@@ -158,9 +158,9 @@ export default function Dashboard(){
         {/* ===== CONTENT ===== */}
         <div style={{flex:1,minWidth:0,display:'flex',flexDirection:'column',...(isMobile?{paddingBottom:72}:{})}}>
           {/* header */}
-          <div style={{background:'#fff',borderBottom:`1px solid ${BORDER}`,padding:'15px 26px',display:'flex',alignItems:'center',gap:18,position:'sticky',top:0,zIndex:5}}>
-            <div style={{fontWeight:700,fontSize:20,color:DARK,flex:'0 0 auto'}}>גילוי מכרזים</div>
-            <div style={{flex:1,display:'flex',alignItems:'center',gap:9,background:'#f4f6f8',border:'1px solid #e2e7ec',borderRadius:8,padding:'9px 14px',maxWidth:440}}>
+          <div style={{background:'#fff',borderBottom:`1px solid ${BORDER}`,padding:isMobile?'12px 14px':'15px 26px',display:'flex',alignItems:'center',gap:isMobile?10:18,position:'sticky',top:0,zIndex:5}}>
+            <div style={{fontWeight:700,fontSize:isMobile?16:20,color:DARK,flex:'0 0 auto'}}>גילוי מכרזים</div>
+            <div style={{flex:1,minWidth:0,display:'flex',alignItems:'center',gap:9,background:'#f4f6f8',border:'1px solid #e2e7ec',borderRadius:8,padding:'9px 14px',maxWidth:440}}>
               <span style={{color:'#9aa6b2',fontSize:15}}>⌕</span>
               <input value={q} onChange={e=>{setQ(e.target.value);setPg(1);}} placeholder="חיפוש: נושא, גוף מפרסם, מספר מכרז…" style={{flex:1,border:'none',outline:'none',background:'transparent',fontSize:13.5,color:DARK,fontFamily:'inherit'}}/>
             </div>
