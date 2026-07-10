@@ -33,16 +33,16 @@ export default function SourcesPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let total = 0;
+          const seen = new Set<string>();
     let latestFetchedAt = '';
     const load = async (offset: number) => {
       const res = await fetch('/api/' + 'tenders?offset=' + offset);
       const data = await res.json();
-      const batch = (data.tenders || []).length;
-      total += batch;
+              const batch = data.tenders || [];
+              batch.forEach((t: any) => seen.add(t.id));
       if (data.fetchedAt) latestFetchedAt = data.fetchedAt;
-      if (batch === 1000) return load(offset + 1000);
-      setCount(total);
+              if (batch.length === 1000) return load(offset + 1000);
+              setCount(seen.size);
       setUpdated(latestFetchedAt
         ? new Date(latestFetchedAt).toLocaleString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
         : new Date().toLocaleDateString('he-IL'));
