@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useIsMobile } from "../hooks/useIsMobile";
 import MobileTabBar from "../components/MobileTabBar";
+import { fetchDedupedTenders } from '../lib/tenderData';
 
 /* ============ עיצוב 2a — אנטרפרייז, טבלת נתונים נקייה ============ */
 
@@ -73,20 +74,12 @@ export default function Dashboard(){
   const toggleMark=useCallback((id:string,e?:any)=>{if(e){e.preventDefault();e.stopPropagation();}setMarked(prev=>{const has=prev.includes(id);const next=has?prev.filter(x=>x!==id):[...prev,id];try{localStorage.setItem('markedTenders',JSON.stringify(next));}catch(err){}return next;});},[]);
 
   const load=useCallback(async()=>{
-    setLoading(true);
-    try{
-      const seen=new Set<string>();const arr:T[]=[];let lastFetchedAt='';
-      const loadPage=async(offset:number):Promise<void>=>{
-        const r=await fetch('/api/tenders?offset='+offset).then(r=>r.json()).catch(()=>({tenders:[]}));
-        if(r.fetchedAt)lastFetchedAt=r.fetchedAt;
-        const batch=r.tenders||[];
-        for(const t of batch){const k=t.id||t.publication_id||(t.title+t.publishDate);if(!seen.has(k)){seen.add(k);arr.push(t);}}
-        if(batch.length===1000)await loadPage(offset+1000);
-      };
-      await loadPage(0);
-      setAll(arr);
-      setFetchedAt(lastFetchedAt);
-    }finally{setLoading(false);}
+        setLoading(true);
+        try{
+                const res:any=await fetchDedupedTenders();
+                setAll(res.tenders);
+                setFetchedAt(res.fetchedAt);
+        }finally{setLoading(false);}
   },[]);
   useEffect(()=>{load();},[load]);
 
