@@ -41,7 +41,7 @@ export default function AgentPage() {
     >
       <div style={{ maxWidth: 760 }}>
         <div style={{ background: '#fff', border: '1px solid ' + BORDER, borderRadius: 14, padding: 18, marginBottom: 18 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14, color: DARK }}>\u2699 תהליך העבודה של הסוכן</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14, color: DARK }}>⚙ תהליך העבודה של הסוכן</div>
           {steps.map((s, i) => {
             const st = STEP_STYLE[s.state];
             return (
@@ -74,10 +74,10 @@ export default function AgentPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') send(); }}
-            placeholder="שאל את הסוכן\u2026"
+                        placeholder="שאל את הסוכן…"
             style={{ flex: 1, padding: '12px 18px', borderRadius: 999, border: '1px solid ' + BORDER, fontSize: 14, outline: 'none', background: '#fff' }}
           />
-          <button onClick={send} aria-label="שלח" style={{ width: 44, height: 44, borderRadius: 999, background: '#2b6fc4', color: '#fff', border: 'none', fontSize: 18, cursor: 'pointer', flex: '0 0 auto' }}>\u2191</button>
+          <button onClick={send} aria-label="שלח" style={{ width: 44, height: 44, borderRadius: 999, background: '#2b6fc4', color: '#fff', border: 'none', fontSize: 18, cursor: 'pointer', flex: '0 0 auto' }}↑</button>
         </div>
       </div>
     </InternalShell>
