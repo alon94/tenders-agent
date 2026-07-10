@@ -8,6 +8,7 @@ const TABS = [
   { icon: '◈', label: 'סוכן', href: '/agent' },
   { icon: '▤', label: 'ערבויות', href: '/guarantee' },
   { icon: '⦁', label: 'מקורות', href: '/sources' },
+  { icon: '⚙', label: 'פרופיל', href: '/profile' },
 ];
 
 const BLUE = '#2b6fc4', MUTED = '#8a97a3', BORDER = '#e6eaee';
