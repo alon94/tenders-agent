@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import type { CSSProperties } from 'react';
 import MobileTabBar from './MobileTabBar';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 const BLUE = '#2b6fc4', ACTIVE = '#1e5aa8', ACTIVE_BG = '#e8f1fb';
 const MUTED = '#5b6b7a', BORDER = '#e6eaee', DARK = '#1a2330';
@@ -30,6 +31,7 @@ export default function SiteNav({
 }) {
   const path = usePathname();
   const current = active || path || '';
+  const isMobile = useIsMobile();
 
   const navStyle: CSSProperties = {
     fontFamily: RBK,
@@ -125,7 +127,7 @@ export default function SiteNav({
           )}
         </div>
       </nav>
-      <MobileTabBar />
+      {isMobile && <MobileTabBar />}
     </>
   );
 }
