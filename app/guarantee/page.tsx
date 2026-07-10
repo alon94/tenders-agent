@@ -57,7 +57,7 @@ export default function GuaranteePage() {
           <span>מכרז</span><span>סוג ערבות</span><span>סכום</span><span>תוקף עד</span><span>סטטוס</span>
         </div>
         {loading ? (
-          <div style={{ padding: 20, color: '#7a8794' }}>טוען\u2026</div>
+                    <div style={{ padding: 20, color: '#7a8794' }}>טוען…</div>div>
         ) : items.length === 0 ? (
           <div style={{ padding: 20, color: '#7a8794' }}>אין ערבויות להצגה</div>
         ) : (
