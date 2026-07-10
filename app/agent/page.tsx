@@ -77,7 +77,7 @@ export default function AgentPage() {
                         placeholder="שאל את הסוכן…"
             style={{ flex: 1, padding: '12px 18px', borderRadius: 999, border: '1px solid ' + BORDER, fontSize: 14, outline: 'none', background: '#fff' }}
           />
-          <button onClick={send} aria-label="שלח" style={{ width: 44, height: 44, borderRadius: 999, background: '#2b6fc4', color: '#fff', border: 'none', fontSize: 18, cursor: 'pointer', flex: '0 0 auto' }}↑</button>
+                    <button onClick={send} aria-label="שלח" style={{ width: 44, height: 44, borderRadius: 999, background: '#2b6fc4', color: '#fff', border: 'none', fontSize: 18, cursor: 'pointer', flex: '0 0 auto' }}>↑</button>
         </div>
       </div>
     </InternalShell>
