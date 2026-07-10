@@ -37,11 +37,11 @@ export default function MarkedPage() {
     <InternalShell
       title="מכרזים מסומנים"
       subtitle={rows.length + ' מכרזים שמורים למעקב'}
-      action={<button style={{ background: '#fff', color: '#1e5aa8', border: '1px solid ' + BORDER, borderRadius: 10, padding: '9px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>ייצוא ל-Excel \u2193</button>}
+      action={<button style={{ background: '#fff', color: '#1e5aa8', border: '1px solid ' + BORDER, borderRadius: 10, padding: '9px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>ייצוא ל-Excel ↓</button>}
     >
       <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-        <button onClick={() => setTab('all')} style={{ border: '1px solid ' + (tab === 'all' ? DARK : BORDER), background: tab === 'all' ? DARK : '#fff', color: tab === 'all' ? '#fff' : '#5b6b7a', borderRadius: 999, padding: '7px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>הכל \u00B7 {rows.length}</button>
-        <button onClick={() => setTab('closing')} style={{ border: '1px solid ' + (tab === 'closing' ? '#b04a34' : BORDER), background: tab === 'closing' ? '#fbe9e7' : '#fff', color: '#b04a34', borderRadius: 999, padding: '7px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>נסגרים בקרוב \u00B7 {closing.length}</button>
+                <button onClick={() => setTab('all')} style={{ border: '1px solid ' + (tab === 'all' ? DARK : BORDER), background: tab === 'all' ? DARK : '#fff', color: tab === 'all' ? '#fff' : '#5b6b7a', borderRadius: 999, padding: '7px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>הכל · {rows.length}</button>
+                <button onClick={() => setTab('closing')} style={{ border: '1px solid ' + (tab === 'closing' ? '#b04a34' : BORDER), background: tab === 'closing' ? '#fbe9e7' : '#fff', color: '#b04a34', borderRadius: 999, padding: '7px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>נסגרים בקרוב · {closing.length}</button>
       </div>
 
       <div style={{ background: '#fff', border: '1px solid ' + BORDER, borderRadius: 12, overflow: 'hidden' }}>
@@ -49,9 +49,9 @@ export default function MarkedPage() {
           <span>ציון</span><span>נושא</span><span>סטטוס</span><span>מועד</span><span>פעולות</span>
         </div>
         {loading ? (
-          <div style={{ padding: 20, color: '#7a8794' }}>טוען\u2026</div>
+                    <div style={{ padding: 20, color: '#7a8794' }}>טוען…</div>
         ) : shown.length === 0 ? (
-          <div style={{ padding: 24, color: '#7a8794', textAlign: 'center' }}>אין מכרזים מסומנים עדיין. סמנו מכרזים \u2606 מדף הגילוי.</div>
+                    <div style={{ padding: 24, color: '#7a8794', textAlign: 'center' }}>אין מכרזים מסומנים עדיין. סמנו מכרזים ☆ מדף הגילוי.</div>
         ) : (
           shown.map((t) => {
             const d = daysLeft(t.deadline || '');
@@ -65,7 +65,7 @@ export default function MarkedPage() {
                 </div>
                 <div style={{ paddingInlineEnd: 10 }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: DARK, lineHeight: 1.4 }}>{t.title || 'ללא כותרת'}</div>
-                  <div style={{ fontSize: 12, color: '#7a8794', marginTop: 3 }}>{t.publisher || 'לא ידוע'} \u00B7 פורסם {fmtDate(t.publishDate || '')}</div>
+                                    <div style={{ fontSize: 12, color: '#7a8794', marginTop: 3 }}>{t.publisher || 'לא ידוע'} · פורסם {fmtDate(t.publishDate || '')}</div>
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
                   {tags.slice(0, 3).map((g, gi) => (<span key={gi} style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 6, background: g.bg, color: g.fg, border: '1px solid ' + g.bd }}>{g.label}</span>))}
