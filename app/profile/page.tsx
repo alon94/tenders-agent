@@ -20,6 +20,7 @@ const BIZ = [
   { value: 'transport', label: 'הסעות ולוגיסטיקה' },
   { value: 'health', label: 'בריאות ורפואה' },
   { value: 'environment', label: 'איכות סביבה' },
+  { value: 'other', label: 'אחר' },
 ]
 
 const REGS = [
@@ -60,6 +61,7 @@ export default function ProfilePage() {
   const [biz, setBiz] = useState<string[]>([])
   const [reg, setReg] = useState('all')
   const [pub, setPub] = useState('all')
+  const [otherText, setOtherText] = useState('')
   const [saved, setSaved] = useState(false)
   const [initial, setInitial] = useState('')
 
@@ -72,9 +74,10 @@ export default function ProfilePage() {
         setBiz(b)
         setReg(p.region || 'all')
         setPub(p.publisherType || 'all')
-        setInitial(JSON.stringify({ b, r: p.region || 'all', p: p.publisherType || 'all' }))
+        setOtherText(p.otherText || '')
+        setInitial(JSON.stringify({ b, r: p.region || 'all', p: p.publisherType || 'all', ot: p.otherText || '' }))
       } else {
-        setInitial(JSON.stringify({ b: [], r: 'all', p: 'all' }))
+        setInitial(JSON.stringify({ b: [], r: 'all', p: 'all', ot: '' }))
       }
     } catch {}
   }, [])
@@ -84,14 +87,19 @@ export default function ProfilePage() {
     setSaved(false)
   }
 
-  const current = JSON.stringify({ b: biz, r: reg, p: pub })
+  const current = JSON.stringify({ b: biz, r: reg, p: pub, ot: otherText })
   const dirty = current !== initial
 
   const save = () => {
-    localStorage.setItem('businessProfile', JSON.stringify({ businessType: biz, region: reg, publisherType: pub }))
+    localStorage.setItem('businessProfile', JSON.stringify({ businessType: biz, region: reg, publisherType: pub, otherText: biz.includes('other') ? otherText : '' }))
     setInitial(current)
     setSaved(true)
     setTimeout(() => setSaved(false), 2500)
+  }
+
+  const labelFor = (v: string) => {
+    if (v === 'other') return otherText.trim() ? otherText.trim() : 'אחר'
+    return BIZ.find(b => b.value === v)?.label || ''
   }
 
   let statusBg = '#f5efdc'
@@ -99,7 +107,7 @@ export default function ProfilePage() {
   let statusBorder = '#e8ddbf'
   let statusText = 'לא נבחר סוג עסק — יוצגו כל המכרזים'
   if (biz.length === 1) {
-    statusText = 'נבחרה קטגוריה אחת — מכרזים יסוננו לפי ' + (BIZ.find(b => b.value === biz[0])?.label || '')
+    statusText = 'נבחרה קטגוריה אחת — מכרזים יסוננו לפי ' + labelFor(biz[0])
   } else if (biz.length >= 2) {
     statusBg = '#e8f1fb'
     statusFg = '#1e5aa8'
@@ -158,6 +166,27 @@ export default function ProfilePage() {
               )
             })}
           </div>
+          {biz.includes('other') && (
+            <div style={{ marginTop: 12 }}>
+              <input
+                type="text"
+                value={otherText}
+                onChange={e => { setOtherText(e.target.value); setSaved(false) }}
+                placeholder="תארו את תחום העיסוק שלכם"
+                style={{
+                  width: '100%',
+                  maxWidth: 420,
+                  padding: '10px 14px',
+                  borderRadius: 8,
+                  border: '1px solid #e2e7ec',
+                  background: '#f4f6f8',
+                  color: DARK,
+                  fontSize: 13.5,
+                  fontFamily: 'inherit',
+                }}
+              />
+            </div>
+          )}
           <div style={{ marginTop: 14, display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 8, background: statusBg, color: statusFg, border: '1px solid ' + statusBorder, fontSize: 12.5, fontWeight: 600 }}>
             <span style={{ width: 7, height: 7, borderRadius: '50%', background: statusFg, display: 'inline-block' }}></span>
             {statusText}
