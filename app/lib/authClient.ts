@@ -100,6 +100,48 @@ export async function signIn(email: string, password: string) {
   return saveSession(data);
 }
 
+// Redirects the browser to Google via Supabase's OAuth authorize endpoint.
+// After the user approves access on Google, Supabase redirects back to
+// redirectTo with the session tokens in the URL hash fragment, which is
+// picked up by completeOAuthSession() on the /auth/callback page.
+export function signInWithGoogle() {
+  if (typeof window === 'undefined') return;
+  const redirectTo = `${window.location.origin}/auth/callback`;
+  const url = `${authUrl('/authorize')}?provider=google&redirect_to=${encodeURIComponent(redirectTo)}`;
+  window.location.href = url;
+}
+
+// Reads the access/refresh tokens from the URL hash fragment (left there by
+// Supabase after a Google OAuth redirect), fetches the user profile and
+// saves the session. Returns null if there's nothing to process.
+export async function completeOAuthSession(): Promise<AuthSession | null> {
+  if (typeof window === 'undefined') return null;
+  const hash = window.location.hash;
+  if (!hash || hash.length < 2) return null;
+  const params = new URLSearchParams(hash.substring(1));
+  const access_token = params.get('access_token');
+  const refresh_token = params.get('refresh_token');
+  const expires_in = params.get('expires_in');
+  const error_description = params.get('error_description');
+  if (error_description) {
+    window.history.replaceState(null, '', window.location.pathname);
+    throw new Error(decodeURIComponent(error_description));
+  }
+  if (!access_token || !refresh_token) return null;
+  const res = await fetch(authUrl('/user'), {
+    headers: { apikey: ANON_KEY, Authorization: `Bearer ${access_token}` },
+  });
+  const user = await res.json().catch(() => ({}));
+  const session = saveSession({
+    access_token,
+    refresh_token,
+    expires_in: expires_in ? parseInt(expires_in, 10) : 3600,
+    user,
+  });
+  window.history.replaceState(null, '', window.location.pathname);
+  return session;
+}
+
 export async function signOut() {
   const session = getSession();
   clearSession();
