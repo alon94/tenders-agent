@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useIsMobile } from "../hooks/useIsMobile";
 import MobileTabBar from "../components/MobileTabBar";
 import { fetchDedupedTenders } from '../lib/tenderData';
+import { getSession, signOut, AUTH_EVENT, type AuthSession } from '../lib/authClient';
 
 /* ============ עיצוב 2a — אנטרפרייז, טבלת נתונים נקייה ============ */
 
@@ -51,6 +52,22 @@ function statusTags(t:T,days:number|null){
 const DARK='#1a2330', BLUE='#2b6fc4', MUTED='#667380', BORDER='#e6eaee';
 
 export default function Dashboard(){
+  const [session, setSession] = useState<AuthSession | null>(null);
+  useEffect(() => {
+    setSession(getSession());
+    const onChange = () => setSession(getSession());
+    window.addEventListener(AUTH_EVENT, onChange);
+    window.addEventListener('storage', onChange);
+    return () => {
+      window.removeEventListener(AUTH_EVENT, onChange);
+      window.removeEventListener('storage', onChange);
+    };
+  }, []);
+  async function handleSignOut() {
+    await signOut();
+    window.location.href = '/signin';
+  }
+
   const[all,setAll]=useState<T[]>([]);
   const[loading,setLoading]=useState(true);
   const[fetchedAt,setFetchedAt]=useState('');
@@ -145,6 +162,19 @@ export default function Dashboard(){
             <div style={{fontWeight:700,fontSize:14,color:DARK}}>◈ הסוכן החכם</div>
             <div style={{fontSize:12,color:MUTED,margin:'7px 0 12px',lineHeight:1.5}}>קבלו מכרזים מותאמים לפי הפרופיל העסקי שלכם</div>
             <a href="/agent" style={{display:'block',background:DARK,color:'#fff',fontWeight:600,fontSize:13,textAlign:'center',padding:9,borderRadius:8,textDecoration:'none'}}>הפעלה</a>
+          </div>
+          <div style={{marginTop:14,paddingTop:14,borderTop:`1px solid ${BORDER}`}}>
+            {session ? (
+              <div>
+                <div style={{fontSize:11.5,color:'#8a97a3',marginBottom:8,wordBreak:'break-all'}}>{session.user.email}</div>
+                <button type="button" onClick={handleSignOut} style={{width:'100%',padding:'8px 12px',borderRadius:9,border:'1px solid #e2e7ec',background:'#fff',color:'#5b6b7a',fontSize:12.5,fontWeight:600,cursor:'pointer'}}>התנתקות</button>
+              </div>
+            ) : (
+              <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                <a href="/signin" style={{display:'block',textAlign:'center',padding:'9px 12px',borderRadius:9,border:'1px solid #e2e7ec',background:'#fff',color:DARK,fontSize:12.5,fontWeight:600,textDecoration:'none'}}>התחברות</a>
+                <a href="/signup" style={{display:'block',textAlign:'center',padding:'9px 12px',borderRadius:9,border:'none',background:BLUE,color:'#fff',fontSize:12.5,fontWeight:700,textDecoration:'none'}}>הרשמה</a>
+              </div>
+            )}
           </div>
         </div>
 
