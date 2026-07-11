@@ -57,6 +57,11 @@ export default function InternalShell({
               </a>
             );
           })}
+                          <div style={{ marginTop: 'auto', paddingTop: 12, borderTop: '1px solid #eef1f4' }}>
+                                      <a href="/profile" style={{ display: 'flex', alignItems: 'center', gap: 11, textDecoration: 'none', padding: '10px 12px', borderRadius: 10, fontSize: 14, fontWeight: path === '/profile' ? 700 : 500, color: path === '/profile' ? ACTIVE_FG : '#5b6b7a', background: path === '/profile' ? ACTIVE_BG : 'transparent', borderInlineStart: path === '/profile' ? '3px solid ' + BLUE : '3px solid transparent' }}>
+                                                    <span style={{ fontSize: 17 }}>⚙</span>פרופיל עסקי
+                                      </a>
+                          </div>
         </aside>
       )}
 
