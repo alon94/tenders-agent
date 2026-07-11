@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
+import { syncTendersFromSources } from "@/app/lib/db";
 
 const API = 'https://next.obudget.org/api/query'
 const STATUSES = `('פורסם','עתידי','פורסם ולא התקבלו השגות','פורסם והתקבלו השגות','בעדכון')`
@@ -209,6 +210,15 @@ export async function GET(req: Request) {
   }
 
   try {
+          // Sync the full tender list into the DB (best-effort; must not block
+          // the email-matching flow below if it fails).
+          let dbSync: { fetched: number; upserted: number } | { error: string };
+          try {
+                    dbSync = await syncTendersFromSources();
+          } catch (syncErr) {
+                    dbSync = { error: String(syncErr) };
+          }
+    
     // Default profile (used when no localStorage profile available server-side)
     // Can be overridden via query params in the future
     const profile: Profile = {
@@ -249,7 +259,7 @@ export async function GET(req: Request) {
       .sort((a, b) => b.score - a.score)
 
     if (tenders.length === 0) {
-      return NextResponse.json({ message: 'No matching tenders found, email not sent' })
+      return NextResponse.json({ message: 'No matching tenders found, email not sent', dbSync })
     }
 
     // Send email via Gmail SMTP
@@ -279,6 +289,7 @@ export async function GET(req: Request) {
       matched: tenders.length,
       sent_to: TO_EMAIL,
       date: dateStr,
+      dbSync,
     })
   } catch (err) {
     console.error('Cron error:', err)
