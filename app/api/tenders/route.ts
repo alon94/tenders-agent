@@ -1,68 +1,38 @@
-import { NextResponse } from 'next/server'
+import { NextResponse } from "next/server";
+import { getTenders } from "@/app/lib/db";
 
-const API = 'https://next.obudget.org/api/query'
-const STATUSES = `('פורסם','עתידי','פורסם ולא התקבלו השגות','פורסם והתקבלו השגות','בעדכון')`
-
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url)
-    const search = searchParams.get('q') || ''
-    const offset = parseInt(searchParams.get('offset') || '0')
-    const today = new Date().toISOString().split('T')[0]
-    const cutoffDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-    const dateFilter = `(claim_date > '${today}' OR (claim_date IS NULL AND publication_date > '${cutoffDate}'))`
-    const searchFilter = search
-    ? `AND (description ILIKE '%${search.replace(/'/g,"''")}%' OR publisher ILIKE '%${search.replace(/'/g,"''")}%')`
-      : ''
-    // Cache-buster: makes the query string unique on every request so a stale
-  // or empty response cached upstream (obudget) for the default, parameter-less
-  // query can never be served back to us again. This value is always true and
-  // does not affect which rows match.
-  const cacheBuster = `AND '${Date.now()}' IS NOT NULL`
+    try {
+          const { searchParams } = new URL(req.url);
+          const search = searchParams.get("q");
+          const offset = parseInt(searchParams.get("offset") || "0");
 
-  const sql = `SELECT
-  publication_id, tender_id,
-  description, publisher, publisher_unit,
-  claim_date, publication_date, status, page_url, tender_type_he
-  FROM procurement_tenders_processed
-  WHERE status IN ${STATUSES} AND ${dateFilter} ${searchFilter} ${cacheBuster}
-  ORDER BY publication_date DESC NULLS LAST, claim_date DESC NULLS LAST
-  LIMIT 1000 OFFSET ${offset}`
+      const rows = await getTenders({ search: search || undefined, offset, limit: 1000 });
 
-  const res = await fetch(`${API}?query=${encodeURIComponent(sql)}`, {
-    headers: { Accept: 'application/json' }, cache: 'no-store'
-  })
-    if (!res.ok) throw new Error(`API ${res.status}`)
-  const data = await res.json()
-    // The upstream API can return HTTP 200 even when the query failed; in that
-  // case it sends back an `error` field and no `rows` array. Treat that as a
-  // real failure instead of silently showing 0 tenders.
-  if (data?.error) throw new Error(String(data.error))
-    if (!Array.isArray(data?.rows)) throw new Error('Unexpected API response: missing rows')
-    const rows = data.rows as Record<string, unknown>[]
+      const tenders = rows.map((row, i) => ({
+              id: String(row.id ?? `${offset}_${i}`),
+              title: String(row.title ?? ""),
+              publisher: [row.publisher, row.publisher_unit].filter(Boolean).join(" - "),
+              publishDate: row.publish_date ? String(row.publish_date).split("T")[0] : undefined,
+              deadline: row.deadline ? String(row.deadline).split("T")[0] : undefined,
+              status: String(row.status ?? ""),
+              url: String(row.url ?? ""),
+              type: String(row.type ?? ""),
+      }));
 
-  const tenders = rows
-    .filter(r => r.description && r.description !== 'מכרז ללא כותרת')
-    .map((r, i) => ({
-      // Unique key: prefer publication_id, fallback to soproc_id, then offset+index
-                    id: String(r.publication_id || r.soproc_id || `${offset}_${i}`),
-      title: String(r.description || ''),
-      publisher: String(r.publisher || r.publisher_unit || ''),
-      publishDate: r.publication_date ? String(r.publication_date).split('T')[0] : '',
-      deadline: r.claim_date ? String(r.claim_date).split('T')[0] : '',
-      status: String(r.status || ''),
-      url: String(r.page_url || ''),
-      type: String(r.tender_type_he || ''),
-    }))
+      // fetchedAt: reflects when this row was last synced into the database by
+      // the daily cron job, not the time of this read request.
+      const fetchedAt = rows.length > 0 && rows[0].fetched_at ? rows[0].fetched_at : new Date().toISOString();
 
-  // fetchedAt: real server-side timestamp of this live fetch from obudget,
-  // used by the dashboard and sources page to show an accurate "last scan" time
-  // instead of the client's local render time.
-  return NextResponse.json({ tenders, count: tenders.length, fetchedAt: new Date().toISOString() })
-  } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 })
-  }
+      return NextResponse.json({
+              tenders,
+              count: tenders.length,
+              fetchedAt,
+      });
+    } catch (err) {
+          return NextResponse.json({ error: String(err) }, { status: 500 });
+    }
 }
