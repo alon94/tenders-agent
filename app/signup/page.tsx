@@ -3,7 +3,7 @@
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { signUp } from '../lib/authClient';
+import { signUp, signInWithGoogle } from '../lib/authClient';
 
 const DARK = '#1a2330';
 const BLUE = '#2b6fc4';
@@ -50,7 +50,6 @@ export default function SignupPage() {
   const [agree, setAgree] = useState(false);
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
-  const [googleNote, setGoogleNote] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
@@ -133,7 +132,7 @@ export default function SignupPage() {
 
         <button
           type="button"
-          onClick={() => setGoogleNote(true)}
+          onClick={signInWithGoogle}
           style={{
             width: '100%',
             padding: 12,
@@ -153,11 +152,6 @@ export default function SignupPage() {
           <GoogleIcon />
           הרשמה עם Google
         </button>
-        {googleNote && (
-          <div style={{ fontSize: 12, color: MUTED, textAlign: 'center', marginTop: 8 }}>
-            התחברות עם Google תהיה זמינה בקרוב — אפשר להירשם כרגע עם אימייל וסיסמה.
-          </div>
-        )}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '18px 0' }}>
           <div style={{ flex: 1, height: 1, background: '#eef1f4' }} />
