@@ -20,6 +20,13 @@ const SOURCES = [
     url: 'https://next.obudget.org/',
     icon: '📊',
   },
+  {
+    name: "מכרזי רשויות מקומיות",
+    desc: "מכרזים מוניציפליים מעיריות ומועצות — נאספים מאתרי הרשויות",
+    host: 'next.obudget.org',
+    url: 'https://next.obudget.org/',
+    icon: '🏙️',
+  },
 ];
 
 function Spinner() {

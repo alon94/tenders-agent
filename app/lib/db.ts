@@ -148,9 +148,53 @@ function rowToRecord(row: ObudgetRow): TenderRecord {
     };
 }
 
-// Fetches the full current tender list from obudget (paginated) and upserts
-// it into the `tenders` table. Called once a day from the cron route.
-export async function syncTendersFromSources(): Promise<{ fetched: number; upserted: number }> {
+// Municipal tenders from obudget's muni_tenders table (scraped from
+// municipality websites). Different schema: publication_id is always "0",
+// the stable key is tender_id (a hash), and open tenders have status 'פתוח'.
+async function fetchMuniPage(offset: number): Promise<ObudgetRow[]> {
+    const today = new Date().toISOString().split("T")[0];
+    const cutoffDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    const filter = `(claim_date > '${today}' OR status = 'פתוח' OR (claim_date IS NULL AND publication_date > '${cutoffDate}'))`;
+    const cacheBuster = `AND '${Date.now()}' IS NOT NULL`;
+
+  const sql = `SELECT publication_id, tender_id, description, publisher, publisher_unit, claim_date, publication_date, status, page_url, tender_type_he FROM muni_tenders WHERE ${filter} ${cacheBuster} ORDER BY publication_date DESC NULLS LAST, claim_date DESC NULLS LAST LIMIT 1000 OFFSET ${offset}`;
+
+  const res = await fetch(`${OBUDGET_API}?query=${encodeURIComponent(sql)}`, {
+        headers: { Accept: "application/json" },
+        cache: "no-store",
+  });
+
+  if (!res.ok) throw new Error(`Obudget muni API error: ${res.status}`);
+    const data = await res.json();
+    if (data.error) throw new Error(String(data.error));
+    if (!Array.isArray(data.rows)) throw new Error("Unexpected obudget muni response: missing rows");
+    return data.rows as ObudgetRow[];
+}
+
+function muniRowToRecord(row: ObudgetRow): TenderRecord {
+    // publication_id is "0" for all muni rows - use the tender_id hash,
+    // prefixed so it can never collide with government publication ids.
+    const key = row.tender_id || `${row.description}-${row.publisher}-${row.publication_date}`;
+    return {
+          id: `muni-${key}`,
+          tender_id: row.tender_id != null ? String(row.tender_id) : null,
+          publication_id: null,
+          title: String(row.description || ""),
+          publisher: row.publisher ? String(row.publisher) : null,
+          publisher_unit: row.publisher_unit ? String(row.publisher_unit) : null,
+          publish_date: row.publication_date ? String(row.publication_date).split("T")[0] : null,
+          deadline: row.claim_date ? String(row.claim_date).split("T")[0] : null,
+          status: row.status ? String(row.status) : null,
+          url: row.page_url ? String(row.page_url) : null,
+          type: row.tender_type_he ? String(row.tender_type_he) : "מכרז מוניציפלי",
+          source: "muni",
+          fetched_at: new Date().toISOString(),
+    };
+}
+
+// Fetches the full current tender list from all sources (paginated) and
+// upserts it into the `tenders` table. Called once a day from the cron route.
+export async function syncTendersFromSources(): Promise<{ fetched: number; upserted: number; muniFetched: number; muniError?: string }> {
     const MAX_PAGES = 10;
     let offset = 0;
     let fetched = 0;
@@ -169,6 +213,26 @@ export async function syncTendersFromSources(): Promise<{ fetched: number; upser
         offset += 1000;
   }
 
+  // Municipal tenders - best-effort: a failure here must not block the
+  // main government tender sync.
+  let muniFetched = 0;
+    let muniError: string | undefined;
+    try {
+          let muniOffset = 0;
+          for (let page = 0; page < MAX_PAGES; page++) {
+                const rows = await fetchMuniPage(muniOffset);
+                muniFetched += rows.length;
+                for (const row of rows) {
+                      if (!row.description) continue;
+                      records.push(muniRowToRecord(row));
+                }
+                if (rows.length < 1000) break;
+                muniOffset += 1000;
+          }
+    } catch (err) {
+          muniError = String(err);
+    }
+
   const { count } = await upsertTenders(records);
-    return { fetched, upserted: count };
+    return { fetched, upserted: count, muniFetched, ...(muniError ? { muniError } : {}) };
 }
