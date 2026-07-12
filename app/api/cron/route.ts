@@ -201,6 +201,7 @@ function buildEmailHTML(tenders: Tender[], profile: Profile, dateStr: string): s
 }
 
 export const dynamic = 'force-dynamic'
+export const maxDuration = 60
 
 export async function GET(req: Request) {
   // Auth check
