@@ -1,44 +1,91 @@
 import { NextResponse } from "next/server";
+import {
+  fetchActiveTenders,
+  rankTenders,
+  answerQuestion,
+  buildSteps,
+  DEFAULT_PROFILE,
+  type AgentProfile,
+} from "@/app/lib/agentEngine";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 // ============================================================
-//  /api/agent  —  נתוני הסוכן החכם
-//  אין מקור אמיתי לשיחות סוכן AI. הנתונים נגזרים מהמכרזים בפועל:
-//  ספירת מכרזים אמיתית + שלבי "סיכום החלטה" שנבנים מהמכרזים.
-//  TODO: לחבר למנוע סוכן/שיחות אמיתי כשיהיה זמין.
+//  /api/agent — הסוכן החכם
+//  GET  — שלבי עבודה אמיתיים + התאמות מובילות לפי הפרופיל
+//  POST — מענה לשאלות בשפה חופשית על בסיס המכרזים בפועל
+//  הפרופיל מגיע מהלקוח (Supabase business_profiles) או מברירת מחדל.
 // ============================================================
 
-const API = "https://next.obudget.org/api/query";
+function profileFromParams(searchParams: URLSearchParams): AgentProfile {
+  const categories = searchParams.get("categories");
+  return {
+    categories: categories ? categories.split(",").filter(Boolean) : DEFAULT_PROFILE.categories,
+    region: searchParams.get("region") || DEFAULT_PROFILE.region,
+    publisher_type: searchParams.get("publisher_type") || DEFAULT_PROFILE.publisher_type,
+    keywords: searchParams.get("keywords") || DEFAULT_PROFILE.keywords,
+  };
+}
 
-type Step = { icon: string; title: string; sub: string; state: "done" | "active" | "pending" };
-type Msg = { role: "agent" | "user"; text: string };
-
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const sql =
-      "SELECT publication_id, description, publisher, claim_date " +
-      "FROM procurement_tenders_all " +
-      "WHERE claim_date IS NOT NULL " +
-      "ORDER BY publication_date DESC NULLS LAST LIMIT 500";
-    const res = await fetch(API + "?query=" + encodeURIComponent(sql), { cache: "no-store" });
-    const json = await res.json();
-    const rows: any[] = json?.rows || json?.result?.records || [];
-    const scanning = rows.length;
+    const { searchParams } = new URL(req.url);
+    const profile = profileFromParams(searchParams);
 
-    const steps: Step[] = [
-      { icon: "\u25C9", title: "איתור מכרזים", sub: scanning + " מכרזים נסרקו", state: "done" },
-      { icon: "\u25C8", title: "סינון לפי פרופיל", sub: "התאמה לתחומי הפעילות", state: "done" },
-      { icon: "\u2605", title: "דירוג והתאמה", sub: "חישוב ציון התאמה", state: "active" },
-      { icon: "\u270E", title: "הכנת סיכום החלטה", sub: "ממתין", state: "pending" },
+    const rows = await fetchActiveTenders();
+    const ranked = rankTenders(rows, profile);
+    const matched = ranked.filter((t) => t.score > 0);
+    const high = matched.filter((t) => t.score >= 10);
+
+    const steps = buildSteps(ranked.length, matched.length, high.length, profile);
+    const top = matched.slice(0, 5);
+
+    const messages = [
+      {
+        role: "agent" as const,
+        text:
+          matched.length > 0
+            ? `סרקתי ${ranked.length.toLocaleString("he-IL")} מכרזים פעילים ומצאתי ${matched.length} שתואמים לפרופיל שלך (${high.length} בהתאמה גבוהה). אלה המובילים — ואפשר לשאול אותי כל שאלה:`
+            : `סרקתי ${ranked.length.toLocaleString("he-IL")} מכרזים פעילים אך לא נמצאו התאמות לפרופיל. נסה לעדכן את הפרופיל העסקי או לשאול אותי בחיפוש חופשי.`,
+        tenders: top,
+      },
     ];
 
-    const messages: Msg[] = [
-      { role: "agent", text: "סרקתי " + scanning + " מכרזים פעילים ודירגתי אותם לפי הפרופיל שלך. אפשר לשאול אותי על כל מכרז." },
-    ];
+    return NextResponse.json({
+      status: "active",
+      scanning: ranked.length,
+      matched: matched.length,
+      steps,
+      messages,
+    });
+  } catch (err) {
+    return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
+}
 
-    return NextResponse.json({ status: "active", scanning, steps, messages });
+export async function POST(req: Request) {
+  try {
+    const body = await req.json().catch(() => ({}));
+    const question = String(body?.question || "").trim();
+    if (!question) {
+      return NextResponse.json({ error: "שאלה ריקה" }, { status: 400 });
+    }
+    const p = body?.profile || {};
+    const profile: AgentProfile = {
+      categories: Array.isArray(p.categories) && p.categories.length > 0 ? p.categories : DEFAULT_PROFILE.categories,
+      region: p.region || DEFAULT_PROFILE.region,
+      publisher_type: p.publisher_type || DEFAULT_PROFILE.publisher_type,
+      keywords: typeof p.keywords === "string" ? p.keywords : DEFAULT_PROFILE.keywords,
+    };
+
+    const rows = await fetchActiveTenders();
+    const ranked = rankTenders(rows, profile);
+    const answer = answerQuestion(question, ranked);
+
+    return NextResponse.json({
+      reply: { role: "agent", text: answer.text, tenders: answer.tenders },
+    });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
