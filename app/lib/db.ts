@@ -192,13 +192,120 @@ function muniRowToRecord(row: ObudgetRow): TenderRecord {
     };
 }
 
+// --- mr.gov.il direct scraping -------------------------------------------
+// The official procurement portal. Server-rendered HTML, 20 results per
+// page, ordered by last-update date (newest first) - so scraping the first
+// few pages daily captures everything that changed since the last run.
+// Publication ids are identical to obudget's publication_id, so upserting
+// with the same `id` keeps both sources fully in sync (the fresher
+// mr.gov.il row overwrites the staler obudget mirror).
+
+const MR_GOV_SEARCH = "https://mr.gov.il/ilgstorefront/he/search/?s=TENDER";
+
+function heDateToIso(d: string | undefined): string | null {
+    if (!d) return null;
+    const m = d.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+    return m ? `${m[3]}-${m[2]}-${m[1]}` : null;
+}
+
+interface MrGovRow {
+    publication_id: string;
+    title: string;
+    publisher: string | null;
+    status: string | null;
+    publish_date: string | null;
+    update_date: string | null;
+    deadline: string | null;
+}
+
+function stripTags(html: string): string {
+    return html.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#039;|&apos;/g, "'").replace(/\s+/g, " ").trim();
+}
+
+function parseMrGovSearchPage(html: string): MrGovRow[] {
+    const rows: MrGovRow[] = [];
+    // Each result contains a link to /ilgstorefront/he/p/<publication_id>
+    // followed by a details block. Split on the product links.
+    const parts = html.split(/href="[^"]*\/ilgstorefront\/he\/p\/(\d{6,})"/);
+    // parts: [before, id1, chunk1, id2, chunk2, ...]
+    for (let i = 1; i < parts.length - 1; i += 2) {
+          const id = parts[i];
+          const chunk = parts[i + 1];
+          const text = stripTags(chunk.slice(0, 4000));
+
+        // Title = text of the anchor itself (start of chunk up to closing tag)
+        const titleMatch = chunk.match(/^[^>]*>([\s\S]*?)<\/a>/);
+          const title = titleMatch ? stripTags(titleMatch[1]) : "";
+
+        const publisher = (text.match(/שם המפרסם:\s*(.+?)\s*מס' פרסום/) || [])[1] || null;
+          const status = (text.match(/סטטוס:\s*(.+?)\s*\|/) || [])[1] || null;
+          const publishDate = (text.match(/תאריך פרסום:\s*(\d{2}\/\d{2}\/\d{4})/) || [])[1];
+          const updateDate = (text.match(/תאריך עדכון:\s*(\d{2}\/\d{2}\/\d{4})/) || [])[1];
+          const deadline = (text.match(/מועד אחרון להגשה:\s*(\d{2}\/\d{2}\/\d{4})/) || [])[1];
+
+        if (!title) continue;
+          // Skip duplicates within the same page (mobile+desktop markup)
+          if (rows.some(r => r.publication_id === id)) continue;
+
+        rows.push({
+                publication_id: id,
+                title,
+                publisher: publisher ? publisher.trim() : null,
+                status: status ? status.trim() : null,
+                publish_date: heDateToIso(publishDate),
+                update_date: heDateToIso(updateDate),
+                deadline: heDateToIso(deadline),
+        });
+    }
+    return rows;
+}
+
+async function fetchMrGovPage(page: number): Promise<MrGovRow[]> {
+    const res = await fetch(`${MR_GOV_SEARCH}&page=${page}`, {
+          headers: {
+                Accept: "text/html",
+                "User-Agent": "Mozilla/5.0 (compatible; TendersAgent/1.0; +https://tenders-agent.vercel.app)",
+                "Accept-Language": "he",
+          },
+          cache: "no-store",
+    });
+    if (!res.ok) throw new Error(`mr.gov.il error: ${res.status}`);
+    return parseMrGovSearchPage(await res.text());
+}
+
+function mrGovRowToRecord(row: MrGovRow): TenderRecord {
+    return {
+          id: row.publication_id,
+          tender_id: null,
+          publication_id: row.publication_id,
+          title: row.title,
+          publisher: row.publisher,
+          publisher_unit: null,
+          publish_date: row.publish_date,
+          deadline: row.deadline,
+          status: row.status,
+          url: `https://mr.gov.il/ilgstorefront/he/p/${row.publication_id}`,
+          type: null,
+          source: "mr.gov.il",
+          fetched_at: new Date().toISOString(),
+    };
+}
+
 // Fetches the full current tender list from all sources (paginated) and
 // upserts it into the `tenders` table. Called once a day from the cron route.
-export async function syncTendersFromSources(): Promise<{ fetched: number; upserted: number; muniFetched: number; muniError?: string }> {
+export async function syncTendersFromSources(): Promise<{
+    fetched: number;
+    upserted: number;
+    muniFetched: number;
+    mrGovFetched: number;
+    mrGovNew: number;
+    muniError?: string;
+    mrGovError?: string;
+}> {
     const MAX_PAGES = 10;
     let offset = 0;
     let fetched = 0;
-    const records: TenderRecord[] = [];
+    const byId = new Map<string, TenderRecord>();
 
   for (let page = 0; page < MAX_PAGES; page++) {
         const rows = await fetchObudgetPage(offset);
@@ -206,7 +313,8 @@ export async function syncTendersFromSources(): Promise<{ fetched: number; upser
 
       for (const row of rows) {
               if (row.description === "מכרז ללא כותרת") continue;
-              records.push(rowToRecord(row));
+              const rec = rowToRecord(row);
+              byId.set(rec.id, rec);
       }
 
       if (rows.length < 1000) break;
@@ -224,7 +332,8 @@ export async function syncTendersFromSources(): Promise<{ fetched: number; upser
                 muniFetched += rows.length;
                 for (const row of rows) {
                       if (!row.description) continue;
-                      records.push(muniRowToRecord(row));
+                      const rec = muniRowToRecord(row);
+                      byId.set(rec.id, rec);
                 }
                 if (rows.length < 1000) break;
                 muniOffset += 1000;
@@ -233,6 +342,48 @@ export async function syncTendersFromSources(): Promise<{ fetched: number; upser
           muniError = String(err);
     }
 
-  const { count } = await upsertTenders(records);
-    return { fetched, upserted: count, muniFetched, ...(muniError ? { muniError } : {}) };
+  // mr.gov.il - the live official portal, fresher than the obudget mirror.
+    // Scrape the first pages (sorted by update date desc) and merge:
+    // fresher fields win, but obudget-only fields (type, tender_id,
+    // publisher_unit) are preserved. New ids not yet mirrored by obudget
+    // are inserted as full records.
+    const MR_GOV_PAGES = 5;
+    let mrGovFetched = 0;
+    let mrGovNew = 0;
+    let mrGovError: string | undefined;
+    try {
+          for (let page = 0; page < MR_GOV_PAGES; page++) {
+                const rows = await fetchMrGovPage(page);
+                if (rows.length === 0) break;
+                mrGovFetched += rows.length;
+                for (const row of rows) {
+                      const existing = byId.get(row.publication_id);
+                      if (existing) {
+                            // merge: mr.gov.il is fresher - overwrite live fields
+                            existing.title = row.title || existing.title;
+                            existing.publisher = row.publisher || existing.publisher;
+                            existing.status = row.status || existing.status;
+                            existing.publish_date = row.publish_date || existing.publish_date;
+                            existing.deadline = row.deadline || existing.deadline;
+                            existing.fetched_at = new Date().toISOString();
+                      } else {
+                            byId.set(row.publication_id, mrGovRowToRecord(row));
+                            mrGovNew++;
+                      }
+                }
+          }
+    } catch (err) {
+          mrGovError = String(err);
+    }
+
+  const { count } = await upsertTenders([...byId.values()]);
+    return {
+          fetched,
+          upserted: count,
+          muniFetched,
+          mrGovFetched,
+          mrGovNew,
+          ...(muniError ? { muniError } : {}),
+          ...(mrGovError ? { mrGovError } : {}),
+    };
 }

@@ -8,7 +8,7 @@ import { fetchDedupedTenders } from '../lib/tenderData';
 const SOURCES = [
   {
     name: "מינהל הרכש הממשלתי",
-    desc: "מקור פרטי המכרז החי — פרטים מלאים, אנשי קשר ומסמכים",
+    desc: "נסרק ישירות מהפורטל הרשמי — סטטוסים ותאריכים בזמן אמת, כולל מכרזים שטרם הגיעו למראה",
     host: 'mr.gov.il',
     url: 'https://mr.gov.il/ilgstorefront/he/',
     icon: '🏛️',
