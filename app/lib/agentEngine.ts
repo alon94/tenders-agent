@@ -161,8 +161,10 @@ export function rankTenders(rows: RawRow[], profile: AgentProfile): AgentTender[
       score: toDisplayScore(scoreMatch(r.description || '', r.publisher || r.publisher_unit || '', profile)),
     }))
     .filter((t) => {
-      if (!t.title || seen.has(t.id)) return false;
-      seen.add(t.id);
+      // מפתח ייחודי: מזהה + מפרסם (אותו מספר מכרז יכול להופיע אצל מפרסמים שונים)
+      const key = t.id + '|' + t.publisher;
+      if (!t.title || seen.has(key)) return false;
+      seen.add(key);
       return true;
     })
     .sort((a, b) => b.score - a.score);

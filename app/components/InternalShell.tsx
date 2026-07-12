@@ -21,7 +21,7 @@ const ACTIVE_FG = '#1e5aa8';
 const NAV = [
   { icon: '◧', label: 'גילוי', href: '/dashboard' },
   { icon: '★', label: 'מסומנים', href: '/marked' },
-  { icon: '◈', label: 'סוכן', href: '/agent' },
+  { icon: '◈', label: 'סוכן חכם', href: '/agent' },
   { icon: '▤', label: 'ערבויות', href: '/guarantee' },
   { icon: '⛁', label: 'מקורות', href: '/sources' },
 ];

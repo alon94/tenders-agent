@@ -5,7 +5,7 @@ import type { CSSProperties } from 'react';
 const TABS = [
   { icon: '▧', label: 'גילוי', href: '/dashboard' },
   { icon: '★', label: 'מסומנים', href: '/marked' },
-  { icon: '◈', label: 'סוכן', href: '/agent' },
+  { icon: '◈', label: 'סוכן חכם', href: '/agent' },
   { icon: '▤', label: 'ערבויות', href: '/guarantee' },
   { icon: '⦁', label: 'מקורות', href: '/sources' },
   { icon: '⚙', label: 'פרופיל', href: '/profile' },
