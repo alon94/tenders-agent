@@ -80,7 +80,7 @@ async function fetchBatch(offset: number): Promise<TenderRow[]> {
   const today = new Date().toISOString().split('T')[0]
   const dateFilter = `(claim_date > '${today}' OR (claim_date IS NULL AND publication_date > '2026-01-01'))`
   const sql = `SELECT tender_id, description, publisher, publisher_unit, claim_date, publication_date, status, page_url
-    FROM procurement_tenders_processed
+    FROM procurement_tenders_all
     WHERE status IN ${STATUSES} AND ${dateFilter}
     ORDER BY publication_date DESC NULLS LAST LIMIT 1000 OFFSET ${offset}`
   try {

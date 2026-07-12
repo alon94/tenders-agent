@@ -115,7 +115,7 @@ async function fetchObudgetPage(offset: number): Promise<ObudgetRow[]> {
     const dateFilter = `(claim_date > '${today}' OR (claim_date IS NULL AND publication_date > '${cutoffDate}'))`;
     const cacheBuster = `AND '${Date.now()}' IS NOT NULL`;
 
-  const sql = `SELECT publication_id, tender_id, description, publisher, publisher_unit, claim_date, publication_date, status, page_url, tender_type_he FROM procurement_tenders_processed WHERE status IN ${STATUSES} AND ${dateFilter} ${cacheBuster} ORDER BY publication_date DESC NULLS LAST, claim_date DESC NULLS LAST LIMIT 1000 OFFSET ${offset}`;
+  const sql = `SELECT publication_id, tender_id, description, publisher, publisher_unit, claim_date, publication_date, status, page_url, tender_type_he FROM procurement_tenders_all WHERE status IN ${STATUSES} AND ${dateFilter} ${cacheBuster} ORDER BY publication_date DESC NULLS LAST, claim_date DESC NULLS LAST LIMIT 1000 OFFSET ${offset}`;
 
   const res = await fetch(`${OBUDGET_API}?query=${encodeURIComponent(sql)}`, {
         headers: { Accept: "application/json" },
