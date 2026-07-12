@@ -26,8 +26,17 @@ export interface AgentTender {
   score: number;
 }
 
+// ציון תצוגה בסקאלת הדשבורד (גילוי): 50 בסיס, תקרה 95.
+// פגיעת קטגוריה (raw 5) → 65 (זהב), שתי פגיעות (raw 10) → 80 (ירוק) —
+// תואם ל-bandColor של עמוד הגילוי (ירוק ≥80, זהב ≥65, כחול מתחת).
+export function toDisplayScore(raw: number): number {
+  if (raw <= 0) return 50;
+  return Math.min(95, 50 + raw * 3);
+}
+
 // סף התאמה: לפחות פגיעה תוכנית אחת (קטגוריה/מילת מפתח), לא רק בונוס אזור/מפרסם
-export const MATCH_THRESHOLD = 5;
+export const MATCH_THRESHOLD = 65;
+export const HIGH_MATCH = 80;
 
 export interface AgentAnswer {
   text: string;
@@ -149,7 +158,7 @@ export function rankTenders(rows: RawRow[], profile: AgentProfile): AgentTender[
       deadline: r.claim_date ? String(r.claim_date).split('T')[0] : '',
       status: r.status || '',
       url: r.page_url || '',
-      score: scoreMatch(r.description || '', r.publisher || r.publisher_unit || '', profile),
+      score: toDisplayScore(scoreMatch(r.description || '', r.publisher || r.publisher_unit || '', profile)),
     }))
     .filter((t) => {
       if (!t.title || seen.has(t.id)) return false;
@@ -204,9 +213,9 @@ export function answerQuestion(question: string, ranked: AgentTender[]): AgentAn
 
   // 2. כמה / ספירה
   if (/^כמה|כמה מכרזים/.test(q)) {
-    const high = matched.filter((t) => t.score >= 10).length;
+    const high = matched.filter((t) => t.score >= HIGH_MATCH).length;
     return {
-      text: `סרקתי ${ranked.length} מכרזים פעילים. ${matched.length} מהם תואמים לפרופיל שלך, ומתוכם ${high} בהתאמה גבוהה (ציון 10+).`,
+      text: `סרקתי ${ranked.length} מכרזים פעילים. ${matched.length} מהם תואמים לפרופיל שלך, ומתוכם ${high} בהתאמה גבוהה (ציון ${HIGH_MATCH}+).`,
       tenders: matched.slice(0, 3),
     };
   }

@@ -31,9 +31,10 @@ function profileQuery(p: BusinessProfile | null): string {
   return qs ? '?' + qs : '';
 }
 
+// אותם ספים וצבעים כמו bandColor בעמוד הגילוי: ירוק ≥80, זהב ≥65, כחול מתחת
 function scoreColor(score: number): { bg: string; fg: string } {
-  if (score >= 10) return { bg: '#e3f4ea', fg: '#1e9e5a' };
-  if (score >= 5) return { bg: '#fbf3d8', fg: '#8a6d1f' };
+  if (score >= 80) return { bg: '#e3f4ea', fg: '#1e9e5a' };
+  if (score >= 65) return { bg: '#fbf3d8', fg: '#8a6d1f' };
   return { bg: '#e8f1fb', fg: '#1e5aa8' };
 }
 
@@ -65,7 +66,7 @@ function TenderList({ tenders }: { tenders: TenderCard[] }) {
               <div style={{ fontSize: 11.5, color: '#7a8794', marginTop: 4 }}>
                 {t.publisher || '—'}
                 {t.deadline ? ' · מועד אחרון: ' + fmtDate(t.deadline) : ''}
-                {t.score >= 10 ? ' · התאמה גבוהה' : t.score >= 5 ? ' · התאמה טובה' : ' · התאמה חלקית'}
+                {t.score >= 80 ? ' · התאמה גבוהה' : t.score >= 65 ? ' · התאמה טובה' : ' · התאמה חלקית'}
               </div>
             </div>
           </a>
