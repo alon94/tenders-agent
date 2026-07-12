@@ -238,6 +238,8 @@ export async function GET(req: Request) {
       fetchBatch(0), fetchBatch(1000), fetchBatch(2000), fetchBatch(3000)
     ])
 
+    console.log('Cron: batch sizes =', batches.map(b => b.length), 'profile =', JSON.stringify(profile))
+
     const seen = new Set<string>()
     const tenders: Tender[] = batches
       .flat()
@@ -262,6 +264,8 @@ export async function GET(req: Request) {
       })
       .sort((a, b) => b.score - a.score)
 
+    console.log('Cron: matched tenders =', tenders.length, 'dbSync =', JSON.stringify(dbSync))
+
     if (tenders.length === 0) {
       return NextResponse.json({ message: 'No matching tenders found, email not sent', dbSync })
     }
@@ -281,12 +285,14 @@ export async function GET(req: Request) {
 
     const html = buildEmailHTML(tenders, profile, dateStr)
 
-    await transporter.sendMail({
+    const mailInfo = await transporter.sendMail({
       from: `"שווה מכרזים 📋" <${process.env.GMAIL_USER}>`,
       to: TO_EMAIL,
       subject: `📋 ${tenders.length} מכרזים מותאמים לפרופיל שלך · ${new Date().toLocaleDateString('he-IL')}`,
       html,
     })
+
+    console.log('Cron: email sent, messageId =', mailInfo.messageId, 'response =', mailInfo.response)
 
     return NextResponse.json({
       success: true,
