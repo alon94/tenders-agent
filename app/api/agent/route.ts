@@ -19,7 +19,7 @@ export async function GET() {
   try {
     const sql =
       "SELECT publication_id, description, publisher, claim_date " +
-      "FROM procurement_tenders_processed " +
+      "FROM procurement_tenders_all " +
       "WHERE claim_date IS NOT NULL " +
       "ORDER BY publication_date DESC NULLS LAST LIMIT 500";
     const res = await fetch(API + "?query=" + encodeURIComponent(sql), { cache: "no-store" });

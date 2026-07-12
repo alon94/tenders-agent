@@ -52,7 +52,7 @@ export async function GET() {
   const cacheBuster = "AND '" + Date.now() + "' IS NOT NULL";
     const sql =
       "SELECT publication_id, tender_id, description, publisher, claim_date, status " +
-      "FROM procurement_tenders_processed " +
+      "FROM procurement_tenders_all " +
       "WHERE claim_date IS NOT NULL " + cacheBuster + " " +
       "ORDER BY claim_date DESC NULLS LAST LIMIT 12";
     const res = await fetch(API + "?query=" + encodeURIComponent(sql), { cache: "no-store" });
