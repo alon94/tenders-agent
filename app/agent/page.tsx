@@ -31,29 +31,46 @@ function profileQuery(p: BusinessProfile | null): string {
   return qs ? '?' + qs : '';
 }
 
+function scoreColor(score: number): { bg: string; fg: string } {
+  if (score >= 10) return { bg: '#e3f4ea', fg: '#1e9e5a' };
+  if (score >= 5) return { bg: '#fbf3d8', fg: '#8a6d1f' };
+  return { bg: '#e8f1fb', fg: '#1e5aa8' };
+}
+
 function TenderList({ tenders }: { tenders: TenderCard[] }) {
   if (!tenders || tenders.length === 0) return null;
+  const sorted = [...tenders].sort((a, b) => b.score - a.score);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
-      {tenders.map((t) => (
-        <a
-          key={t.id}
-          href={t.url || '#'}
-          target={t.url ? '_blank' : undefined}
-          rel="noopener noreferrer"
-          style={{
-            display: 'block', background: '#fff', border: '1px solid ' + BORDER, borderRadius: 10,
-            padding: '10px 12px', textDecoration: 'none', color: DARK,
-          }}
-        >
-          <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.4 }}>{t.title}</div>
-          <div style={{ fontSize: 11.5, color: '#7a8794', marginTop: 4 }}>
-            {t.publisher || '—'}
-            {t.deadline ? ' · מועד אחרון: ' + fmtDate(t.deadline) : ''}
-            {t.score >= 10 ? ' · 🟢 התאמה גבוהה' : t.score > 0 ? ' · 🟡 התאמה' : ''}
-          </div>
-        </a>
-      ))}
+      {sorted.map((t) => {
+        const sc = scoreColor(t.score);
+        return (
+          <a
+            key={t.id}
+            href={t.url || '#'}
+            target={t.url ? '_blank' : undefined}
+            rel="noopener noreferrer"
+            style={{
+              display: 'flex', alignItems: 'flex-start', gap: 10,
+              background: '#fff', border: '1px solid ' + BORDER, borderRadius: 10,
+              padding: '10px 12px', textDecoration: 'none', color: DARK,
+            }}
+          >
+            <span title="ציון התאמה" style={{
+              flex: '0 0 auto', minWidth: 40, textAlign: 'center', padding: '4px 8px',
+              borderRadius: 8, background: sc.bg, color: sc.fg, fontSize: 13, fontWeight: 700,
+            }}>{t.score}</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.4 }}>{t.title}</div>
+              <div style={{ fontSize: 11.5, color: '#7a8794', marginTop: 4 }}>
+                {t.publisher || '—'}
+                {t.deadline ? ' · מועד אחרון: ' + fmtDate(t.deadline) : ''}
+                {t.score >= 10 ? ' · התאמה גבוהה' : t.score >= 5 ? ' · התאמה טובה' : ' · התאמה חלקית'}
+              </div>
+            </div>
+          </a>
+        );
+      })}
     </div>
   );
 }

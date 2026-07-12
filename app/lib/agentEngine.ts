@@ -191,7 +191,7 @@ export function answerQuestion(question: string, ranked: AgentTender[]): AgentAn
   if (/נסגר|דדליין|מועד אחרון|בקרוב|השבוע|דחוף/.test(q)) {
     const soon = matched
       .filter((t) => { const d = daysLeft(t.deadline); return d !== null && d >= 0 && d <= 7; })
-      .sort((a, b) => (daysLeft(a.deadline) ?? 99) - (daysLeft(b.deadline) ?? 99))
+      .sort((a, b) => b.score - a.score || (daysLeft(a.deadline) ?? 99) - (daysLeft(b.deadline) ?? 99))
       .slice(0, 5);
     if (soon.length === 0) {
       return { text: 'אין כרגע מכרזים מותאמים לפרופיל שלך שנסגרים בשבוע הקרוב.', tenders: [] };
@@ -226,6 +226,7 @@ export function answerQuestion(question: string, ranked: AgentTender[]): AgentAn
         const text = (t.title + ' ' + t.publisher).toLowerCase();
         return terms.some((term) => text.includes(term.toLowerCase()));
       })
+      .sort((a, b) => b.score - a.score)
       .slice(0, 5);
     if (hits.length > 0) {
       return { text: `נמצאו ${hits.length} מכרזים רלוונטיים לשאלה שלך:`, tenders: hits };
