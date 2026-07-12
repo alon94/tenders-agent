@@ -4,6 +4,7 @@ import {
   rankTenders,
   answerQuestion,
   buildSteps,
+  MATCH_THRESHOLD,
   DEFAULT_PROFILE,
   type AgentProfile,
 } from "@/app/lib/agentEngine";
@@ -35,7 +36,7 @@ export async function GET(req: Request) {
 
     const rows = await fetchActiveTenders();
     const ranked = rankTenders(rows, profile);
-    const matched = ranked.filter((t) => t.score > 0);
+    const matched = ranked.filter((t) => t.score >= MATCH_THRESHOLD);
     const high = matched.filter((t) => t.score >= 10);
 
     const steps = buildSteps(ranked.length, matched.length, high.length, profile);

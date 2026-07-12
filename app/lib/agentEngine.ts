@@ -26,6 +26,9 @@ export interface AgentTender {
   score: number;
 }
 
+// סף התאמה: לפחות פגיעה תוכנית אחת (קטגוריה/מילת מפתח), לא רק בונוס אזור/מפרסם
+export const MATCH_THRESHOLD = 5;
+
 export interface AgentAnswer {
   text: string;
   tenders: AgentTender[];
@@ -182,7 +185,7 @@ function extractTerms(question: string): string[] {
 
 export function answerQuestion(question: string, ranked: AgentTender[]): AgentAnswer {
   const q = question.toLowerCase();
-  const matched = ranked.filter((t) => t.score > 0);
+  const matched = ranked.filter((t) => t.score >= MATCH_THRESHOLD);
 
   // 1. מכרזים שנסגרים בקרוב
   if (/נסגר|דדליין|מועד אחרון|בקרוב|השבוע|דחוף/.test(q)) {
