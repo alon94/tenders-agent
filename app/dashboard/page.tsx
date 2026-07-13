@@ -5,6 +5,8 @@ import MobileTabBar from "../components/MobileTabBar";
 import MobileMenu from "../components/MobileMenu";
 import { fetchDedupedTenders } from '../lib/tenderData';
 import { getSession, signOut, AUTH_EVENT, type AuthSession } from '../lib/authClient';
+import { fetchMyProfile, type BusinessProfile } from '../lib/profileApi';
+import { scoreTender } from '../lib/scoring';
 
 /* ============ עיצוב 2a — אנטרפרייז, טבלת נתונים נקייה ============ */
 
@@ -54,8 +56,12 @@ const DARK='#1a2330', BLUE='#2b6fc4', MUTED='#667380', BORDER='#e6eaee';
 
 export default function Dashboard(){
   const [session, setSession] = useState<AuthSession | null>(null);
+  const [bizProfile, setBizProfile] = useState<BusinessProfile | null>(null);
   useEffect(() => {
-    setSession(getSession());
+    const s = getSession();
+    setSession(s);
+    // אורח: ברירת מחדל — הצג הכל, כולל מכרזים שמועד הגשתם עבר
+    if (!s) setShowClosed(true);
     const onChange = () => setSession(getSession());
     window.addEventListener(AUTH_EVENT, onChange);
     window.addEventListener('storage', onChange);
@@ -64,6 +70,11 @@ export default function Dashboard(){
       window.removeEventListener('storage', onChange);
     };
   }, []);
+  // משתמש מחובר: טעינת הפרופיל העסקי לדירוג מותאם
+  useEffect(() => {
+    if (!session) { setBizProfile(null); return; }
+    fetchMyProfile().then(p => setBizProfile(p)).catch(() => setBizProfile(null));
+  }, [session]);
   async function handleSignOut() {
     await signOut();
     window.location.href = '/signin';
@@ -107,17 +118,25 @@ export default function Dashboard(){
     if(pub)r=r.filter(t=>mPub(t,pub));
     if(!showClosed)r=r.filter(t=>{const d=dl(t.deadline);return d===null||d>=0;});
     if(!showNoDate)r=r.filter(t=>!!t.deadline);
-    r=r.filter(t=>{const d=dl(t.deadline);if(d===null)return showNoDate;return d>=0&&d<=maxD;});
+    r=r.filter(t=>{const d=dl(t.deadline);if(d===null)return showNoDate;if(d<0)return showClosed;return d<=maxD;});
     if(q.trim()){const ql=q.toLowerCase();r=r.filter(t=>(t.title||'').toLowerCase().includes(ql)||(t.publisher||'').toLowerCase().includes(ql));}
     return r;
   },[all,biz,pub,maxD,showClosed,showNoDate,q]);
 
   const closing=useMemo(()=>base.filter(t=>{const d=dl(t.deadline);return d!==null&&d>=0&&d<=7;}),[base]);
   const newT=useMemo(()=>base.filter(t=>{if(!t.publishDate)return false;return new Date(t.publishDate).getTime()>(now-7*86400000);}),[base,now]);
+  const scoreOf=useCallback((t:T):number=>{
+    if(bizProfile)return scoreTender(t,{categories:bizProfile.categories,region:bizProfile.region,publisher_type:bizProfile.publisher_type},now).display;
+    return matchSc(biz,t);
+  },[bizProfile,biz,now]);
   const shown=useMemo(()=>{
     const r=tab==='closing'?closing:tab==='new'?newT:base;
+    if(bizProfile){
+      // מחובר עם פרופיל עסקי: מיון לפי ציון התאמה, שובר שוויון — הדדליין הקרוב
+      return [...r].sort((a,b)=>scoreOf(b)-scoreOf(a)||((dl(a.deadline)??9999)-(dl(b.deadline)??9999)));
+    }
     return [...r].sort((a,b)=>(dl(a.deadline)??9999)-(dl(b.deadline)??9999));
-  },[base,closing,newT,tab]);
+  },[base,closing,newT,tab,bizProfile,scoreOf]);
 
   const tp=Math.ceil(shown.length/PER);
   const rows=shown.slice((pg-1)*PER,pg*PER);
@@ -254,7 +273,7 @@ export default function Dashboard(){
                 <div style={{padding:50,textAlign:'center',color:MUTED,fontSize:14}}>לא נמצאו מכרזים התואמים לסינון</div>
               ):rows.map((t,i)=>{
                 const d=dl(t.deadline);
-                const score=matchSc(biz,t);
+                const score=scoreOf(t);
                 const tags=statusTags(t,d);
                 const isMarked=marked.includes(t.id);
                 return(
