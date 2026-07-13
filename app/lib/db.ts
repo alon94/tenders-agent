@@ -347,30 +347,40 @@ export async function syncTendersFromSources(): Promise<{
     // fresher fields win, but obudget-only fields (type, tender_id,
     // publisher_unit) are preserved. New ids not yet mirrored by obudget
     // are inserted as full records.
-    const MR_GOV_PAGES = 5;
+    const MR_GOV_PAGES = 25;      // 25 pages x 20 = up to 500 recently-updated tenders
+    const MR_GOV_CONCURRENCY = 5; // fetch 5 pages in parallel per batch
     let mrGovFetched = 0;
     let mrGovNew = 0;
     let mrGovError: string | undefined;
     try {
-          for (let page = 0; page < MR_GOV_PAGES; page++) {
-                const rows = await fetchMrGovPage(page);
-                if (rows.length === 0) break;
-                mrGovFetched += rows.length;
-                for (const row of rows) {
-                      const existing = byId.get(row.publication_id);
-                      if (existing) {
-                            // merge: mr.gov.il is fresher - overwrite live fields
-                            existing.title = row.title || existing.title;
-                            existing.publisher = row.publisher || existing.publisher;
-                            existing.status = row.status || existing.status;
-                            existing.publish_date = row.publish_date || existing.publish_date;
-                            existing.deadline = row.deadline || existing.deadline;
-                            existing.fetched_at = new Date().toISOString();
-                      } else {
-                            byId.set(row.publication_id, mrGovRowToRecord(row));
-                            mrGovNew++;
+          outer: for (let batchStart = 0; batchStart < MR_GOV_PAGES; batchStart += MR_GOV_CONCURRENCY) {
+                const pageNums = Array.from(
+                      { length: Math.min(MR_GOV_CONCURRENCY, MR_GOV_PAGES - batchStart) },
+                      (_, i) => batchStart + i
+                );
+                const results = await Promise.all(pageNums.map(p => fetchMrGovPage(p)));
+
+              let sawEmptyPage = false;
+                for (const rows of results) {
+                      if (rows.length === 0) { sawEmptyPage = true; continue; }
+                      mrGovFetched += rows.length;
+                      for (const row of rows) {
+                            const existing = byId.get(row.publication_id);
+                            if (existing) {
+                                  // merge: mr.gov.il is fresher - overwrite live fields
+                                  existing.title = row.title || existing.title;
+                                  existing.publisher = row.publisher || existing.publisher;
+                                  existing.status = row.status || existing.status;
+                                  existing.publish_date = row.publish_date || existing.publish_date;
+                                  existing.deadline = row.deadline || existing.deadline;
+                                  existing.fetched_at = new Date().toISOString();
+                            } else {
+                                  byId.set(row.publication_id, mrGovRowToRecord(row));
+                                  mrGovNew++;
+                            }
                       }
                 }
+                if (sawEmptyPage) break outer; // reached the end of the result list
           }
     } catch (err) {
           mrGovError = String(err);

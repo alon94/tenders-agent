@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useIsMobile } from "../hooks/useIsMobile";
 import MobileTabBar from "../components/MobileTabBar";
+import MobileMenu from "../components/MobileMenu";
 import { fetchDedupedTenders } from '../lib/tenderData';
 import { getSession, signOut, AUTH_EVENT, type AuthSession } from '../lib/authClient';
 
@@ -182,6 +183,7 @@ export default function Dashboard(){
         <div style={{flex:1,minWidth:0,display:'flex',flexDirection:'column',...(isMobile?{paddingBottom:72}:{})}}>
           {/* header */}
           <div style={{background:'#fff',borderBottom:`1px solid ${BORDER}`,padding:isMobile?'12px 14px':'15px 26px',display:'flex',alignItems:'center',gap:isMobile?10:18,position:'sticky',top:0,zIndex:5}}>
+            {isMobile && <MobileMenu/>}
             <div style={{fontWeight:700,fontSize:isMobile?16:20,color:DARK,flex:'0 0 auto'}}>גילוי מכרזים</div>
             <div style={{flex:1,minWidth:0,display:'flex',alignItems:'center',gap:9,background:'#f4f6f8',border:'1px solid #e2e7ec',borderRadius:8,padding:'9px 14px',maxWidth:440}}>
               <span style={{color:'#9aa6b2',fontSize:15}}>⌕</span>

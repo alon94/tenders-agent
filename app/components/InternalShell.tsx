@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useIsMobile } from '../hooks/useIsMobile';
 import MobileTabBar from './MobileTabBar';
+import MobileMenu from './MobileMenu';
 import { getSession, signOut, AUTH_EVENT, type AuthSession } from '../lib/authClient';
 
 // ============================================================
@@ -243,11 +244,14 @@ export default function InternalShell({
             flexWrap: 'wrap',
           }}
         >
-          <div>
-            <div style={{ fontSize: 17, fontWeight: 700 }}>{title}</div>
-            {subtitle && (
-              <div style={{ fontSize: 12.5, color: '#7a8794', marginTop: 2 }}>{subtitle}</div>
-            )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {isMobile && <MobileMenu />}
+            <div>
+              <div style={{ fontSize: 17, fontWeight: 700 }}>{title}</div>
+              {subtitle && (
+                <div style={{ fontSize: 12.5, color: '#7a8794', marginTop: 2 }}>{subtitle}</div>
+              )}
+            </div>
           </div>
           {action}
         </header>
