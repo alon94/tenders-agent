@@ -37,7 +37,7 @@ export async function GET(req: Request) {
 
     const rows = await fetchActiveTenders();
     const ranked = rankTenders(rows, profile);
-    const matched = ranked.filter((t) => t.score >= MATCH_THRESHOLD);
+    const matched = ranked.filter((t) => t.matched);
     const high = matched.filter((t) => t.score >= HIGH_MATCH);
 
     const steps = buildSteps(ranked.length, matched.length, high.length, profile);

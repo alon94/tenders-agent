@@ -5,6 +5,8 @@
 //  משותף ל-/api/agent (GET + POST).
 // ============================================================
 
+import { scoreTender } from './scoring';
+
 const API = 'https://next.obudget.org/api/query';
 const STATUSES = `('פורסם','עתידי','פורסם ולא התקבלו השגות','פורסם והתקבלו השגות','בעדכון')`;
 
@@ -23,18 +25,11 @@ export interface AgentTender {
   deadline: string;
   status: string;
   url: string;
-  score: number;
+  score: number;    // ציון תצוגה 50-95 מהמנוע המאוחד (scoring.ts)
+  matched: boolean; // לפחות פגיעה תוכנית אחת (קטגוריה/מילת מפתח)
 }
 
-// ציון תצוגה בסקאלת הדשבורד (גילוי): 50 בסיס, תקרה 95.
-// פגיעת קטגוריה (raw 5) → 65 (זהב), שתי פגיעות (raw 10) → 80 (ירוק) —
-// תואם ל-bandColor של עמוד הגילוי (ירוק ≥80, זהב ≥65, כחול מתחת).
-export function toDisplayScore(raw: number): number {
-  if (raw <= 0) return 50;
-  return Math.min(95, 50 + raw * 3);
-}
-
-// סף התאמה: לפחות פגיעה תוכנית אחת (קטגוריה/מילת מפתח), לא רק בונוס אזור/מפרסם
+// רצועות תצוגה — זהות לעמוד הגילוי (ירוק ≥80, זהב ≥65, כחול מתחת)
 export const MATCH_THRESHOLD = 65;
 export const HIGH_MATCH = 80;
 
@@ -52,41 +47,6 @@ export const CAT_LABELS: Record<string, string> = {
   other: 'אחר',
 };
 
-const CAT_KW: Record<string, string[]> = {
-  tech: ['טכנולוגי', 'תוכנה', 'מחשב', 'דיגיטל', 'סייבר', 'פיתוח', 'מערכת', 'IT', 'ענן'],
-  consulting: ['ייעוץ', 'יעוץ', 'ניהול', 'אסטרטגי', 'כלכל', 'פרויקט', 'תכנון'],
-  legal: ['משפט', 'רגולצי', 'עו"ד', 'ייצוג', 'חוזה', 'חשבונאות', 'ביקורת'],
-  construction: ['בניה', 'בנייה', 'תשתית', 'עבודות', 'קבלן', 'שיפוץ', 'אדריכל'],
-  cleaning: ['ניקיון', 'תחזוקה', 'חיטוי'],
-  security: ['שמירה', 'אבטחה', 'מאבטח', 'בטיחות'],
-  health: ['רפואי', 'בריאות', 'רפואה', 'מכשור רפואי', 'סיעוד'],
-  education: ['חינוך', 'הכשרה', 'הדרכה', 'קורס', 'אקדמי'],
-  catering: ['מזון', 'קייטרינג', 'אוכל', 'כשר', 'הסעדה'],
-  transport: ['הובלה', 'תחבורה', 'רכב', 'לוגיסטי', 'הסעות'],
-  marketing: ['שיווק', 'פרסום', 'מיתוג', 'קמפיין'],
-  environment: ['סביבה', 'קיימות', 'פסולת', 'מחזור', 'אנרגיה ירוקה'],
-  other: [],
-};
-
-const REG_KW: Record<string, string[]> = {
-  north: ['צפון', 'עכו', 'נצרת', 'טבריה', 'גליל'],
-  haifa: ['חיפה', 'קריות', 'קריית', 'כרמל'],
-  center: ['מרכז', 'פתח תקווה', 'ראשון לציון', 'רחובות', 'רמת גן', 'חולון', 'בת ים'],
-  tlv: ['תל אביב', 'תל-אביב', 'יפו'],
-  jerusalem: ['ירושלים', 'בית שמש', 'מודיעין'],
-  south: ['דרום', 'באר שבע', 'אשדוד', 'אשקלון', 'נגב', 'אילת'],
-  national: [], all: [],
-};
-
-const PUB_KW: Record<string, string[]> = {
-  gov: ['משרד', 'ממשלה', 'מדינה', 'רשות', 'מינהל'],
-  local: ['עירייה', 'עיריית', 'מועצה', 'רשות מקומית', 'אזורית'],
-  health: ['בית חולים', 'קופת חולים', 'מאוחדת', 'כללית', 'מכבי', 'לאומית', 'בריאות'],
-  edu: ['אוניברסיטה', 'מכללה', 'טכניון', 'בית ספר'],
-  infra: ['חשמל', 'מים', 'נתיבי', 'מקורות', 'רכבת', 'נמל'],
-  all: [],
-};
-
 export const DEFAULT_PROFILE: AgentProfile = {
   categories: (process.env.PROFILE_CATEGORIES || 'consulting,tech,marketing').split(','),
   region: process.env.PROFILE_REGIONS?.split(',')[0] || 'national',
@@ -94,22 +54,16 @@ export const DEFAULT_PROFILE: AgentProfile = {
   keywords: process.env.PROFILE_KEYWORDS || '',
 };
 
-// --- דירוג התאמה ---
-export function scoreMatch(title: string, publisher: string, profile: AgentProfile): number {
-  let score = 0;
-  const text = (title + ' ' + publisher).toLowerCase();
-  const kw = (profile.keywords || '').split(',').map((k) => k.trim()).filter(Boolean);
-  kw.forEach((k) => { if (text.includes(k.toLowerCase())) score += 10; });
-  (profile.categories || []).forEach((cat) => {
-    CAT_KW[cat]?.forEach((w) => { if (text.includes(w.toLowerCase())) score += 5; });
-  });
-  const reg = profile.region;
-  if (reg === 'national' || reg === 'all') score += 1;
-  else REG_KW[reg]?.forEach((w) => { if (text.includes(w.toLowerCase())) score += 3; });
-  const pub = profile.publisher_type;
-  if (pub === 'all') score += 1;
-  else PUB_KW[pub]?.forEach((w) => { if (text.includes(w.toLowerCase())) score += 4; });
-  return score;
+// --- דירוג התאמה — עטיפה סביב המנוע המאוחד (scoring.ts) ---
+export function scoreMatch(
+  title: string, publisher: string, profile: AgentProfile,
+  publishDate = '', deadline = ''
+): { display: number; matched: boolean } {
+  const bd = scoreTender(
+    { title, publisher, publishDate, deadline },
+    { categories: profile.categories, region: profile.region, publisher_type: profile.publisher_type, keywords: profile.keywords }
+  );
+  return { display: bd.display, matched: bd.matched };
 }
 
 // --- שליפת מכרזים פעילים (עם cache של 10 דקות) ---
@@ -150,16 +104,24 @@ export async function fetchActiveTenders(): Promise<RawRow[]> {
 export function rankTenders(rows: RawRow[], profile: AgentProfile): AgentTender[] {
   const seen = new Set<string>();
   return rows
-    .map((r, i) => ({
-      id: String(r.tender_id || i),
-      title: r.description || '',
-      publisher: r.publisher || r.publisher_unit || '',
-      publishDate: r.publication_date ? String(r.publication_date).split('T')[0] : '',
-      deadline: r.claim_date ? String(r.claim_date).split('T')[0] : '',
-      status: r.status || '',
-      url: r.page_url || '',
-      score: toDisplayScore(scoreMatch(r.description || '', r.publisher || r.publisher_unit || '', profile)),
-    }))
+    .map((r, i) => {
+      const title = r.description || '';
+      const publisher = r.publisher || r.publisher_unit || '';
+      const publishDate = r.publication_date ? String(r.publication_date).split('T')[0] : '';
+      const deadline = r.claim_date ? String(r.claim_date).split('T')[0] : '';
+      const { display, matched } = scoreMatch(title, publisher, profile, publishDate, deadline);
+      return {
+        id: String(r.tender_id || i),
+        title,
+        publisher,
+        publishDate,
+        deadline,
+        status: r.status || '',
+        url: r.page_url || '',
+        score: display,
+        matched,
+      };
+    })
     .filter((t) => {
       // מפתח ייחודי: מזהה + מפרסם (אותו מספר מכרז יכול להופיע אצל מפרסמים שונים)
       const key = t.id + '|' + t.publisher;
@@ -196,7 +158,7 @@ function extractTerms(question: string): string[] {
 
 export function answerQuestion(question: string, ranked: AgentTender[]): AgentAnswer {
   const q = question.toLowerCase();
-  const matched = ranked.filter((t) => t.score >= MATCH_THRESHOLD);
+  const matched = ranked.filter((t) => t.matched);
 
   // 1. מכרזים שנסגרים בקרוב
   if (/נסגר|דדליין|מועד אחרון|בקרוב|השבוע|דחוף/.test(q)) {

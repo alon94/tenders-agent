@@ -1,45 +1,11 @@
 import { NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 import { syncTendersFromSources } from "@/app/lib/db";
+import { scoreTender } from "@/app/lib/scoring";
 
 const API = 'https://next.obudget.org/api/query'
 const STATUSES = `('פורסם','עתידי','פורסם ולא התקבלו השגות','פורסם והתקבלו השגות','בעדכון')`
 const TO_EMAIL = 'alonkatabi17@gmail.com'
-
-const CAT_KW: Record<string,string[]> = {
-  tech:['טכנולוגי','תוכנה','מחשב','דיגיטל','סייבר','פיתוח','מערכת','IT','ענן'],
-  consulting:['ייעוץ','ניהול','אסטרטגי','כלכל','פרויקט','תכנון'],
-  legal:['משפט','רגולצי','עו"ד','ייצוג','חוזה'],
-  construction:['בניה','תשתית','עבודות','קבלן','שיפוץ','אדריכל'],
-  cleaning:['ניקיון','תחזוקה','חיטוי'],
-  security:['שמירה','אבטחה','מאבטח','בטיחות'],
-  medical:['רפואי','בריאות','רפואה','מכשור רפואי'],
-  education:['חינוך','הכשרה','הדרכה','קורס','אקדמי'],
-  food:['מזון','קייטרינג','אוכל','כשר'],
-  transport:['הובלה','תחבורה','רכב','לוגיסטי','הסעות'],
-  marketing:['שיווק','פרסום','מיתוג','קמפיין'],
-  engineering:['הנדסה','ייצור','תעשיה','אלקטרוניקה','חשמל'],
-  environment:['סביבה','קיימות','פסולת','מחזור','אנרגיה ירוקה'],
-  finance:['חשבונאות','ביקורת','פיננסי','מס','ביטוח'],
-  hr:['משאבי אנוש','גיוס','שכר','רווחה'],
-}
-const REG_KW: Record<string,string[]> = {
-  north:['צפון','עכו','נצרת','טבריה','גליל'],
-  haifa:['חיפה','קריות','קריית','קרמל'],
-  center:['מרכז','פתח תקווה','ראשון לציון','רחובות','רמת גן','חולון','בת ים'],
-  tlv:['תל אביב','תל-אביב','יפו'],
-  jerusalem:['ירושלים','בית שמש','מודיעין'],
-  south:['דרום','באר שבע','אשדוד','אשקלון','נגב','אילת'],
-  national:[],
-}
-const PUB_KW: Record<string,string[]> = {
-  gov:['משרד','ממשלה','מדינה','רשות','מינהל'],
-  local:['עירייה','מועצה','רשות מקומית','אזורית'],
-  hospital:['בית חולים','קופת חולים','מאוחדת','כללית','מכבי','לאומית'],
-  university:['אוניברסיטה','מכללה','טכניון'],
-  defense:['צבא','משטרה','ביטחון'],
-  infra:['חשמל','מים','נתיבי','מקורות'],
-}
 
 interface TenderRow {
   tender_id?: unknown; description?: string; publisher?: string; publisher_unit?: string;
@@ -47,23 +13,24 @@ interface TenderRow {
 }
 interface Tender {
   id: string; title: string; publisher: string; publishDate: string;
-  deadline: string; status: string; url: string; score: number;
+  deadline: string; status: string; url: string; score: number; matched: boolean;
 }
 interface Profile {
   businessName?: string; categories?: string[]; regions?: string[];
   publishers?: string[]; keywords?: string;
 }
 
-function scoreMatch(title: string, publisher: string, profile: Profile): number {
-  let score = 0
-  const text = (title + ' ' + publisher).toLowerCase()
-  const kw = (profile.keywords || '').split(',').map(k => k.trim()).filter(Boolean)
-  kw.forEach(k => { if (text.includes(k.toLowerCase())) score += 10 })
-  ;(profile.categories || []).forEach(cat => { CAT_KW[cat]?.forEach(w => { if (text.includes(w.toLowerCase())) score += 5 }) })
-  if ((profile.regions || []).includes('national')) score += 1
-  ;(profile.regions || []).filter(r => r !== 'national').forEach(reg => { REG_KW[reg]?.forEach(w => { if (text.includes(w.toLowerCase())) score += 3 }) })
-  ;(profile.publishers || []).forEach(pub => { PUB_KW[pub]?.forEach(w => { if (text.includes(w.toLowerCase())) score += 4 }) })
-  return score
+// דירוג — המנוע המאוחד (scoring.ts): רלוונטיות + דחיפות + טריות + הקשר,
+// ציון תצוגה 50-95 — זהה לדשבורד ולסוכן החכם.
+function scoreMatch(
+  title: string, publisher: string, profile: Profile,
+  publishDate = '', deadline = ''
+): { display: number; matched: boolean } {
+  const bd = scoreTender(
+    { title, publisher, publishDate, deadline },
+    { categories: profile.categories, region: profile.regions, publisher_type: profile.publishers, keywords: profile.keywords }
+  )
+  return { display: bd.display, matched: bd.matched }
 }
 
 function formatDate(d: string) {
@@ -98,7 +65,7 @@ function buildEmailHTML(tenders: Tender[], profile: Profile, dateStr: string): s
   const tenderRows = topTenders.map(t => {
     const days = daysLeft(t.deadline)
     const soon = days !== null && days >= 0 && days <= 7
-    const scoreLabel = t.score >= 15 ? '🟢 התאמה גבוהה' : t.score >= 8 ? '🟡 התאמה טובה' : '🔵 התאמה'
+    const scoreLabel = t.score >= 80 ? `🟢 התאמה גבוהה · ${t.score}` : t.score >= 65 ? `🟡 התאמה טובה · ${t.score}` : `🔵 התאמה · ${t.score}`
     return `
       <tr style="border-bottom:1px solid #eee;">
         <td style="padding:12px 8px;font-size:14px;direction:rtl;">
@@ -245,22 +212,25 @@ export async function GET(req: Request) {
       .flat()
       .filter(r => r.description && r.description !== 'מכרז ללא כותרת')
       .map((r, i) => {
-        const score = scoreMatch(r.description || '', r.publisher || r.publisher_unit || '', profile)
+        const publishDate = r.publication_date ? r.publication_date.split('T')[0] : ''
+        const deadline = r.claim_date ? r.claim_date.split('T')[0] : ''
+        const { display, matched } = scoreMatch(r.description || '', r.publisher || r.publisher_unit || '', profile, publishDate, deadline)
         return {
           id: String(r.tender_id || i),
           title: r.description || '',
           publisher: r.publisher || r.publisher_unit || '',
-          publishDate: r.publication_date ? r.publication_date.split('T')[0] : '',
-          deadline: r.claim_date ? r.claim_date.split('T')[0] : '',
+          publishDate,
+          deadline,
           status: r.status || '',
           url: r.page_url || '',
-          score,
+          score: display,
+          matched,
         }
       })
       .filter(t => {
         if (!t.title || seen.has(t.id)) return false
         seen.add(t.id)
-        return t.score > 0
+        return t.matched // לפחות פגיעה תוכנית אחת בפרופיל
       })
       .sort((a, b) => b.score - a.score)
 

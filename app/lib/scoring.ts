@@ -23,9 +23,14 @@
 
 export interface ScoringProfile {
   categories?: string[];
-  region?: string;
-  publisher_type?: string;
+  region?: string | string[];        // אזור אחד או כמה
+  publisher_type?: string | string[]; // סוג מפרסם אחד או כמה
   keywords?: string;
+}
+
+function asArray(v: string | string[] | undefined): string[] {
+  if (!v) return [];
+  return Array.isArray(v) ? v : [v];
 }
 
 export interface ScorableTender {
@@ -126,12 +131,12 @@ export function scoreTender(t: ScorableTender, profile: ScoringProfile, now = Da
 
   // --- 4. התאמה סביבתית (0-10) ---
   let context = 0;
-  const pub = profile.publisher_type;
-  if (pub && pub !== 'all') { if (countHits(text, PUB_KW[pub] || []) > 0) context += 6; }
-  else if (pub === 'all') context += 2;
-  const reg = profile.region;
-  if (reg && reg !== 'national' && reg !== 'all') { if (countHits(text, REG_KW[reg] || []) > 0) context += 4; }
-  else if (reg) context += 2;
+  const pubs = asArray(profile.publisher_type);
+  if (pubs.some(p => countHits(text, PUB_KW[p] || []) > 0)) context += 6;
+  else if (pubs.includes('all')) context += 2;
+  const regs = asArray(profile.region);
+  if (regs.some(r => countHits(text, REG_KW[r] || []) > 0)) context += 4;
+  else if (regs.includes('national') || regs.includes('all')) context += 2;
   context = Math.min(10, context);
 
   const raw = Math.min(100, relevance + urgency + freshness + context);
