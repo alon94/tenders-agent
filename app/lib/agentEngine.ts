@@ -5,7 +5,7 @@
 //  משותף ל-/api/agent (GET + POST).
 // ============================================================
 
-import { scoreTender } from './scoring';
+import { scoreTender, CAT_KW as CAT_KW_PUBLIC } from './scoring';
 import { getTenders, type TenderRecord } from './db';
 
 const API = 'https://next.obudget.org/api/query';
@@ -176,74 +176,228 @@ function fmtDate(d: string): string {
   try { return new Date(d).toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' }); } catch { return d; }
 }
 
+// ============================================================
+//  שכבת שליפה משודרגת (רמה 1 — ללא LLM):
+//  1. נרמול עברית קל — הסרת ו/ה תחיליות, ריבוי, סיומות
+//  2. BM25 — דירוג רלוונטיות סטטיסטי לחיפוש חופשי
+//  3. חילוץ מסננים קומפוזיציוני — אזור+תחום+זמן+גוף באותה שאלה
+// ============================================================
+
 const STOPWORDS = new Set([
-  'של', 'על', 'את', 'עם', 'יש', 'מה', 'איזה', 'אילו', 'כמה', 'האם', 'לי', 'אני',
+  'של', 'על', 'את', 'עם', 'יש', 'מה', 'איזה', 'אילו', 'כמה', 'האם', 'לי', 'אני', 'לא',
   'מכרז', 'מכרזים', 'תראה', 'הצג', 'חפש', 'מצא', 'בבקשה', 'רוצה', 'אפשר', 'בתחום', 'לגבי', 'עבור',
+  'עוד', 'גם', 'או', 'כל', 'זה', 'זו', 'הם', 'הן', 'שלי', 'שלנו', 'אצל',
 ]);
 
-function extractTerms(question: string): string[] {
-  return question
-    .replace(/[?!.,;:"'()]/g, ' ')
+// נרמול מילה עברית: תחיליות ו/ה תמיד, ב/ל/מ/כ/ש רק במילים ארוכות,
+// וסיומות ריבוי — כדי ש"הדרכות" יתאים ל"הדרכה" ו"בצפון" ל"צפון".
+function normHe(w: string): string {
+  let s = w.replace(/[^א-תa-z0-9]/gi, '');
+  for (let i = 0; i < 2; i++) {
+    if (/^[וה]/.test(s) && s.length > 3) { s = s.slice(1); continue; }
+    if (/^[בלמכש]/.test(s) && s.length > 4) { s = s.slice(1); continue; }
+    break;
+  }
+  if (s.length >= 5) s = s.replace(/(יות|אות|ים|ות)$/, '');
+  return s;
+}
+
+function tokenize(text: string): string[] {
+  return text
+    .toLowerCase()
+    .replace(/[?!.,;:"'()\-\/·|]/g, ' ')
     .split(/\s+/)
-    .map((w) => w.trim())
-    .filter((w) => w.length >= 2 && !STOPWORDS.has(w));
+    .filter((w) => w.length >= 2 && !STOPWORDS.has(w))
+    .map(normHe)
+    .filter((w) => w.length >= 2);
+}
+
+// BM25 — חיפוש חופשי מדורג על פני כל המכרזים
+function bm25Search(query: string, docs: AgentTender[], topK = 6): AgentTender[] {
+  const qTokens = [...new Set(tokenize(query))];
+  if (qTokens.length === 0) return [];
+
+  const k1 = 1.4, b = 0.75;
+  const docTokens = docs.map((d) => tokenize(d.title + ' ' + d.publisher));
+  const avgLen = docTokens.reduce((s, t) => s + t.length, 0) / (docTokens.length || 1);
+
+  // תדירות מסמכים לכל מונח
+  const df = new Map<string, number>();
+  for (const toks of docTokens) {
+    const seen = new Set(toks);
+    for (const t of seen) if (qTokens.includes(t)) df.set(t, (df.get(t) || 0) + 1);
+  }
+
+  const scored: { t: AgentTender; s: number }[] = [];
+  for (let i = 0; i < docs.length; i++) {
+    const toks = docTokens[i];
+    let s = 0;
+    for (const qt of qTokens) {
+      const n = df.get(qt) || 0;
+      if (n === 0) continue;
+      const tf = toks.filter((x) => x === qt).length;
+      if (tf === 0) continue;
+      const idf = Math.log(1 + (docs.length - n + 0.5) / (n + 0.5));
+      s += idf * ((tf * (k1 + 1)) / (tf + k1 * (1 - b + b * (toks.length / avgLen))));
+    }
+    if (s > 0) scored.push({ t: docs[i], s });
+  }
+  return scored
+    .sort((a, b2) => b2.s - a.s || b2.t.score - a.t.score)
+    .slice(0, topK)
+    .map((x) => x.t);
+}
+
+// --- חילוץ מסננים מהשאלה (קומפוזיציוני — כמה מסננים ביחד) ---
+const REGION_NAMES: Record<string, string[]> = {
+  north: ['צפון', 'גליל', 'עכו', 'נצרת', 'טבריה'],
+  haifa: ['חיפה', 'קריות', 'כרמל'],
+  center: ['מרכז', 'פתח תקווה', 'ראשון לציון', 'רחובות', 'רמת גן', 'חולון'],
+  tlv: ['תל אביב', 'תל-אביב', 'יפו'],
+  jerusalem: ['ירושלים', 'בית שמש', 'מודיעין'],
+  south: ['דרום', 'באר שבע', 'אשדוד', 'אשקלון', 'נגב', 'אילת'],
+};
+
+interface QueryFilters {
+  windowDays: number | null;   // "נסגר תוך X"
+  isNew: boolean;              // פורסמו לאחרונה
+  highOnly: boolean;           // התאמה גבוהה בלבד
+  muni: boolean;               // מוניציפליים
+  region: string | null;       // מפתח אזור
+  regionLabel: string;
+  categories: string[];        // מפתחות קטגוריה שזוהו
+  ministry: string | null;     // "משרד ה..."
+  noDeadline: boolean;
+  labels: string[];            // תיאורי המסננים לתשובה
+}
+
+function extractFilters(q: string): QueryFilters {
+  const f: QueryFilters = {
+    windowDays: null, isNew: false, highOnly: false, muni: false,
+    region: null, regionLabel: '', categories: [], ministry: null,
+    noDeadline: false, labels: [],
+  };
+
+  // חלון זמן לסגירה
+  if (/נסגר|דדליין|מועד אחרון|להגיש|הגשה/.test(q)) {
+    if (/היום|מחר/.test(q)) f.windowDays = 2;
+    else if (/שבועיים/.test(q)) f.windowDays = 14;
+    else if (/חודש/.test(q)) f.windowDays = 30;
+    else f.windowDays = 7; // ברירת מחדל: "בקרוב"/"השבוע"
+  } else if (/דחוף|בקרוב|השבוע/.test(q)) f.windowDays = 7;
+  if (f.windowDays) f.labels.push(f.windowDays <= 2 ? 'נסגרים ממש עכשיו' : `נסגרים בתוך ${f.windowDays} ימים`);
+
+  // חדשים
+  if (/חדש/.test(q)) { f.isNew = true; f.labels.push('פורסמו בשבוע האחרון'); }
+
+  // התאמה גבוהה
+  if (/התאמה גבוהה|הכי מתאים|מומלץ|טוב ביותר|מוביל/.test(q)) { f.highOnly = true; f.labels.push('התאמה מובילה'); }
+
+  // מוניציפלי
+  if (/מוניציפל|רשויות מקומיות|רשות מקומית|עיריי|מועצה/.test(q)) { f.muni = true; f.labels.push('רשויות מקומיות'); }
+
+  // אזור
+  for (const [key, names] of Object.entries(REGION_NAMES)) {
+    if (names.some((n) => q.includes(n))) { f.region = key; f.regionLabel = names[0]; f.labels.push(`אזור ${names[0]}`); break; }
+  }
+
+  // קטגוריה — לפי שם התחום או מילות המילון שלו
+  for (const [cat, label] of Object.entries(CAT_LABELS)) {
+    if (cat === 'other') continue;
+    const dictWords = CAT_KW_PUBLIC[cat] || [];
+    if (q.includes(label) || dictWords.some((w) => q.includes(w.toLowerCase()))) {
+      if (!f.categories.includes(cat)) { f.categories.push(cat); f.labels.push(`תחום ${label}`); }
+    }
+  }
+
+  // משרד ממשלתי ספציפי
+  const m = q.match(/משרד ה([א-ת]{2,15})/);
+  if (m) { f.ministry = 'משרד ה' + m[1]; f.labels.push(f.ministry); }
+
+  // ללא מועד הגשה
+  if (/ללא מועד|בלי מועד|בלי דדליין/.test(q)) { f.noDeadline = true; f.labels.push('ללא מועד הגשה'); }
+
+  return f;
+}
+
+function hasFilters(f: QueryFilters): boolean {
+  return f.windowDays !== null || f.isNew || f.highOnly || f.muni || !!f.region || f.categories.length > 0 || !!f.ministry || f.noDeadline;
+}
+
+function applyFilters(ranked: AgentTender[], f: QueryFilters): AgentTender[] {
+  let r = ranked;
+  if (f.windowDays !== null) r = r.filter((t) => { const d = daysLeft(t.deadline); return d !== null && d >= 0 && d <= f.windowDays!; });
+  if (f.isNew) r = r.filter((t) => t.publishDate && (Date.now() - new Date(t.publishDate).getTime()) / 86400000 <= 7);
+  if (f.highOnly) { const hi = r.filter((t) => t.score >= HIGH_MATCH); r = hi.length > 0 ? hi : r.filter((t) => t.matched); }
+  if (f.muni) r = r.filter((t) => t.id.startsWith('muni-') || /עיריי|מועצה/.test(t.publisher));
+  if (f.region) { const words = REGION_NAMES[f.region]; r = r.filter((t) => words.some((w) => (t.title + ' ' + t.publisher).includes(w))); }
+  if (f.categories.length > 0) {
+    r = r.filter((t) => {
+      const text = (t.title + ' ' + t.publisher).toLowerCase();
+      return f.categories.some((c) => (CAT_KW_PUBLIC[c] || []).some((w) => text.includes(w.toLowerCase())));
+    });
+  }
+  if (f.ministry) r = r.filter((t) => t.publisher.includes(f.ministry!));
+  if (f.noDeadline) r = r.filter((t) => !t.deadline);
+  // מיון: לפי דדליין כשיש חלון זמן, אחרת לפי ציון
+  return f.windowDays !== null
+    ? [...r].sort((a, b) => (daysLeft(a.deadline) ?? 999) - (daysLeft(b.deadline) ?? 999) || b.score - a.score)
+    : [...r].sort((a, b) => b.score - a.score);
 }
 
 export function answerQuestion(question: string, ranked: AgentTender[]): AgentAnswer {
-  const q = question.toLowerCase();
+  const q = question.toLowerCase().trim();
   const matched = ranked.filter((t) => t.matched);
 
-  // 1. מכרזים שנסגרים בקרוב
-  if (/נסגר|דדליין|מועד אחרון|בקרוב|השבוע|דחוף/.test(q)) {
-    const soon = matched
-      .filter((t) => { const d = daysLeft(t.deadline); return d !== null && d >= 0 && d <= 7; })
-      .sort((a, b) => b.score - a.score || (daysLeft(a.deadline) ?? 99) - (daysLeft(b.deadline) ?? 99))
-      .slice(0, 5);
-    if (soon.length === 0) {
-      return { text: 'אין כרגע מכרזים מותאמים לפרופיל שלך שנסגרים בשבוע הקרוב.', tenders: [] };
-    }
-    return {
-      text: `נמצאו ${soon.length} מכרזים מותאמים שנסגרים בשבוע הקרוב — כדאי לפעול מהר:`,
-      tenders: soon,
-    };
+  // ברכות ועזרה
+  if (/^(שלום|היי|הי |בוקר טוב|ערב טוב|אהלן)/.test(q)) {
+    return { text: 'שלום! אני סוכן המכרזים שלך. אפשר לשאול אותי למשל: "מה נסגר השבוע?", "מכרזי טכנולוגיה בירושלים", "מכרזים חדשים של רשויות מקומיות", או כל חיפוש חופשי.', tenders: [] };
+  }
+  if (/מה אתה (יודע|יכול)|עזרה|איך (זה עובד|משתמשים)/.test(q)) {
+    return { text: 'אני סורק את כל המכרזים הפעילים משלושת המקורות (ממשלתי, mr.gov.il ורשויות מקומיות) ועונה על שאלות משולבות: לפי תחום ("מכרזי הדרכה"), אזור ("בצפון"), זמן ("נסגרים השבוע", "חדשים"), גוף ("משרד הבריאות", "עיריות") — ואפשר לשלב הכל בשאלה אחת. כל תשובה מגובה במכרזים אמיתיים עם ציון התאמה.', tenders: [] };
   }
 
-  // 2. כמה / ספירה
-  if (/^כמה|כמה מכרזים/.test(q)) {
+  // ספירה
+  if (/^כמה/.test(q)) {
+    const f = extractFilters(q);
+    if (hasFilters(f)) {
+      const hits = applyFilters(ranked, f);
+      return {
+        text: `נמצאו ${hits.length} מכרזים (${f.labels.join(' · ')}).${hits.length > 0 ? ' אלה המובילים:' : ''}`,
+        tenders: hits.slice(0, 5),
+      };
+    }
     const high = matched.filter((t) => t.score >= HIGH_MATCH).length;
     return {
-      text: `סרקתי ${ranked.length} מכרזים פעילים. ${matched.length} מהם תואמים לפרופיל שלך, ומתוכם ${high} בהתאמה גבוהה (ציון ${HIGH_MATCH}+).`,
+      text: `סרקתי ${ranked.length.toLocaleString('he-IL')} מכרזים פעילים. ${matched.length} מהם תואמים לפרופיל שלך, ומתוכם ${high} בהתאמה גבוהה (ציון ${HIGH_MATCH}+).`,
       tenders: matched.slice(0, 3),
     };
   }
 
-  // 3. המלצות / הכי מתאים
-  if (/מומלץ|הכי|מתאים|כדאי|טוב ביותר|מוביל/.test(q)) {
-    const top = matched.slice(0, 5);
-    if (top.length === 0) return { text: 'לא נמצאו מכרזים מותאמים לפרופיל שלך כרגע. נסה להרחיב את תחומי הפעילות בפרופיל העסקי.', tenders: [] };
-    return { text: `אלה ${top.length} המכרזים המתאימים ביותר לפרופיל שלך כרגע:`, tenders: top };
-  }
-
-  // 4. חיפוש חופשי לפי מילות השאלה
-  const terms = extractTerms(question);
-  if (terms.length > 0) {
-    const hits = ranked
-      .filter((t) => {
-        const text = (t.title + ' ' + t.publisher).toLowerCase();
-        return terms.some((term) => text.includes(term.toLowerCase()));
-      })
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 5);
-    if (hits.length > 0) {
-      return { text: `נמצאו ${hits.length} מכרזים רלוונטיים לשאלה שלך:`, tenders: hits };
+  // מסננים מובנים — תומך בשילובים ("מכרזי בינוי בדרום שנסגרים החודש")
+  const f = extractFilters(q);
+  if (hasFilters(f)) {
+    const hits = applyFilters(f.highOnly || f.windowDays !== null ? matched : ranked, f);
+    if (hits.length === 0) {
+      return { text: `לא נמצאו מכרזים העונים על: ${f.labels.join(' · ')}. נסה להרחיב את החיפוש.`, tenders: [] };
     }
+    return {
+      text: `נמצאו ${hits.length} מכרזים — ${f.labels.join(' · ')}:`,
+      tenders: hits.slice(0, 6),
+    };
   }
 
-  // 5. ברירת מחדל — ההתאמות המובילות
+  // חיפוש חופשי — BM25 עם נרמול עברית
+  const hits = bm25Search(question, ranked);
+  if (hits.length > 0) {
+    return { text: `נמצאו ${hits.length} מכרזים רלוונטיים לחיפוש שלך:`, tenders: hits };
+  }
+
+  // ברירת מחדל
   const top = matched.slice(0, 3);
   return {
     text: top.length > 0
-      ? 'לא מצאתי מכרזים ספציפיים לשאלה, אבל אלה ההתאמות המובילות לפרופיל שלך. אפשר לשאול למשל: "מה נסגר השבוע?", "כמה מכרזים בתחום שלי?", או לחפש מילה חופשית.'
+      ? 'לא מצאתי מכרזים לשאלה הזו, אבל אלה ההתאמות המובילות לפרופיל שלך. נסה למשל: "מכרזי ייעוץ בירושלים שנסגרים החודש" או "מכרזים חדשים של עיריות".'
       : 'לא מצאתי מכרזים מתאימים. נסה לנסח אחרת, או עדכן את הפרופיל העסקי שלך.',
     tenders: top,
   };
