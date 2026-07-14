@@ -264,9 +264,47 @@ export async function GET(req: Request) {
 
     console.log('Cron: email sent, messageId =', mailInfo.messageId, 'response =', mailInfo.response)
 
+    // --- התראה חכמה: מכרזים חדשים (פורסמו ביומיים האחרונים) בהתאמה גבוהה (80+) ---
+    const cutoff = new Date(Date.now() - 2 * 86400000).toISOString().split('T')[0]
+    const hotNew = tenders.filter(t => t.score >= 80 && t.publishDate && t.publishDate >= cutoff)
+    let alertSent = 0
+    if (hotNew.length > 0) {
+      const alertHtml = `<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:24px;background:#F4F6F8;font-family:Arial,sans-serif;direction:rtl;">
+  <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+    <div style="background:#1e9e5a;padding:20px 28px;color:#fff;">
+      <div style="font-size:20px;font-weight:800;">🔔 ${hotNew.length} מכרזים חדשים בהתאמה גבוהה</div>
+      <div style="font-size:13px;opacity:.85;margin-top:4px;">פורסמו ביומיים האחרונים · ציון 80+</div>
+    </div>
+    <div style="padding:20px 28px;">
+      ${hotNew.slice(0, 10).map(t => `
+        <div style="padding:12px 0;border-bottom:1px solid #eee;">
+          ${t.url ? `<a href="${t.url}" style="color:#1e5aa8;font-weight:700;font-size:14px;text-decoration:none;">${t.title}</a>` : `<span style="font-weight:700;font-size:14px;">${t.title}</span>`}
+          <div style="font-size:12px;color:#76838F;margin-top:4px;">
+            🏛️ ${t.publisher || '—'} · 🟢 ציון ${t.score}
+            ${t.deadline ? ` · ⏰ הגשה עד ${formatDate(t.deadline)}` : ''}
+          </div>
+        </div>`).join('')}
+      <div style="text-align:center;margin-top:18px;">
+        <a href="https://tenders-agent.vercel.app/dashboard" style="display:inline-block;background:#1e9e5a;color:#fff;padding:11px 26px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;">לכל המכרזים בדשבורד ←</a>
+      </div>
+    </div>
+  </div>
+</body></html>`
+      await transporter.sendMail({
+        from: `"שווה מכרזים 🔔" <${process.env.GMAIL_USER}>`,
+        to: TO_EMAIL,
+        subject: `🔔 ${hotNew.length} מכרזים חדשים בהתאמה גבוהה לפרופיל שלך`,
+        html: alertHtml,
+      })
+      alertSent = hotNew.length
+      console.log('Cron: hot-new alert sent,', hotNew.length, 'tenders')
+    }
+
     return NextResponse.json({
       success: true,
       matched: tenders.length,
+      hot_new_alert: alertSent,
       sent_to: TO_EMAIL,
       date: dateStr,
       dbSync,

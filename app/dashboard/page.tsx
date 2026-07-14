@@ -211,13 +211,19 @@ export default function Dashboard(){
             {!isMobile && (<>
 <span style={{marginInlineStart:'auto',fontSize:12.5,color:'#7a8794',display:'inline-flex',alignItems:'center',gap:7,flex:'0 0 auto'}}>
               <span style={{width:7,height:7,borderRadius:999,background:BLUE}}></span>
-              {loading?(<><style>{`@keyframes dashSpin{to{transform:rotate(360deg);}}`}</style><span style={{display:'inline-flex',alignItems:'center',gap:6}}><span style={{width:9,height:9,border:'2px solid '+BORDER,borderTopColor:BLUE,borderRadius:'50%',display:'inline-block',animation:'dashSpin 0.7s linear infinite'}}/>טוען…</span></>):`עודכן ${fetchedAt?new Date(fetchedAt).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}):new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})} · `}
+              {loading?(<><style>{`@keyframes dashSpin{to{transform:rotate(360deg);}}`}</style><span style={{display:'inline-flex',alignItems:'center',gap:6}}><span style={{width:9,height:9,border:'2px solid '+BORDER,borderTopColor:BLUE,borderRadius:'50%',display:'inline-block',animation:'dashSpin 0.7s linear infinite'}}/>טוען…</span></>):`נסרק ${new Date(fetchedAt||Date.now()).toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric'})} ${new Date(fetchedAt||Date.now()).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})} · `}
               <a href="https://data.gov.il" target="_blank" rel="noopener noreferrer" style={{color:'#7a8794'}}>data.gov.il</a>
             </span>
             <a href="/agent" style={{background:BLUE,color:'#fff',fontWeight:600,fontSize:13,padding:'9px 16px',borderRadius:8,textDecoration:'none',flex:'0 0 auto'}}>✦ תובנות AI</a>
 </>)}
             <a href="/profile" style={{width:32,height:32,borderRadius:8,background:'#eef1f4',color:DARK,display:'inline-flex',alignItems:'center',justifyContent:'center',fontWeight:700,fontSize:13,textDecoration:'none',flex:'0 0 auto'}}>א</a>
           </div>
+          {isMobile && !loading && (
+            <div style={{background:'#fff',borderBottom:`1px solid ${BORDER}`,padding:'6px 14px',fontSize:11.5,color:'#7a8794',display:'flex',alignItems:'center',gap:6}}>
+              <span style={{width:6,height:6,borderRadius:999,background:BLUE,display:'inline-block'}}></span>
+              נסרק לאחרונה: {new Date(fetchedAt||Date.now()).toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric'})} בשעה {new Date(fetchedAt||Date.now()).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})}
+            </div>
+          )}
 
           <div style={{padding:'22px 26px 30px'}}>
             {/* KPI strip */}

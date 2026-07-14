@@ -107,8 +107,8 @@ export default function AgentPage() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [messages, thinking]);
 
-  async function send() {
-    const text = input.trim();
+  async function send(preset?: string) {
+    const text = (preset ?? input).trim();
     if (!text || thinking) return;
     setInput('');
     setMessages((m) => [...m, { role: 'user', text }]);
@@ -192,7 +192,33 @@ export default function AgentPage() {
             disabled={loading}
             style={{ flex: 1, padding: '12px 18px', borderRadius: 999, border: '1px solid ' + BORDER, fontSize: 14, outline: 'none', background: '#fff' }}
           />
-          <button onClick={send} aria-label="שלח" disabled={thinking} style={{ width: 44, height: 44, borderRadius: 999, background: thinking ? '#9db8d8' : '#2b6fc4', color: '#fff', border: 'none', fontSize: 18, cursor: thinking ? 'default' : 'pointer', flex: '0 0 auto' }}>↑</button>
+          <button onClick={() => send()} aria-label="שלח" disabled={thinking} style={{ width: 44, height: 44, borderRadius: 999, background: thinking ? '#9db8d8' : '#2b6fc4', color: '#fff', border: 'none', fontSize: 18, cursor: thinking ? 'default' : 'pointer', flex: '0 0 auto' }}>↑</button>
+        </div>
+
+        {/* שאלות מוצעות */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, paddingTop: 10 }}>
+          {[
+            'מה נסגר השבוע?',
+            'כמה מכרזים בתחום שלי?',
+            'מה הכי מתאים לי?',
+            'מכרזים של רשויות מקומיות',
+            'מכרזים חדשים',
+          ].map((q) => (
+            <button
+              key={q}
+              type="button"
+              onClick={() => send(q)}
+              disabled={thinking || loading}
+              style={{
+                background: '#fff', border: '1px solid ' + BORDER, borderRadius: 999,
+                padding: '7px 14px', fontSize: 12.5, fontWeight: 600, color: '#3a4a5a',
+                cursor: thinking || loading ? 'default' : 'pointer', fontFamily: 'inherit',
+                opacity: thinking || loading ? .55 : 1,
+              }}
+            >
+              {q}
+            </button>
+          ))}
         </div>
       </div>
     </InternalShell>

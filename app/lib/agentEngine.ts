@@ -6,6 +6,7 @@
 // ============================================================
 
 import { scoreTender } from './scoring';
+import { getTenders, type TenderRecord } from './db';
 
 const API = 'https://next.obudget.org/api/query';
 const STATUSES = `('פורסם','עתידי','פורסם ולא התקבלו השגות','פורסם והתקבלו השגות','בעדכון')`;
@@ -67,15 +68,18 @@ export function scoreMatch(
 }
 
 // --- שליפת מכרזים פעילים (עם cache של 10 דקות) ---
+// המקור הראשי: ה-DB שלנו (Supabase) — מכיל את כל שלושת המקורות:
+// obudget, mr.gov.il והמכרזים המוניציפליים. אם ה-DB לא זמין —
+// נסיגה ל-obudget ישירות (כמו בגרסה הישנה).
 interface RawRow {
   tender_id?: unknown; description?: string; publisher?: string; publisher_unit?: string;
   claim_date?: string; publication_date?: string; status?: string; page_url?: string;
 }
 
-let cache: { at: number; rows: RawRow[] } = { at: 0, rows: [] };
+let cache: { at: number; rows: TenderRecord[] } = { at: 0, rows: [] };
 const CACHE_TTL = 10 * 60 * 1000;
 
-async function fetchBatch(offset: number): Promise<RawRow[]> {
+async function fetchObudgetFallback(offset: number): Promise<TenderRecord[]> {
   const today = new Date().toISOString().split('T')[0];
   const dateFilter = `(claim_date > '${today}' OR (claim_date IS NULL AND publication_date > '2026-01-01'))`;
   const sql = `SELECT tender_id, description, publisher, publisher_unit, claim_date, publication_date, status, page_url
@@ -86,38 +90,67 @@ async function fetchBatch(offset: number): Promise<RawRow[]> {
     const res = await fetch(`${API}?query=${encodeURIComponent(sql)}`, { cache: 'no-store' });
     if (!res.ok) return [];
     const data = await res.json();
-    return (data?.rows ?? []) as RawRow[];
+    return ((data?.rows ?? []) as RawRow[]).map((r, i) => ({
+      id: String(r.tender_id || `ob-${offset}-${i}`),
+      title: r.description || '',
+      publisher: r.publisher || null,
+      publisher_unit: r.publisher_unit || null,
+      publish_date: r.publication_date ? String(r.publication_date).split('T')[0] : null,
+      deadline: r.claim_date ? String(r.claim_date).split('T')[0] : null,
+      status: r.status || null,
+      url: r.page_url || null,
+    }));
   } catch {
     return [];
   }
 }
 
-export async function fetchActiveTenders(): Promise<RawRow[]> {
+export async function fetchActiveTenders(): Promise<TenderRecord[]> {
   if (Date.now() - cache.at < CACHE_TTL && cache.rows.length > 0) return cache.rows;
-  const batches = await Promise.all([fetchBatch(0), fetchBatch(1000), fetchBatch(2000)]);
-  const rows = batches.flat().filter((r) => r.description && r.description !== 'מכרז ללא כותרת');
+
+  const today = new Date().toISOString().split('T')[0];
+  let rows: TenderRecord[] = [];
+
+  try {
+    // עד 10,000 רשומות מה-DB, בעימוד של 1000
+    for (let offset = 0; offset < 10000; offset += 1000) {
+      const page = await getTenders({ offset, limit: 1000 });
+      rows.push(...page);
+      if (page.length < 1000) break;
+    }
+    // פעילים בלבד: מועד הגשה עתידי או ללא מועד
+    rows = rows.filter((t) => t.title && (!t.deadline || String(t.deadline).split('T')[0] >= today));
+  } catch {
+    rows = [];
+  }
+
+  if (rows.length === 0) {
+    const batches = await Promise.all([fetchObudgetFallback(0), fetchObudgetFallback(1000), fetchObudgetFallback(2000)]);
+    rows = batches.flat().filter((r) => r.title && r.title !== 'מכרז ללא כותרת');
+  }
+
   if (rows.length > 0) cache = { at: Date.now(), rows };
   return rows;
 }
 
 // --- דירוג מלא לפי פרופיל ---
-export function rankTenders(rows: RawRow[], profile: AgentProfile): AgentTender[] {
+export function rankTenders(rows: TenderRecord[], profile: AgentProfile): AgentTender[] {
   const seen = new Set<string>();
   return rows
-    .map((r, i) => {
-      const title = r.description || '';
+    .map((r) => {
+      const title = r.title || '';
       const publisher = r.publisher || r.publisher_unit || '';
-      const publishDate = r.publication_date ? String(r.publication_date).split('T')[0] : '';
-      const deadline = r.claim_date ? String(r.claim_date).split('T')[0] : '';
+      const publishDate = r.publish_date ? String(r.publish_date).split('T')[0] : '';
+      const deadline = r.deadline ? String(r.deadline).split('T')[0] : '';
       const { display, matched } = scoreMatch(title, publisher, profile, publishDate, deadline);
       return {
-        id: String(r.tender_id || i),
+        id: String(r.id),
         title,
         publisher,
         publishDate,
         deadline,
         status: r.status || '',
-        url: r.page_url || '',
+        url: r.url || '',
         score: display,
         matched,
       };
