@@ -65,7 +65,10 @@ export default function GuaranteePage() {
             const s = STATUS[g.status];
             return (
               <div key={g.id} style={{ display: 'grid', gridTemplateColumns: '1fr 150px 130px 150px 120px', padding: '14px 16px', fontSize: 13.5, alignItems: 'center', borderBottom: '1px solid ' + BORDER }}>
-                <span style={{ fontWeight: 600, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingInlineEnd: 10 }}>{g.tenderTitle}</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, paddingInlineEnd: 10 }}>
+                  <span style={{ fontWeight: 600, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.tenderTitle}</span>
+                  <a href={'/tender/' + g.id} style={{ flex: '0 0 auto', fontSize: 11.5, fontWeight: 600, color: '#1e5aa8', background: '#e8f1fb', border: '1px solid #cfe0f4', borderRadius: 7, padding: '3px 9px', textDecoration: 'none', whiteSpace: 'nowrap' }}>פרטים</a>
+                </span>
                 <span style={{ color: '#5b6b7a' }}>{g.type}</span>
                 <span style={{ fontWeight: 700, color: DARK }}>{shekel(g.amount)}</span>
                 <span style={{ color: '#5b6b7a' }}>{fmtDate(g.expiry)}</span>

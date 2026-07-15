@@ -48,9 +48,7 @@ function TenderList({ tenders }: { tenders: TenderCard[] }) {
         return (
           <a
             key={t.id}
-            href={t.url || '#'}
-            target={t.url ? '_blank' : undefined}
-            rel="noopener noreferrer"
+            href={'/tender/' + t.id}
             style={{
               display: 'flex', alignItems: 'flex-start', gap: 10,
               background: '#fff', border: '1px solid ' + BORDER, borderRadius: 10,
@@ -67,6 +65,15 @@ function TenderList({ tenders }: { tenders: TenderCard[] }) {
                 {t.publisher || '—'}
                 {t.deadline ? ' · מועד אחרון: ' + fmtDate(t.deadline) : ''}
                 {t.score >= 80 ? ' · התאמה גבוהה' : t.score >= 65 ? ' · התאמה טובה' : ' · התאמה חלקית'}
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                <span style={{ fontSize: 11.5, fontWeight: 600, color: '#1e5aa8', background: '#e8f1fb', border: '1px solid #cfe0f4', borderRadius: 7, padding: '4px 10px' }}>פרטי המכרז ←</span>
+                {t.url && (
+                  <span
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(t.url, '_blank', 'noopener'); }}
+                    style={{ fontSize: 11.5, fontWeight: 600, color: '#5b6b7a', background: '#fff', border: '1px solid #e2e7ec', borderRadius: 7, padding: '4px 10px', cursor: 'pointer' }}
+                  >עמוד המקור ↗</span>
+                )}
               </div>
             </div>
           </a>

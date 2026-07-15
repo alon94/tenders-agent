@@ -270,7 +270,7 @@ export default function Dashboard(){
 
             {/* table */}
             <div style={{background:'#fff',border:`1px solid ${BORDER}`,borderRadius:10,overflow:'hidden'}}>
-              {!isMobile && (<div style={{display:'grid',gridTemplateColumns:'70px 1fr 232px 156px 96px',padding:'12px 18px',background:'#f7f9fb',borderBottom:`1px solid ${BORDER}`,fontSize:12,fontWeight:700,color:'#8a97a3'}}>
+              {!isMobile && (<div style={{display:'grid',gridTemplateColumns:'70px 1fr 232px 156px 150px',padding:'12px 18px',background:'#f7f9fb',borderBottom:`1px solid ${BORDER}`,fontSize:12,fontWeight:700,color:'#8a97a3'}}>
                 <span>ציון</span><span>נושא המכרז</span><span>סטטוס</span><span>מועד הגשה</span><span></span>
               </div>)}
               {loading?(
@@ -302,11 +302,14 @@ export default function Dashboard(){
                     <span style={{color:DARK,fontWeight:700}}>{fd(t.deadline)}</span>
                     {d!==null&&d>=0&&<span style={{color:d<=7?'#b04a34':'#7a8794'}}> · נותרו {d} ימים</span>}
                   </div>
-                  <button onClick={(e)=>toggleMark(t.id,e)} style={{fontSize:18,color:isMarked?'#d9a520':'#c2ccd6',background:'transparent',border:'none',cursor:'pointer',padding:6}}>{isMarked?'★':'☆'}</button>
+                  <div style={{display:'flex',alignItems:'center',gap:8}}>
+                    <span style={{fontSize:12,fontWeight:600,color:'#1e5aa8',background:'#e8f1fb',border:'1px solid #cfe0f4',borderRadius:7,padding:'5px 11px',whiteSpace:'nowrap'}}>פרטי המכרז ←</span>
+                    <button onClick={(e)=>toggleMark(t.id,e)} style={{fontSize:18,color:isMarked?'#d9a520':'#c2ccd6',background:'transparent',border:'none',cursor:'pointer',padding:6}}>{isMarked?'★':'☆'}</button>
+                  </div>
                 </div>
               </a>
             ) : (
-              <div key={t.id||i} style={{display:'grid',gridTemplateColumns:'70px 1fr 232px 156px 96px',padding:'16px 18px',borderBottom:'1px solid #eef1f4',alignItems:'center'}}>
+              <div key={t.id||i} style={{display:'grid',gridTemplateColumns:'70px 1fr 232px 156px 150px',padding:'16px 18px',borderBottom:'1px solid #eef1f4',alignItems:'center'}}>
                     <div style={{display:'flex',flexDirection:'column',alignItems:'flex-start',gap:5}}>
                       <span style={{fontSize:21,fontWeight:700,color:DARK,lineHeight:1}}>{score}</span>
                       <span style={{width:30,height:3,borderRadius:2,background:bandColor(score)}}></span>
@@ -324,7 +327,8 @@ export default function Dashboard(){
                       <div style={{color:DARK,fontWeight:600}}>{fd(t.deadline)}</div>
                       {d!==null&&d>=0&&<div style={{color:d<=7?'#b04a34':'#7a8794',fontSize:12,marginTop:3}}>נותרו {d} ימים</div>}
                     </div>
-                    <div style={{display:'flex',justifyContent:'flex-end'}}>
+                    <div style={{display:'flex',justifyContent:'flex-end',alignItems:'center',gap:6}}>
+                      <a href={`/tender/${t.id}`} style={{fontSize:12,fontWeight:600,color:'#1e5aa8',background:'#e8f1fb',border:'1px solid #cfe0f4',borderRadius:7,padding:'5px 11px',textDecoration:'none',whiteSpace:'nowrap'}}>פרטים</a>
                       <button onClick={(e)=>toggleMark(t.id,e)} title={isMarked?'הסר סימון':'סמן מכרז'} style={{fontSize:16,lineHeight:1,color:isMarked?'#d9a520':'#c2ccd6',background:'transparent',border:'none',cursor:'pointer',padding:6}}>{isMarked?'★':'☆'}</button>
                     </div>
                   </div>
