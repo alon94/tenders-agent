@@ -54,7 +54,7 @@ export default function TenderPage() {
 
   return (
     <InternalShell title="פרטי מכרז" subtitle={t.publisher || undefined}
-      action={<a href="/marked" style={{ color: '#5b6b7a', textDecoration: 'none', fontSize: 13 }}>\u2192 חזרה</a>}>
+      action={<a href="/marked" style={{ color: '#5b6b7a', textDecoration: 'none', fontSize: 13 }}>→ חזרה</a>}>
       <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start', flexWrap: 'wrap' }}>
         <div style={{ flex: '1 1 480px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 18 }}>
           <Card>
@@ -108,13 +108,13 @@ export default function TenderPage() {
             <div style={{ fontSize: 11.5, color: '#8a97a3' }}>מועד אחרון להגשה</div>
             <div style={{ fontSize: 22, fontWeight: 700, color: '#b04a34', margin: '4px 0 2px' }}>{fmtDate(t.deadline || '')}</div>
             {d !== null && d >= 0 && <div style={{ fontSize: 12.5, color: '#7a8794' }}>נותרו {d} ימים</div>}
-            <a href={t.submissionUrl || t.url || '#'} target="_blank" rel="noreferrer" style={{ display: 'block', textAlign: 'center', marginTop: 12, background: '#2b6fc4', color: '#fff', borderRadius: 10, padding: '11px', fontSize: 13.5, fontWeight: 600, textDecoration: 'none' }}>הגשת הצעה \u2197</a>
-            <button style={{ display: 'block', width: '100%', marginTop: 8, background: '#fff', color: '#5b6b7a', border: '1px solid ' + BORDER, borderRadius: 10, padding: '10px', fontSize: 13, cursor: 'pointer' }}>\u2606 שמירה למעקב</button>
+            <a href={t.submissionUrl || t.url || '#'} target="_blank" rel="noreferrer" style={{ display: 'block', textAlign: 'center', marginTop: 12, background: '#2b6fc4', color: '#fff', borderRadius: 10, padding: '11px', fontSize: 13.5, fontWeight: 600, textDecoration: 'none' }}>הגשת הצעה ↗</a>
+            <button style={{ display: 'block', width: '100%', marginTop: 8, background: '#fff', color: '#5b6b7a', border: '1px solid ' + BORDER, borderRadius: 10, padding: '10px', fontSize: 13, cursor: 'pointer' }}>☆ שמירה למעקב</button>
           </Card>
           <Card style={{ background: '#f0f6fd', border: '1px solid #cfe0f4' }}>
-            <div style={{ fontSize: 13.5, fontWeight: 700, color: '#1e5aa8', marginBottom: 6 }}>\u2726 תובנת הסוכן החכם</div>
+            <div style={{ fontSize: 13.5, fontWeight: 700, color: '#1e5aa8', marginBottom: 6 }}>✦ תובנת הסוכן החכם</div>
             <div style={{ fontSize: 12.5, color: '#40566e', lineHeight: 1.5 }}>ציון ההתאמה למכרז זה הוא {score}. מומלץ לבדוק את דרישות הסף לפני הגשה.</div>
-            <button style={{ marginTop: 10, background: '#2b6fc4', color: '#fff', border: 'none', borderRadius: 9, padding: '9px 14px', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>\u2726 הפק סיכום החלטה</button>
+            <button style={{ marginTop: 10, background: '#2b6fc4', color: '#fff', border: 'none', borderRadius: 9, padding: '9px 14px', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>✦ הפק סיכום החלטה</button>
           </Card>
         </div>
       </div>

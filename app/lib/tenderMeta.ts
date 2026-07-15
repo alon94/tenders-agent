@@ -54,6 +54,7 @@ export function daysLeft(d: string): number | null {
 
 export function fmtDate(d: string): string {
   if (!d) return "—";
-  try { return new Date(d).toLocaleDateString("he-IL", { day: "2-digit", month: "2-digit", year: "numeric" }); }
-  catch { return d; }
+  const x = new Date(d);
+  if (isNaN(x.getTime())) return "—"; // תאריך לא תקין — לא מציגים "Invalid Date"
+  return x.toLocaleDateString("he-IL", { day: "2-digit", month: "2-digit", year: "numeric" });
 }

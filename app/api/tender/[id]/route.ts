@@ -1,9 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getTenderById } from '@/app/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 function clean(s: string): string {
-  return (s || '').replace(/&amp;/g, '&').replace(/&#039;/g, "'").replace(/&quot;/g, '"').replace(/\s+/g, ' ').trim();
+  return (s || '')
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/&amp;/g, '&').replace(/&#039;/g, "'").replace(/&quot;/g, '"').replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ').trim();
+}
+
+// תשובת עמוד פרטים מתוך רשומת ה-DB (למכרזים מוניציפליים או כשהסריקה נכשלת)
+async function detailFromDb(id: string) {
+  const t = await getTenderById(id);
+  if (!t) return null;
+  return {
+    id,
+    url: t.url || '',
+    title: t.title,
+    publisher: t.publisher || '',
+    publicationNumber: t.publication_id || '',
+    status: t.status || '',
+    procedureNumber: '',
+    publishDate: t.publish_date ? String(t.publish_date).split('T')[0] : '',
+    updateDate: '',
+    submissionStart: '',
+    deadline: t.deadline ? String(t.deadline).split('T')[0] : '',
+    contactName: '',
+    contactEmail: '',
+    topics: [] as string[],
+    documents: [] as { date: string; title: string; description: string; url: string }[],
+    submissionUrl: t.url || '',
+    source: t.source || 'db',
+  };
 }
 
 // Find a label in the stripped-text fragments, return the next meaningful fragment after it.
@@ -58,6 +87,14 @@ function extractDocuments(html: string): { date: string; title: string; descript
 
 export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
+
+  // מכרז מוניציפלי — אין לו עמוד ב-mr.gov.il; נשלף מה-DB עם קישור לאתר הרשות
+  if (id.startsWith('muni-')) {
+    const fromDb = await detailFromDb(id).catch(() => null);
+    if (fromDb) return NextResponse.json(fromDb, { status: 200 });
+    return NextResponse.json({ id, url: '', error: 'not found' }, { status: 200 });
+  }
+
   const sourceUrl = `https://mr.gov.il/ilgstorefront/he/p/${id}`;
 
   try {
@@ -70,6 +107,8 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
     });
 
     if (!res.ok) {
+      const fromDb = await detailFromDb(id).catch(() => null);
+      if (fromDb) return NextResponse.json(fromDb, { status: 200 });
       return NextResponse.json({ id, url: sourceUrl, error: 'source fetch failed' }, { status: 200 });
     }
 

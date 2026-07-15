@@ -10,6 +10,22 @@ const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const OBUDGET_API = "https://next.obudget.org/api/query";
 const STATUSES = `('פורסם','עתידי','פורסם ולא התקבלו השגות','פורסם והתקבלו השגות','בעדכון')`;
 
+// פענוח ישויות HTML בטקסט (חלק מנתוני המקור מגיעים עם &#1513; וכד')
+export function decodeEntities(s: string | null | undefined): string {
+    if (!s) return "";
+    return s
+          .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+          .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCharCode(parseInt(n, 16)))
+          .replace(/&nbsp;/g, " ")
+          .replace(/&amp;/g, "&")
+          .replace(/&quot;/g, '"')
+          .replace(/&apos;/g, "'")
+          .replace(/&lt;/g, "<")
+          .replace(/&gt;/g, ">")
+          .replace(/\s+/g, " ")
+          .trim();
+}
+
 function restUrl(path: string): string {
     if (!SUPABASE_URL) throw new Error("Missing SUPABASE_URL env var");
     return `${SUPABASE_URL}/rest/v1${path}`;
@@ -106,7 +122,26 @@ export async function getTenders(opts: { search?: string; offset?: number; limit
         throw new Error(`Supabase query failed (${res.status}): ${text}`);
   }
 
-  return (await res.json()) as TenderRecord[];
+  const rows = (await res.json()) as TenderRecord[];
+  // פענוח ישויות HTML בקריאה — מכסה גם רשומות ישנות שנשמרו לפני התיקון
+  return rows.map((r) => ({ ...r, title: decodeEntities(r.title), publisher: r.publisher ? decodeEntities(r.publisher) : r.publisher }));
+}
+
+// שליפת מכרז בודד לפי מזהה (לעמוד הפרטים — בעיקר למכרזים מוניציפליים)
+export async function getTenderById(id: string): Promise<TenderRecord | null> {
+    const params = new URLSearchParams();
+    params.set("select", "*");
+    params.set("id", `eq.${id}`);
+    params.set("limit", "1");
+    const res = await fetch(`${restUrl("/tenders")}?${params.toString()}`, {
+          headers: authHeaders(),
+          cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const rows = (await res.json()) as TenderRecord[];
+    if (!rows[0]) return null;
+    const r = rows[0];
+    return { ...r, title: decodeEntities(r.title), publisher: r.publisher ? decodeEntities(r.publisher) : r.publisher };
 }
 
 async function fetchObudgetPage(offset: number): Promise<ObudgetRow[]> {
@@ -179,8 +214,8 @@ function muniRowToRecord(row: ObudgetRow): TenderRecord {
           id: `muni-${key}`,
           tender_id: row.tender_id != null ? String(row.tender_id) : null,
           publication_id: null,
-          title: String(row.description || ""),
-          publisher: row.publisher ? String(row.publisher) : null,
+          title: decodeEntities(String(row.description || "")),
+          publisher: row.publisher ? decodeEntities(String(row.publisher)) : null,
           publisher_unit: row.publisher_unit ? String(row.publisher_unit) : null,
           publish_date: row.publication_date ? String(row.publication_date).split("T")[0] : null,
           deadline: row.claim_date ? String(row.claim_date).split("T")[0] : null,
