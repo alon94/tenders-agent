@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { waitUntil } from '@vercel/functions';
 import { classifySmallBiz, fetchTenderPdfText } from '@/app/lib/smallbiz';
 
 export const dynamic = 'force-dynamic';
@@ -14,6 +15,7 @@ export const maxDuration = 300; // Fluid Compute מאפשר עד 5 דקות גם
 const BATCH_SIZE = 30;      // עד 30 מכרזים לריצה
 const CONCURRENCY = 4;      // 4 מכרזים מעובדים בו-זמנית
 const TIME_BUDGET_MS = 250000; // עצירה מסודרת אחרי ~4 דקות כדי לא להיקטע
+const MAX_CHAIN = 40;       // מעצור בטיחות: עד 40 ריצות משורשרות (~1,200 מכרזים)
 
 // מיגרציה עצמית: מוודא שעמודות small_biz_* קיימות (חד-פעמי בפועל,
 // idempotent תמיד). משתמש בחיבור Postgres הישיר של אינטגרציית Supabase.
@@ -130,11 +132,29 @@ export async function GET(req: Request) {
 
     console.log('SmallBiz: processed', results.length, 'tenders:', JSON.stringify(results));
 
+    // --- לולאת שרשור: אם נשארו מכרזים בתור, הריצה מפעילה את הבאה ---
+    // תנאי המשך: האצווה הייתה מלאה (כנראה יש עוד) או שנעצרנו לפני שסיימנו אותה.
+    const chainDepth = parseInt(new URL(req.url).searchParams.get('chain') || '0', 10);
+    const hasMore = batch.length === BATCH_SIZE || results.length < batch.length;
+    let chained = false;
+    if (hasMore && chainDepth < MAX_CHAIN && process.env.CRON_SECRET) {
+      const origin = new URL(req.url).origin;
+      chained = true;
+      waitUntil(
+        fetch(`${origin}/api/smallbiz?chain=${chainDepth + 1}`, {
+          headers: { 'x-cron-secret': process.env.CRON_SECRET },
+        }).catch((e) => console.error('SmallBiz chain trigger failed:', e))
+      );
+      console.log('SmallBiz: chaining next batch, depth', chainDepth + 1);
+    }
+
     return NextResponse.json({
       success: true,
       processed: results.length,
       found_preference: results.filter((r) => r.small_biz === true).length,
       llm_enabled: !!process.env.ANTHROPIC_API_KEY,
+      chain_depth: chainDepth,
+      chained_next: chained,
       results,
     });
   } catch (err) {

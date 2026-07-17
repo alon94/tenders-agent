@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@types/nodemailer": "^8.0.1",
+    "@vercel/functions": "^3.7.5",
     "next": "16.2.9",
     "nodemailer": "^9.0.1",
     "pdf-parse": "^1.1.4",
