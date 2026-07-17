@@ -20,9 +20,11 @@ async function ensureSmallBizColumns(): Promise<void> {
   if (columnsEnsured) return;
   const conn = process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL;
   if (!conn) throw new Error('Missing POSTGRES_URL for migration');
+  // sslmode שבתוך ה-URL של Supabase דורס את אובייקט ה-ssl — מסירים אותו
+  const cleaned = conn.replace(/([?&])sslmode=[^&]+&?/, '$1').replace(/[?&]$/, '');
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { Client } = require('pg');
-  const client = new Client({ connectionString: conn, ssl: { rejectUnauthorized: false } });
+  const client = new Client({ connectionString: cleaned, ssl: { rejectUnauthorized: false } });
   await client.connect();
   try {
     await client.query(`
