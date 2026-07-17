@@ -13,6 +13,32 @@ export const maxDuration = 60;
 
 const BATCH_SIZE = 6;
 
+// מיגרציה עצמית: מוודא שעמודות small_biz_* קיימות (חד-פעמי בפועל,
+// idempotent תמיד). משתמש בחיבור Postgres הישיר של אינטגרציית Supabase.
+let columnsEnsured = false;
+async function ensureSmallBizColumns(): Promise<void> {
+  if (columnsEnsured) return;
+  const conn = process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL;
+  if (!conn) throw new Error('Missing POSTGRES_URL for migration');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { Client } = require('pg');
+  const client = new Client({ connectionString: conn, ssl: { rejectUnauthorized: false } });
+  await client.connect();
+  try {
+    await client.query(`
+      alter table tenders
+        add column if not exists small_biz boolean,
+        add column if not exists small_biz_summary text,
+        add column if not exists small_biz_quote text,
+        add column if not exists small_biz_confidence text,
+        add column if not exists small_biz_checked_at timestamptz;
+    `);
+    columnsEnsured = true;
+  } finally {
+    await client.end();
+  }
+}
+
 function restUrl(path: string): string {
   const base = process.env.SUPABASE_URL;
   if (!base) throw new Error('Missing SUPABASE_URL');
@@ -37,6 +63,7 @@ export async function GET(req: Request) {
   }
 
   try {
+    await ensureSmallBizColumns();
     const today = new Date().toISOString().split('T')[0];
 
     // אצווה: טרם נבדקו, דדליין עתידי, מקור ממשלתי (למוניציפליים אין חוברות ב-mr.gov.il)
