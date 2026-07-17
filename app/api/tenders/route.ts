@@ -21,6 +21,10 @@ export async function GET(req: Request) {
               status: String(row.status ?? ""),
               url: String(row.url ?? ""),
               type: String(row.type ?? ""),
+              smallBiz: row.small_biz === true,
+              smallBizConfidence: row.small_biz_confidence ?? null,
+              smallBizQuote: row.small_biz_quote ?? null,
+              smallBizSummary: row.small_biz_summary ?? null,
       }));
 
       // fetchedAt: reflects when this row was last synced into the database by

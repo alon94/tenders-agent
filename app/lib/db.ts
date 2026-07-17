@@ -55,6 +55,12 @@ export interface TenderRecord {
     type?: string | null;
     source?: string;
     fetched_at?: string;
+    // שדות העדפת עסקים קטנים — נכתבים אך ורק ע"י תהליך 2 (/api/smallbiz)
+    small_biz?: boolean | null;
+    small_biz_summary?: string | null;
+    small_biz_quote?: string | null;
+    small_biz_confidence?: string | null;
+    small_biz_checked_at?: string | null;
 }
 
 interface ObudgetRow {

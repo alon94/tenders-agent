@@ -33,7 +33,7 @@ const PUBS=[
   {id:'edu',label:'מוסדות חינוך',kw:['אוניברסיטה','מכללה','בית ספר']},
   {id:'infra',label:'חברות ממשלתיות',kw:['חברת חשמל','מקורות','נמלים','רכבת','נתיבי']},
 ];
-interface T{id:string;title:string;publisher:string;publishDate:string;deadline:string;status:string;url:string;type:string;}
+interface T{id:string;title:string;publisher:string;publishDate:string;deadline:string;status:string;url:string;type:string;smallBiz?:boolean;smallBizConfidence?:string|null;smallBizQuote?:string|null;smallBizSummary?:string|null;}
 function dl(d:string):number|null{if(!d)return null;const x=new Date(d);return isNaN(x.getTime())?null:Math.ceil((x.getTime()-Date.now())/86400000);}
 function fd(d:string){if(!d)return'—';try{return new Date(d).toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric'});}catch{return d;}}
 function mBiz(t:T,id:string){if(!id)return true;const b=BIZ.find(x=>x.id===id);if(!b||!('kw' in b))return true;const s=(t.title+' '+(t.publisher||'')).toLowerCase();return(b as any).kw.some((k:string)=>s.includes(k.toLowerCase()));}
@@ -48,6 +48,7 @@ function statusTags(t:T,days:number|null){
   else if(s.includes('סגור')||s.includes('נסגר'))tags.push({label:s,bg:'#fbe9e7',fg:'#b04a34',bd:'#f2cfc8'});
   else if(s)tags.push({label:s,bg:'#eef1f4',fg:'#5b6b7a',bd:'#e2e7ec'});
   if(days!==null&&days>=0&&days<=7)tags.push({label:'נסגר בקרוב',bg:'#fbe9e7',fg:'#b04a34',bd:'#f2cfc8'});
+  if(t.smallBiz&&(t.smallBizConfidence==='high'||t.smallBizConfidence==='medium'))tags.push({label:'⭐ העדפה לעסקים קטנים',bg:'#e8f1fb',fg:'#1e5aa8',bd:'#cfe0f4'});
   if(t.publisher)tags.push({label:t.publisher.length>20?t.publisher.slice(0,20)+'…':t.publisher,bg:'#eaf1fb',fg:'#1e5aa8',bd:'#d3e2f5'});
   return tags;
 }
@@ -89,6 +90,7 @@ export default function Dashboard(){
   const[maxD,setMaxD]=useState(365);
   const[showClosed,setShowClosed]=useState(false);
   const[showNoDate,setShowNoDate]=useState(true);
+  const[sbOnly,setSbOnly]=useState(false);
   const[tab,setTab]=useState<'all'|'closing'|'new'>('all');
   const[q,setQ]=useState('');
   const[pg,setPg]=useState(1);
@@ -119,9 +121,10 @@ export default function Dashboard(){
     if(!showClosed)r=r.filter(t=>{const d=dl(t.deadline);return d===null||d>=0;});
     if(!showNoDate)r=r.filter(t=>!!t.deadline);
     r=r.filter(t=>{const d=dl(t.deadline);if(d===null)return showNoDate;if(d<0)return showClosed;return d<=maxD;});
+    if(sbOnly)r=r.filter(t=>t.smallBiz&&(t.smallBizConfidence==='high'||t.smallBizConfidence==='medium'));
     if(q.trim()){const ql=q.toLowerCase();r=r.filter(t=>(t.title||'').toLowerCase().includes(ql)||(t.publisher||'').toLowerCase().includes(ql));}
     return r;
-  },[all,biz,pub,maxD,showClosed,showNoDate,q]);
+  },[all,biz,pub,maxD,showClosed,showNoDate,sbOnly,q]);
 
   const closing=useMemo(()=>base.filter(t=>{const d=dl(t.deadline);return d!==null&&d>=0&&d<=7;}),[base]);
   const newT=useMemo(()=>base.filter(t=>{if(!t.publishDate)return false;return new Date(t.publishDate).getTime()>(now-7*86400000);}),[base,now]);
@@ -264,7 +267,8 @@ export default function Dashboard(){
                 </div>
                 <label style={{display:'flex',alignItems:'center',gap:8,fontSize:13.5,color:'#33475b',cursor:'pointer'}}><input type="checkbox" checked={showClosed} onChange={e=>setShowClosed(e.target.checked)} style={{accentColor:BLUE,width:16,height:16}}/>הצג גם שנסגרו</label>
                 <label style={{display:'flex',alignItems:'center',gap:8,fontSize:13.5,color:'#33475b',cursor:'pointer'}}><input type="checkbox" checked={showNoDate} onChange={e=>setShowNoDate(e.target.checked)} style={{accentColor:BLUE,width:16,height:16}}/>הצג גם ללא מועד</label>
-                <button onClick={()=>{setBiz('');setPub('');setMaxD(365);setShowClosed(false);setShowNoDate(true);setQ('');setPg(1);}} style={{...chip,marginInlineStart:'auto'}}>איפוס ✕</button>
+                <label style={{display:'flex',alignItems:'center',gap:8,fontSize:13.5,color:'#33475b',cursor:'pointer'}}><input type="checkbox" checked={sbOnly} onChange={e=>{setSbOnly(e.target.checked);setPg(1);}} style={{accentColor:BLUE,width:16,height:16}}/>⭐ העדפה לעסקים קטנים בלבד</label>
+                <button onClick={()=>{setBiz('');setPub('');setMaxD(365);setShowClosed(false);setShowNoDate(true);setSbOnly(false);setQ('');setPg(1);}} style={{...chip,marginInlineStart:'auto'}}>איפוס ✕</button>
               </div>
             )}
 
