@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { classifySmallBiz, fetchTenderPdfText } from '@/app/lib/smallbiz';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60;
+export const maxDuration = 300; // Fluid Compute מאפשר עד 5 דקות גם ב-Hobby
 
 // ============================================================
 //  /api/smallbiz — תהליך 2: זיהוי העדפת עסקים קטנים (batch)
@@ -11,7 +11,9 @@ export const maxDuration = 60;
 //  כותב אך ורק לשדות small_biz_* — אין נגיעה בשדות הבסיס.
 // ============================================================
 
-const BATCH_SIZE = 6;
+const BATCH_SIZE = 30;      // עד 30 מכרזים לריצה
+const CONCURRENCY = 4;      // 4 מכרזים מעובדים בו-זמנית
+const TIME_BUDGET_MS = 250000; // עצירה מסודרת אחרי ~4 דקות כדי לא להיקטע
 
 // מיגרציה עצמית: מוודא שעמודות small_biz_* קיימות (חד-פעמי בפועל,
 // idempotent תמיד). משתמש בחיבור Postgres הישיר של אינטגרציית Supabase.
@@ -95,8 +97,10 @@ export async function GET(req: Request) {
 
     const batch = (await res.json()) as { id: string; title: string; publication_id: string }[];
     const results: { id: string; small_biz: boolean | null; confidence: string | null }[] = [];
+    const startedAt = Date.now();
 
-    for (const t of batch) {
+    // עיבוד מכרז בודד + עדכון נקודתי של שדות ההעדפה בלבד
+    async function processOne(t: { id: string; title: string; publication_id: string }) {
       let update: Record<string, unknown>;
       try {
         const text = await fetchTenderPdfText(t.publication_id);
@@ -111,13 +115,17 @@ export async function GET(req: Request) {
         };
         results.push({ id: t.id, small_biz: null, confidence: null });
       }
-
-      // PATCH נקודתי — מעדכן אך ורק את שדות ההעדפה
       await fetch(`${restUrl('/tenders')}?id=eq.${encodeURIComponent(t.id)}`, {
         method: 'PATCH',
         headers: authHeaders({ Prefer: 'return=minimal' }),
         body: JSON.stringify(update),
       });
+    }
+
+    // עיבוד במנות מקביליות, עם עצירה מסודרת לפני תקרת הזמן
+    for (let i = 0; i < batch.length; i += CONCURRENCY) {
+      if (Date.now() - startedAt > TIME_BUDGET_MS) break;
+      await Promise.all(batch.slice(i, i + CONCURRENCY).map(processOne));
     }
 
     console.log('SmallBiz: processed', results.length, 'tenders:', JSON.stringify(results));
