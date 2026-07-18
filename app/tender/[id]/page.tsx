@@ -92,12 +92,12 @@ export default function TenderPage() {
               <div style={{ fontSize: 13, color: '#7a8794' }}>אין מסמכים מצורפים.</div>
             ) : docs.map((doc, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderTop: i ? '1px solid #eef1f4' : 'none' }}>
-                <span style={{ fontSize: 18, color: '#5b6b7a' }}>\u25A4</span>
+                <span style={{ fontSize: 18, color: '#5b6b7a' }}>▤</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13.5, fontWeight: 600, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.name || doc.title || 'מסמך'}</div>
                   <div style={{ fontSize: 11.5, color: '#8a97a3' }}>{[doc.type, doc.date && fmtDate(doc.date)].filter(Boolean).join(' \u00B7 ')}</div>
                 </div>
-                <a href={doc.url} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: '#2b6fc4', fontWeight: 600, textDecoration: 'none', flex: '0 0 auto' }}>הורדה \u2193</a>
+                <a href={doc.url} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: '#2b6fc4', fontWeight: 600, textDecoration: 'none', flex: '0 0 auto' }}>הורדה ↓</a>
               </div>
             ))}
           </Card>
