@@ -3,7 +3,7 @@
 //  הרצה: npm test   (npx tsx scripts/regression.test.ts)
 // ============================================================
 import { parseHeDate, fmtDate, daysLeft } from "../app/lib/tenderMeta";
-import { DOMAINS, classifyTender, matchDomain, matchQuery, domainCounts, UNCATEGORIZED_ID } from "../app/lib/domains";
+import { DOMAINS, classifyTender, matchDomain, matchPublisher, matchQuery, domainCounts, UNCATEGORIZED_ID } from "../app/lib/domains";
 
 let failures = 0;
 function check(name: string, cond: boolean, detail = "") {
@@ -86,6 +86,31 @@ console.log("\nTICKET-13 — תחומים נגזרים מהדאטה, bucket לא
   check("לא-מסווג = 1", uncategorized === 1, String(uncategorized));
   check("סינון לפי לא-מסווג מחזיר בדיוק אותו", fixtures.filter((t) => matchDomain(t, UNCATEGORIZED_ID)).length === 1);
   check("נרמול שדה type מהמקור (בינוי → construction)", classifyTender({ title: "מכרז 123", type: "עבודות בינוי" }).includes("construction"));
+}
+
+// ---------- כיסוי מקורות: הגופים והקטגוריות מהפוטר ----------
+console.log("\nכיסוי — כל הגופים והקטגוריות מרשימת המקור מסווגים");
+{
+  const bodies: [string, string][] = [
+    ["ממשלת ישראל", "gov"], ["משרד הביטחון", "gov"], ["רשות מקרקעי ישראל", "gov"],
+    ["מנהל מקרקעי ישראל", "gov"], ["משרד החינוך", "gov"], ["משטרת ישראל", "gov"],
+    ["נציבות שירות המדינה", "gov"], ["משרד הבריאות", "gov"], ["משרד הרווחה", "gov"],
+    ["משרד הבינוי והשיכון", "gov"], ["חברת החשמל", "infra"], ["עיריית באר שבע", "local"],
+    ["עיריית הוד השרון", "local"], ["עיריית נתיבות", "local"], ["מועצה אזורית שדות נגב", "local"],
+    ["עיריית רמת השרון", "local"], ["מפעל הפיס", "public"], ["ג'וינט ישראל", "public"],
+    ["קופת חולים מאוחדת", "health"],
+  ];
+  for (const [pub, group] of bodies)
+    check(`גוף "${pub}" → ${group}`, matchPublisher({ publisher: pub } as any, group));
+  const cats: [string, string][] = [
+    ["מכרז עבודות בניה", "construction"], ["מכרז מקרקעין", "realestate"],
+    ["מכרז השכרת נכסים", "realestate"], ["מכרז עבודות חשמל", "construction"],
+    ["מכרז הסעות", "transport"], ["מכרז אספקת רכב", "transport"],
+    ["מכרז הובלות", "transport"], ["מכרז לעבודות עפר", "construction"],
+    ["מכרז עיצוב גרפי", "marketing"],
+  ];
+  for (const [title, dom] of cats)
+    check(`קטגוריה "${title}" → ${dom}`, classifyTender({ title }).includes(dom));
 }
 
 console.log(failures === 0 ? "\n✅ כל הבדיקות עברו" : `\n❌ ${failures} בדיקות נכשלו`);
