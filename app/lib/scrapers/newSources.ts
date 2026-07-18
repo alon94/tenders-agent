@@ -189,9 +189,8 @@ export const NEW_SOURCES: NewSource[] = [
   genericSource("meuhedet", "קופת חולים מאוחדת", "קופת חולים מאוחדת", [
     "https://www.meuhedet.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%A4%D7%A2%D7%99%D7%9C%D7%99%D7%9D/",
   ], {
-    // שמות המכרזים באתר מאוחדת אינם מכילים את המילה "מכרז" — הזיהוי
-    // לפי נתיב הקישור (עמודי פרט תחת /מכרזים/), בעברית או ב-URL-encoding
     hrefMatch: /מכרז|%D7%9E%D7%9B%D7%A8%D7%96/i,
+    note: "רשימת המכרזים נטענת ב-JavaScript בצד לקוח — ה-HTML מהשרת ריק. נדרשת כתובת ה-API הפנימי (DevTools → Network) כדי לקצור ישירות ממנו",
   }),
   genericSource("maccabi", "מכבי שירותי בריאות", "מכבי שירותי בריאות", [
     "https://www.maccabi4u.co.il/bids/",
@@ -201,11 +200,11 @@ export const NEW_SOURCES: NewSource[] = [
     "https://www.btl.gov.il/About/tenders/Pages/default.aspx",
   ]),
   genericSource("iroads", "נתיבי ישראל", "נתיבי ישראל", [
-    "https://www.iroads.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/",
-  ]),
+    proxied("https://www.iroads.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/"),
+  ], { note: "WAF מחזיר 403 גם עם כותרות דפדפן — נדרש IL_PROXY_URL" }),
   genericSource("ayalon", "נתיבי איילון", "נתיבי איילון", [
-    "https://www.ayalonhw.co.il/tenders/tenders-lobby/",
-  ], { hrefMatch: /tender/i }),
+    proxied("https://www.ayalonhw.co.il/tenders/tenders-lobby/"),
+  ], { hrefMatch: /tender/i, note: "WAF מחזיר 403 גם עם כותרות דפדפן — נדרש IL_PROXY_URL" }),
   genericSource("iec", "חברת החשמל", "חברת החשמל לישראל", [
     "https://www.iec.co.il/content/suppliers/content-pages/tendersinfo",
   ], {
