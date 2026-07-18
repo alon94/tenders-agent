@@ -17,7 +17,8 @@ export async function fetchDedupedTenders() {
                             arr.push(t);
                   }
           }
-          if (batch.length === 1000) await loadPage(offset + 1000);
+          // Safety cap: avoid unbounded recursion in case pagination never ends
+          if (batch.length === 1000 && offset < 50000) await loadPage(offset + 1000);
     };
     await loadPage(0);
 

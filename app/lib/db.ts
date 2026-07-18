@@ -108,8 +108,9 @@ export async function getTenders(opts: { search?: string; offset?: number; limit
   const params = new URLSearchParams();
     params.set("select", "*");
     params.set("order", "publish_date.desc.nullslast,deadline.desc.nullslast");
-    params.set("limit", String(limit));
-    params.set("offset", String(offset));
+      // Use Range headers for pagination (PostgREST / Supabase ignores
+      // offset as a query param for large tables). Limit/offset are sent
+      // via headers below.
 
   if (search) {
         const safe = search.replace(/[,()]/g, " ").trim();
@@ -119,7 +120,7 @@ export async function getTenders(opts: { search?: string; offset?: number; limit
   }
 
   const res = await fetch(`${restUrl("/tenders")}?${params.toString()}`, {
-        headers: authHeaders(),
+        headers: authHeaders({ Range: `offset−${offset}-offset−${offset + limit - 1}`, "Range-Unit": "items" }),
         cache: "no-store",
   });
 
