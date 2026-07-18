@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useIsMobile } from "../hooks/useIsMobile";
 import MobileTabBar from "../components/MobileTabBar";
 import MobileMenu from "../components/MobileMenu";
@@ -84,13 +84,18 @@ export default function Dashboard(){
   },[]);
   const toggleMark=useCallback((id:string,e?:any)=>{if(e){e.preventDefault();e.stopPropagation();}setMarked(prev=>{const has=prev.includes(id);const next=has?prev.filter(x=>x!==id):[...prev,id];try{localStorage.setItem('markedTenders',JSON.stringify(next));}catch(err){}return next;});},[]);
 
-  const load=useCallback(async()=>{
+  // מונע טעינות כפולות: ריצה אחת בו-זמנית (didLoad חוסם קריאה שנייה
+  // בזמן שהראשונה עוד רצה, כולל double-mount של StrictMode).
+  const loadingRef=useRef(false);
+  const load=useCallback(async(force=false)=>{
+        if(loadingRef.current&&!force)return;
+        loadingRef.current=true;
         setLoading(true);
         try{
                 const res:any=await fetchDedupedTenders();
                 setAll(res.tenders);
                 setFetchedAt(res.fetchedAt);
-        }finally{setLoading(false);}
+        }finally{setLoading(false);loadingRef.current=false;}
   },[]);
   useEffect(()=>{load();},[load]);
 
