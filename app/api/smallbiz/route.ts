@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { waitUntil } from '@vercel/functions';
 import { classifySmallBiz, fetchTenderPdfText } from '@/app/lib/smallbiz';
+import { recordSyncRun, detectTrigger } from '@/app/lib/ops';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // Fluid Compute מאפשר עד 5 דקות גם ב-Hobby
@@ -67,6 +68,10 @@ export async function GET(req: Request) {
   if (!isAuthorized) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  const runStartedAt = new Date().toISOString();
+  const runT0 = Date.now();
+  const runTrigger = detectTrigger(req);
 
   try {
     await ensureSmallBizColumns();
@@ -148,6 +153,11 @@ export async function GET(req: Request) {
       console.log('SmallBiz: chaining next batch, depth', chainDepth + 1);
     }
 
+    await recordSyncRun({
+      type: 'smallbiz', started_at: runStartedAt, duration_ms: Date.now() - runT0, trigger: runTrigger,
+      counts: { processed: results.length, found: results.filter((r) => r.small_biz === true).length, chain_depth: chainDepth, chained },
+    });
+
     return NextResponse.json({
       success: true,
       processed: results.length,
@@ -159,6 +169,7 @@ export async function GET(req: Request) {
     });
   } catch (err) {
     console.error('SmallBiz error:', err);
+    await recordSyncRun({ type: 'smallbiz', started_at: runStartedAt, duration_ms: Date.now() - runT0, trigger: runTrigger, counts: {}, error: String(err) });
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }
