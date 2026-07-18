@@ -8,7 +8,7 @@
 
 import type { TenderRecord } from "../db";
 import { upsertTenders } from "../db";
-import { fetchText, fetchJson, harvestTenderLinks, rowsToRecords, heDateToIso, hashId, stripTags } from "./core";
+import { fetchText, fetchJson, harvestTenderLinks, rowsToRecords, heDateToIso, hashId, stripTags, proxied } from "./core";
 
 export interface NewSource {
   id: string;
@@ -41,6 +41,12 @@ async function runRmi(): Promise<TenderRecord[]> {
         const deadline = dateVal(o, ["SgiraDate", "sgiraDate", "ClosingDate", "closingDate", "DeadLine", "deadline", "LastDate"]);
         const publish = dateVal(o, ["PirsumDate", "pirsumDate", "PublishDate", "publishDate", "OpenDate"]);
         if (!title && !num) continue;
+        // ה-API מחזיר את כל ההיסטוריה (8,000+) — שומרים רק פעילים:
+        // מועד הגשה מהיום והלאה, או ללא מועד אך פורסם בשנה האחרונה.
+        const today = new Date().toISOString().slice(0, 10);
+        const yearAgo = new Date(Date.now() - 365 * 86400000).toISOString().slice(0, 10);
+        if (deadline ? deadline < today : !(publish && publish >= yearAgo)) continue;
+        const internalId = str(o, ["MichrazID", "michrazId", "Id", "id"]);
         const label = title || `מכרז מקרקעין ${num}`;
         recs.push({
           id: `rmi-${num ? String(num) : hashId(label)}`,
@@ -52,7 +58,9 @@ async function runRmi(): Promise<TenderRecord[]> {
           publish_date: publish,
           deadline,
           status: "פורסם",
-          url: "https://apps.land.gov.il/MichrazimSite/#/michrazim",
+          url: internalId
+            ? `https://apps.land.gov.il/MichrazimSite/#/michraz/${internalId}`
+            : "https://apps.land.gov.il/MichrazimSite/#/michrazim",
           type: "מכרז מקרקעין",
           source: src.id,
           fetched_at: now,
@@ -172,15 +180,19 @@ export const NEW_SOURCES: NewSource[] = [
   { id: "rmi", name: 'רמ"י — מכרזי מקרקעין', publisher: "רשות מקרקעי ישראל", enabled: true, run: runRmi },
   { id: "mod", name: "משרד הביטחון — סחר אלקטרוני", publisher: "משרד הביטחון", enabled: true, run: runMod },
   genericSource("mashcal", 'משכ"ל', "החברה למשק וכלכלה של השלטון המקומי", [
-    "https://www.mashcal.co.il/our-tenders/",
-    "https://www.mashcal.co.il/published-tenders/",
-  ], { hrefMatch: /tender/i }),
+    proxied("https://www.mashcal.co.il/our-tenders/"),
+    proxied("https://www.mashcal.co.il/published-tenders/"),
+  ], { hrefMatch: /tender/i, note: "הגנת בוטים ברמת רשת — ללא IL_PROXY_URL הבקשה צפויה להיכשל" }),
   genericSource("pais", "מפעל הפיס", "מפעל הפיס", [
-    "https://www.pais.co.il/tenders/",
-  ], { hrefMatch: /tender/i }),
+    proxied("https://www.pais.co.il/tenders/"),
+  ], { hrefMatch: /tender/i, note: "מוגן Imperva/Incapsula — ללא IL_PROXY_URL הבקשה צפויה להיכשל" }),
   genericSource("meuhedet", "קופת חולים מאוחדת", "קופת חולים מאוחדת", [
     "https://www.meuhedet.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%A4%D7%A2%D7%99%D7%9C%D7%99%D7%9D/",
-  ]),
+  ], {
+    // שמות המכרזים באתר מאוחדת אינם מכילים את המילה "מכרז" — הזיהוי
+    // לפי נתיב הקישור (עמודי פרט תחת /מכרזים/), בעברית או ב-URL-encoding
+    hrefMatch: /מכרז|%D7%9E%D7%9B%D7%A8%D7%96/i,
+  }),
   genericSource("maccabi", "מכבי שירותי בריאות", "מכבי שירותי בריאות", [
     "https://www.maccabi4u.co.il/bids/",
     "https://www.maccabi4u.co.il/new/bids/",

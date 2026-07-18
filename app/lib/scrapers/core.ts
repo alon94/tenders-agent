@@ -9,14 +9,31 @@
 
 import type { TenderRecord } from "../db";
 
-const UA = "Mozilla/5.0 (compatible; TendersAgent/1.0; +https://tenders-agent.vercel.app)";
+// UA דפדפני מלא — חומות WAF פשוטות (403 בנתיבי ישראל/איילון) חוסמות
+// לפי User-Agent בלבד; כותרות דפדפן סטנדרטיות פותרות זאת ברוב המקרים.
+const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
+const BROWSER_HEADERS: Record<string, string> = {
+  "User-Agent": UA,
+  "Accept-Language": "he-IL,he;q=0.9,en;q=0.8",
+  "Sec-Fetch-Dest": "document",
+  "Sec-Fetch-Mode": "navigate",
+  "Sec-Fetch-Site": "none",
+  "Upgrade-Insecure-Requests": "1",
+};
+
+// מקורות עם הגנת בוטים ברמת רשת (משכ"ל, מפעל הפיס, חח"י) יכולים
+// לעבור דרך proxy ישראלי אם מוגדר: IL_PROXY_URL="https://my-proxy/fetch?url="
+export function proxied(url: string): string {
+  const p = process.env.IL_PROXY_URL;
+  return p ? p + encodeURIComponent(url) : url;
+}
 
 export async function fetchText(url: string, timeoutMs = 20000): Promise<string> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
     const res = await fetch(url, {
-      headers: { "User-Agent": UA, Accept: "text/html,application/json;q=0.9,*/*;q=0.8", "Accept-Language": "he" },
+      headers: { ...BROWSER_HEADERS, Accept: "text/html,application/json;q=0.9,*/*;q=0.8" },
       cache: "no-store",
       signal: ctrl.signal,
       redirect: "follow",
@@ -34,7 +51,7 @@ export async function fetchJson(url: string, init: RequestInit = {}, timeoutMs =
   try {
     const res = await fetch(url, {
       ...init,
-      headers: { "User-Agent": UA, Accept: "application/json", "Content-Type": "application/json", "Accept-Language": "he", ...(init.headers || {}) },
+      headers: { ...BROWSER_HEADERS, Accept: "application/json", "Content-Type": "application/json", ...(init.headers || {}) },
       cache: "no-store",
       signal: ctrl.signal,
     });
