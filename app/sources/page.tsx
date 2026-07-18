@@ -40,7 +40,7 @@ const SOURCES: { name: string; desc: string; host: string; url: string; icon: st
     host: 'apps.land.gov.il',
     url: 'https://apps.land.gov.il/MichrazimSite/',
     icon: '🗺️',
-    status: 'pilot',
+    status: 'active',
   },
   {
     name: "משרד הביטחון — אתר סחר אלקטרוני",
@@ -48,7 +48,7 @@ const SOURCES: { name: string; desc: string; host: string; url: string; icon: st
     host: 'online.mod.gov.il',
     url: 'https://www.online.mod.gov.il/Online2016/Pages/General/Balam/BalamList.aspx',
     icon: '🛡️',
-    status: 'pilot',
+    status: 'active',
   },
   {
     name: "משכ\"ל — החברה למשק וכלכלה",
@@ -80,7 +80,7 @@ const SOURCES: { name: string; desc: string; host: string; url: string; icon: st
     host: 'maccabi4u.co.il',
     url: 'https://www.maccabi4u.co.il/bids/',
     icon: '⚕️',
-    status: 'pilot',
+    status: 'active',
   },
   {
     name: "המוסד לביטוח לאומי",
@@ -88,7 +88,7 @@ const SOURCES: { name: string; desc: string; host: string; url: string; icon: st
     host: 'btl.gov.il',
     url: 'https://www.btl.gov.il/About/tenders/Pages/default.aspx',
     icon: '🏦',
-    status: 'pilot',
+    status: 'active',
   },
   {
     name: "נתיבי ישראל",
