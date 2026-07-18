@@ -5,26 +5,15 @@ import { useRouter } from 'next/navigation';
 import InternalShell from '../components/InternalShell';
 import { getSession } from '../lib/authClient';
 import { fetchMyProfile, saveMyProfile } from '../lib/profileApi';
+import { CATEGORY_OPTIONS, PUBLISHER_OPTIONS } from '../lib/domains';
 
 const DARK = '#1a2330';
 const BLUE = '#2b6fc4';
 const MUTED = '#7a8794';
 
-const BIZ = [
-  { value: 'consulting', label: 'ייעוץ וניהול' },
-  { value: 'tech', label: 'טכנולוגיה ותוכנה' },
-  { value: 'marketing', label: 'שיווק ופרסום' },
-  { value: 'construction', label: 'בינוי ותשתיות' },
-  { value: 'legal', label: 'משפט וחשבונאות' },
-  { value: 'education', label: 'חינוך והדרכה' },
-  { value: 'security', label: 'אבטחה ושמירה' },
-  { value: 'cleaning', label: 'ניקיון ותחזוקה' },
-  { value: 'catering', label: 'קייטרינג ומזון' },
-  { value: 'transport', label: 'הסעות ולוגיסטיקה' },
-  { value: 'health', label: 'בריאות ורפואה' },
-  { value: 'environment', label: 'איכות סביבה' },
-  { value: 'other', label: 'אחר' },
-];
+// הקטגוריות והמפרסמים נגזרים מהמנוע המרכזי (app/lib/domains.ts) —
+// זהים אחד-לאחד לתחומי המכרזים בדשבורד.
+const BIZ = CATEGORY_OPTIONS;
 
 const REGS = [
   { value: 'all', label: 'כל הארץ' },
@@ -37,14 +26,7 @@ const REGS = [
   { value: 'jerusalem', label: 'ירושלים' },
 ];
 
-const PUBS = [
-  { value: 'all', label: 'כל המפרסמים' },
-  { value: 'gov', label: 'משרדי ממשלה' },
-  { value: 'local', label: 'רשויות מקומיות' },
-  { value: 'health', label: 'מערכת הבריאות' },
-  { value: 'edu', label: 'מוסדות חינוך' },
-  { value: 'infra', label: 'חברות ממשלתיות' },
-];
+const PUBS = PUBLISHER_OPTIONS;
 
 const selStyle = {
   width: '100%',

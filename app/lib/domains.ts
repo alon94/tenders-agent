@@ -171,3 +171,19 @@ export function domainCounts(tenders: ClassifiableTender[]): { domains: DomainCo
     .sort((a, b) => b.count - a.count);
   return { domains, uncategorized };
 }
+
+// ------------------------------------------------------------
+// אפשרויות פרופיל — נגזרות מאותו מקור אמת, כך שהקטגוריות בפרופיל
+// העסקי ובאונבורדינג זהות אחת-לאחת לתחומי המכרזים בדשבורד.
+// ------------------------------------------------------------
+export interface Option { value: string; label: string }
+
+export const CATEGORY_OPTIONS: Option[] = [
+  ...DOMAINS.map((d) => ({ value: d.id, label: d.label })),
+  { value: "other", label: "אחר" },
+];
+
+export const PUBLISHER_OPTIONS: Option[] = [
+  { value: "all", label: "כל המפרסמים" },
+  ...PUBLISHERS.map((p) => ({ value: p.id, label: p.label })),
+];

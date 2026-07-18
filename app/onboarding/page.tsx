@@ -4,21 +4,14 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSession } from '../lib/authClient';
 import { saveMyProfile } from '../lib/profileApi';
+import { CATEGORY_OPTIONS } from '../lib/domains';
 
 const DARK = '#1a2330';
 const BLUE = '#2b6fc4';
 const MUTED = '#7a8794';
 
-const CATS = [
-  { value: 'consulting', label: 'ייעוץ וניהול' },
-  { value: 'tech', label: 'טכנולוגיה ותוכנה' },
-  { value: 'marketing', label: 'שיווק ופרסום' },
-  { value: 'construction', label: 'בינוי ותשתיות' },
-  { value: 'legal', label: 'משפט וחשבונאות' },
-  { value: 'security', label: 'אבטחה ושמירה' },
-  { value: 'transport', label: 'הסעות ולוגיסטיקה' },
-  { value: 'health', label: 'בריאות ורפואה' },
-];
+// כל 12 תחומי המכרזים + "אחר" — מאותו מקור אמת של הדשבורד.
+const CATS = CATEGORY_OPTIONS;
 
 const STEPS = [
   { n: 1, label: 'יצירת חשבון' },
