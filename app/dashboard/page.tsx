@@ -152,12 +152,14 @@ export default function Dashboard(){
     {icon:'⛁',label:'מקורות',href:'/sources'},
     {icon:'⚙',label:'פרופיל עסקי',href:'/profile'},
   ];
+  const smallBizCount=useMemo(()=>all.filter(t=>t.smallBiz&&(t.smallBizConfidence==='high'||t.smallBizConfidence==='medium')).length,[all]);
   const kpis=[
     {value:all.length,label:'מכרזים פעילים במאגר',dot:BLUE},
     {value:closing.length,label:'נסגרים בשבוע הקרוב',dot:'#b04a34'},
     {value:newT.length,label:'חדשים ב-7 ימים',dot:'#1e9e5a'},
+    {value:smallBizCount,label:'⭐ העדפה לעסקים קטנים',dot:'#1e5aa8',onClick:()=>{setSbOnly(v=>!v);setPg(1);}},
     {value:base.length,label:'מוצגים כעת',dot:'#d9a520'},
-  ];
+  ] as {value:number,label:string,dot:string,onClick?:()=>void}[];
   const chip:React.CSSProperties={background:'#fff',color:'#5b6b7a',fontWeight:600,fontSize:13,padding:'8px 15px',borderRadius:7,border:'1px solid #e2e7ec',cursor:'pointer'};
   const selWrap:React.CSSProperties={position:'relative'};
   const selStyle:React.CSSProperties={background:'#fff',color:'#5b6b7a',fontWeight:600,fontSize:13,padding:'8px 30px 8px 15px',borderRadius:7,border:'1px solid #e2e7ec',cursor:'pointer',appearance:'none',WebkitAppearance:'none',fontFamily:'inherit'};
@@ -230,9 +232,9 @@ export default function Dashboard(){
 
           <div style={{padding:'22px 26px 30px'}}>
             {/* KPI strip */}
-            <div style={{display:isMobile?'flex':'grid',gridTemplateColumns:isMobile?undefined:'repeat(4,1fr)',gap:isMobile?10:1,background:isMobile?'transparent':BORDER,border:isMobile?'none':`1px solid ${BORDER}`,borderRadius:10,overflow:isMobile?'auto':'hidden',overflowX:isMobile?'auto':undefined,marginBottom:22}}>
+            <div style={{display:isMobile?'flex':'grid',gridTemplateColumns:isMobile?undefined:'repeat(5,1fr)',gap:isMobile?10:1,background:isMobile?'transparent':BORDER,border:isMobile?'none':`1px solid ${BORDER}`,borderRadius:10,overflow:isMobile?'auto':'hidden',overflowX:isMobile?'auto':undefined,marginBottom:22}}>
               {kpis.map(k=>(
-                <div key={k.label} style={{background:'#fff',padding:'16px 18px',...(isMobile?{minWidth:120,border:'1px solid #e6eaee',borderRadius:12}:{})}}>
+                <div key={k.label} onClick={k.onClick} style={{background:'#fff',padding:'16px 18px',cursor:k.onClick?'pointer':'default',...(isMobile?{minWidth:120,border:'1px solid #e6eaee',borderRadius:12}:{})}}>
                   <div style={{display:'flex',alignItems:'center',gap:8}}><span style={{width:8,height:8,borderRadius:999,background:k.dot}}></span><span style={{fontSize:28,fontWeight:700,color:DARK,lineHeight:1}}>{loading?'…':k.value.toLocaleString()}</span></div>
                        <div style={{fontSize:12.5,color:MUTED,marginTop:8}}>{k.label}</div>
                 </div>
