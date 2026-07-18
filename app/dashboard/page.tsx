@@ -5,6 +5,7 @@ import MobileTabBar from "../components/MobileTabBar";
 import MobileMenu from "../components/MobileMenu";
 import { fetchDedupedTenders } from '../lib/tenderData';
 import { getSession, signOut, AUTH_EVENT, type AuthSession } from '../lib/authClient';
+import { parseHeDate } from '../lib/tenderMeta';
 import { fetchMyProfile, type BusinessProfile } from '../lib/profileApi';
 import { scoreTender } from '../lib/scoring';
 
@@ -34,9 +35,26 @@ const PUBS=[
   {id:'infra',label:'חברות ממשלתיות',kw:['חברת חשמל','מקורות','נמלים','רכבת','נתיבי']},
 ];
 interface T{id:string;title:string;publisher:string;publishDate:string;deadline:string;status:string;url:string;type:string;smallBiz?:boolean;smallBizConfidence?:string|null;smallBizQuote?:string|null;smallBizSummary?:string|null;}
-function dl(d:string):number|null{if(!d)return null;const x=new Date(d);return isNaN(x.getTime())?null:Math.ceil((x.getTime()-Date.now())/86400000);}
-function fd(d:string){if(!d)return'—';try{return new Date(d).toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric'});}catch{return d;}}
+function dl(d:string):number|null{const x=parseHeDate(d);return x===null?null:Math.ceil((x.getTime()-Date.now())/86400000);}
+function fd(d:string){const x=parseHeDate(d);return x===null?'—':x.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric'});}
 function mBiz(t:T,id:string){if(!id)return true;const b=BIZ.find(x=>x.id===id);if(!b||!('kw' in b))return true;const s=(t.title+' '+(t.publisher||'')).toLowerCase();return(b as any).kw.some((k:string)=>s.includes(k.toLowerCase()));}
+// TICKET-12: מנוע התאמה מרכזי — חיפוש חופשי מקבל גם הרחבה סמנטית:
+// אם השאילתה תואמת תחום (לפי שם או מילת אשכול), מכרז שפוגע בכל מילה
+// מהאשכול נחשב תואם — כך שחיפוש "טכנולוגיה" ≈ סינון "טכנולוגיה".
+function matchesQuery(t:T,q:string):boolean{
+  const ql=q.toLowerCase().trim();
+  if(!ql)return true;
+  const text=(t.title+' '+(t.publisher||'')+' '+(t.id||'')).toLowerCase();
+  if(text.includes(ql))return true;
+  for(const b of BIZ){
+    const kws:(string[])|undefined=(b as any).kw;
+    if(!kws)continue;
+    const label=(b.label||'').toLowerCase();
+    const qHitsDomain=label.includes(ql)||kws.some(k=>{const kl=k.toLowerCase();return kl.includes(ql)||ql.includes(kl);});
+    if(qHitsDomain&&kws.some(k=>text.includes(k.toLowerCase())))return true;
+  }
+  return false;
+}
 function mPub(t:T,id:string){if(!id)return true;const p=PUBS.find(x=>x.id===id);if(!p||!('kw' in p))return true;return(p as any).kw.some((k:string)=>(t.publisher||'').toLowerCase().includes(k.toLowerCase()));}
 function matchSc(biz:string,t:{title:string,publisher:string}):number{if(!biz)return 55+Math.floor((t.title.length%3)*10);const b=BIZ.find(b=>b.id===biz);if(!b||!(b as any).kw)return 55;const h=(t.title+' '+t.publisher).toLowerCase();const hits=(b as any).kw.filter((k:string)=>h.includes(k.toLowerCase())).length;return Math.min(95,50+hits*15);}
 function bandColor(score:number){if(score>=80)return'#1e9e5a';if(score>=65)return'#d9a520';return'#2b6fc4';}
@@ -122,7 +140,7 @@ export default function Dashboard(){
     if(!showNoDate)r=r.filter(t=>!!t.deadline);
     r=r.filter(t=>{const d=dl(t.deadline);if(d===null)return showNoDate;if(d<0)return showClosed;return d<=maxD;});
     if(sbOnly)r=r.filter(t=>t.smallBiz&&(t.smallBizConfidence==='high'||t.smallBizConfidence==='medium'));
-    if(q.trim()){const ql=q.toLowerCase();r=r.filter(t=>(t.title||'').toLowerCase().includes(ql)||(t.publisher||'').toLowerCase().includes(ql));}
+    if(q.trim())r=r.filter(t=>matchesQuery(t,q));
     return r;
   },[all,biz,pub,maxD,showClosed,showNoDate,sbOnly,q]);
 
@@ -152,6 +170,19 @@ export default function Dashboard(){
     {icon:'⛁',label:'מקורות',href:'/sources'},
     {icon:'⚙',label:'פרופיל עסקי',href:'/profile'},
   ];
+  // TICKET-13: התחומים נגזרים מהנתונים בפועל — ספירה חיה לכל אשכול,
+  // תחום בלי מכרזים מוסתר, והרשימה ממוינת לפי נפח. (מנגנון המיפוי
+  // קטגוריה→אשכול מרוכז ב-BIZ ומשותף לסינון, לחיפוש ולדירוג.)
+  const bizOptions=useMemo(()=>{
+    const opts:{id:string,label:string}[]=[{id:'',label:'כל התחומים'}];
+    const counted=BIZ
+      .filter(b=>(b as any).kw)
+      .map(b=>({id:b.id,base:b.label,count:all.filter(t=>mBiz(t,b.id)).length}))
+      .filter(x=>x.count>0)
+      .sort((a,b)=>b.count-a.count);
+    for(const c of counted)opts.push({id:c.id,label:`${c.base} (${c.count.toLocaleString('he-IL')})`});
+    return opts;
+  },[all]);
   const smallBizCount=useMemo(()=>all.filter(t=>t.smallBiz&&(t.smallBizConfidence==='high'||t.smallBizConfidence==='medium')).length,[all]);
   const kpis=[
     {value:all.length,label:'מכרזים פעילים במאגר',dot:BLUE},
@@ -250,7 +281,7 @@ export default function Dashboard(){
                 );
               })}
               <div style={{...selWrap,marginInlineStart:'auto'}}>
-                <select value={biz} onChange={e=>{setBiz(e.target.value);setPg(1);}} style={selStyle}>{BIZ.map(b=><option key={b.id} value={b.id}>{b.label}</option>)}</select>
+                <select value={biz} onChange={e=>{setBiz(e.target.value);setPg(1);}} style={selStyle}>{bizOptions.map(b=><option key={b.id} value={b.id}>{b.label}</option>)}</select>
                 <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',fontSize:10,color:'#9aa6b2',pointerEvents:'none'}}>▾</span>
               </div>
               <div style={selWrap}>

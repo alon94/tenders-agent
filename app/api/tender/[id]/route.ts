@@ -122,6 +122,20 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
     let title = titleMatch ? clean(titleMatch[1]) : '';
     title = title.replace(/^\d+\s*\|\s*/, '');
 
+    // TICKET-11: המקור מחזיר DD/MM/YYYY — ממירים ל-ISO חד-משמעי,
+    // כך שהלקוח לעולם לא מפרש יום/חודש הפוך.
+    const heToIso = (s: string): string => {
+      const m = (s || '').match(/(\d{1,2})[./](\d{1,2})[./](\d{4})/);
+      if (!m) return s || '';
+      return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+    };
+    // fallback: שליפת תאריך לפי תווית מהטקסט המלא (כשה-pick מפספס)
+    const fullText = frags.join(' | ');
+    const dateByLabel = (label: string): string => {
+      const m = fullText.match(new RegExp(label + '\\s*:?\\s*\\|?\\s*(\\d{1,2}[./]\\d{1,2}[./]\\d{4})'));
+      return m ? m[1] : '';
+    };
+
     const emailMatch = html.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
     const contactEmail = emailMatch ? emailMatch[0] : '';
 
@@ -136,10 +150,10 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
       publicationNumber: pick(frags, ["מס' פרסום", 'מס׳ פרסום', 'מספר פרסום']),
       status: pick(frags, ['סטטוס']),
       procedureNumber: pick(frags, ['מס׳ הליך', "מס' הליך", 'מספר הליך']),
-      publishDate: pick(frags, ['תאריך פרסום']),
-      updateDate: pick(frags, ['תאריך עדכון']),
-      submissionStart: pick(frags, ['מועד תחילת ההגשה', 'מועד תחילת הגשה']),
-      deadline: pick(frags, ['מועד אחרון להגשה']),
+      publishDate: heToIso(pick(frags, ['תאריך פרסום']) || dateByLabel('תאריך פרסום')),
+      updateDate: heToIso(pick(frags, ['תאריך עדכון']) || dateByLabel('תאריך עדכון')),
+      submissionStart: heToIso(pick(frags, ['מועד תחילת ההגשה', 'מועד תחילת הגשה']) || dateByLabel('מועד תחילת ה?הגשה')),
+      deadline: heToIso(pick(frags, ['מועד אחרון להגשה']) || dateByLabel('מועד אחרון להגשה')),
       contactName,
       contactEmail,
       topics: [] as string[],

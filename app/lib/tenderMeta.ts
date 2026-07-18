@@ -46,15 +46,32 @@ export function statusTags(status: string, days: number | null, publisher?: stri
   return tags;
 }
 
-export function daysLeft(d: string): number | null {
+// ============================================================
+// פרסור תאריכים ריכוזי (TICKET-11)
+// המקור הישראלי (מינהל הרכש) מחזיר DD/MM/YYYY — new Date() מפרש
+// את זה בטעות כ-MM/DD. הפונקציה הזו היא נקודת הפרסור היחידה
+// לרשימה ולדף הפרט כאחד.
+// ============================================================
+export function parseHeDate(d: string): Date | null {
   if (!d) return null;
+  // DD/MM/YYYY או DD.MM.YYYY (כולל שעה אופציונלית אחרי)
+  const m = d.match(/^(\d{1,2})[./](\d{1,2})[./](\d{4})/);
+  if (m) {
+    const x = new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+    return isNaN(x.getTime()) ? null : x;
+  }
+  // ISO (YYYY-MM-DD) וכל פורמט חד-משמעי אחר
   const x = new Date(d);
-  return isNaN(x.getTime()) ? null : Math.ceil((x.getTime() - Date.now()) / 86400000);
+  return isNaN(x.getTime()) ? null : x;
+}
+
+export function daysLeft(d: string): number | null {
+  const x = parseHeDate(d);
+  return x === null ? null : Math.ceil((x.getTime() - Date.now()) / 86400000);
 }
 
 export function fmtDate(d: string): string {
-  if (!d) return "—";
-  const x = new Date(d);
-  if (isNaN(x.getTime())) return "—"; // תאריך לא תקין — לא מציגים "Invalid Date"
+  const x = parseHeDate(d);
+  if (x === null) return "—";
   return x.toLocaleDateString("he-IL", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
