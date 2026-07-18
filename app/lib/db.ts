@@ -120,7 +120,7 @@ export async function getTenders(opts: { search?: string; offset?: number; limit
   }
 
   const res = await fetch(`${restUrl("/tenders")}?${params.toString()}`, {
-        headers: authHeaders({ Range: `offset−${offset}-offset−${offset + limit - 1}`, "Range-Unit": "items" }),
+        headers: authHeaders({ Range: `${offset}-${offset + limit - 1}`, "Range-Unit": "items" }),
         cache: "no-store",
   });
 
