@@ -8,55 +8,17 @@ import { getSession, signOut, AUTH_EVENT, type AuthSession } from '../lib/authCl
 import { parseHeDate } from '../lib/tenderMeta';
 import { fetchMyProfile, type BusinessProfile } from '../lib/profileApi';
 import { scoreTender } from '../lib/scoring';
+// TICKET-12/13: מנוע ההתאמה המרכזי — סינון, חיפוש, סיווג וספירת
+// תחומים עוברים כולם דרך app/lib/domains.ts (מקור אמת יחיד).
+import { DOMAINS, PUBLISHERS, UNCATEGORIZED_ID, UNCATEGORIZED_LABEL, matchDomain, matchPublisher, matchQuery, domainCounts } from '../lib/domains';
 
 /* ============ עיצוב 2a — אנטרפרייז, טבלת נתונים נקייה ============ */
 
-const BIZ=[
-  {id:'',label:'כל התחומים'},
-  {id:'consulting',label:'ייעוץ וניהול',kw:['ייעוץ','יעוץ','ניהול','אסטרטגיה','הדרכה','ניהול פרויקט']},
-  {id:'tech',label:'טכנולוגיה',kw:['תוכנה','מחשוב','טכנולוגיה','פיתוח','סייבר','IT','AI','ענן','מערכת מידע']},
-  {id:'marketing',label:'שיווק ופרסום',kw:['שיווק','פרסום','קמפיין','יחסי ציבור','מדיה','תוכן','SEO']},
-  {id:'construction',label:'בינוי ותשתיות',kw:['בינוי','בנייה','תשתיות','קבלן','שיפוץ','ביוב','מים','כבישים','אדריכל']},
-  {id:'legal',label:'משפט וחשבונאות',kw:['משפטי','עורך דין','חשבונאות','רואה חשבון','ביקורת','ציות','חוזה']},
-  {id:'education',label:'חינוך והדרכה',kw:['חינוך','הדרכה','הכשרה','קורס','מורה','מרצה','בית ספר']},
-  {id:'security',label:'אבטחה ושמירה',kw:['אבטחה','שמירה','שומר','מאבטח','סיור','בטיחות']},
-  {id:'cleaning',label:'ניקיון ותחזוקה',kw:['ניקיון','תחזוקה','חיטוי','הדברה','גינון']},
-  {id:'catering',label:'קייטרינג ומזון',kw:['קייטרינג','אוכל','מזון','ספק מזון','ארוחה']},
-  {id:'transport',label:'הסעות ולוגיסטיקה',kw:['הסעות','תחבורה','לוגיסטיקה','הובלה','שינוע']},
-  {id:'health',label:'בריאות ורפואה',kw:['בריאות','רפואה','סיעוד','אחות','רופא','שיקום','מרפאה']},
-  {id:'environment',label:'איכות סביבה',kw:['סביבה','אקולוגי','ירוק','פסולת','מחזור','זיהום']},
-];
-const PUBS=[
-  {id:'',label:'כל הגופים'},
-  {id:'gov',label:'משרדי ממשלה',kw:['משרד','רשות','מינהל','אגף','ממשלת']},
-  {id:'local',label:'רשויות מקומיות',kw:['עיריית','עירייה','מועצה','מועצת']},
-  {id:'health',label:'מערכת הבריאות',kw:['בית חולים','קופת חולים','מאוחדת','לאומית','כללית','מדא','הדסה']},
-  {id:'edu',label:'מוסדות חינוך',kw:['אוניברסיטה','מכללה','בית ספר']},
-  {id:'infra',label:'חברות ממשלתיות',kw:['חברת חשמל','מקורות','נמלים','רכבת','נתיבי']},
-];
+const PUBS=[{id:'',label:'כל הגופים'},...PUBLISHERS.map(p=>({id:p.id,label:p.label}))];
 interface T{id:string;title:string;publisher:string;publishDate:string;deadline:string;status:string;url:string;type:string;smallBiz?:boolean;smallBizConfidence?:string|null;smallBizQuote?:string|null;smallBizSummary?:string|null;}
 function dl(d:string):number|null{const x=parseHeDate(d);return x===null?null:Math.ceil((x.getTime()-Date.now())/86400000);}
 function fd(d:string){const x=parseHeDate(d);return x===null?'—':x.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric'});}
-function mBiz(t:T,id:string){if(!id)return true;const b=BIZ.find(x=>x.id===id);if(!b||!('kw' in b))return true;const s=(t.title+' '+(t.publisher||'')).toLowerCase();return(b as any).kw.some((k:string)=>s.includes(k.toLowerCase()));}
-// TICKET-12: מנוע התאמה מרכזי — חיפוש חופשי מקבל גם הרחבה סמנטית:
-// אם השאילתה תואמת תחום (לפי שם או מילת אשכול), מכרז שפוגע בכל מילה
-// מהאשכול נחשב תואם — כך שחיפוש "טכנולוגיה" ≈ סינון "טכנולוגיה".
-function matchesQuery(t:T,q:string):boolean{
-  const ql=q.toLowerCase().trim();
-  if(!ql)return true;
-  const text=(t.title+' '+(t.publisher||'')+' '+(t.id||'')).toLowerCase();
-  if(text.includes(ql))return true;
-  for(const b of BIZ){
-    const kws:(string[])|undefined=(b as any).kw;
-    if(!kws)continue;
-    const label=(b.label||'').toLowerCase();
-    const qHitsDomain=label.includes(ql)||kws.some(k=>{const kl=k.toLowerCase();return kl.includes(ql)||ql.includes(kl);});
-    if(qHitsDomain&&kws.some(k=>text.includes(k.toLowerCase())))return true;
-  }
-  return false;
-}
-function mPub(t:T,id:string){if(!id)return true;const p=PUBS.find(x=>x.id===id);if(!p||!('kw' in p))return true;return(p as any).kw.some((k:string)=>(t.publisher||'').toLowerCase().includes(k.toLowerCase()));}
-function matchSc(biz:string,t:{title:string,publisher:string}):number{if(!biz)return 55+Math.floor((t.title.length%3)*10);const b=BIZ.find(b=>b.id===biz);if(!b||!(b as any).kw)return 55;const h=(t.title+' '+t.publisher).toLowerCase();const hits=(b as any).kw.filter((k:string)=>h.includes(k.toLowerCase())).length;return Math.min(95,50+hits*15);}
+function matchSc(biz:string,t:{title:string,publisher:string}):number{if(!biz||biz===UNCATEGORIZED_ID)return 55+Math.floor((t.title.length%3)*10);const b=DOMAINS.find(b=>b.id===biz);if(!b)return 55;const h=(t.title+' '+t.publisher).toLowerCase();const hits=b.kw.filter((k:string)=>h.includes(k.toLowerCase())).length;return Math.min(95,50+hits*15);}
 function bandColor(score:number){if(score>=80)return'#1e9e5a';if(score>=65)return'#d9a520';return'#2b6fc4';}
 function statusTags(t:T,days:number|null){
   const tags:{label:string,bg:string,fg:string,bd:string}[]=[];
@@ -134,18 +96,19 @@ export default function Dashboard(){
 
   const base=useMemo(()=>{
     let r=all;
-    if(biz)r=r.filter(t=>mBiz(t,biz));
-    if(pub)r=r.filter(t=>mPub(t,pub));
+    if(biz)r=r.filter(t=>matchDomain(t,biz));
+    if(pub)r=r.filter(t=>matchPublisher(t,pub));
     if(!showClosed)r=r.filter(t=>{const d=dl(t.deadline);return d===null||d>=0;});
     if(!showNoDate)r=r.filter(t=>!!t.deadline);
     r=r.filter(t=>{const d=dl(t.deadline);if(d===null)return showNoDate;if(d<0)return showClosed;return d<=maxD;});
     if(sbOnly)r=r.filter(t=>t.smallBiz&&(t.smallBizConfidence==='high'||t.smallBizConfidence==='medium'));
-    if(q.trim())r=r.filter(t=>matchesQuery(t,q));
+    if(q.trim())r=r.filter(t=>matchQuery(t,q));
     return r;
   },[all,biz,pub,maxD,showClosed,showNoDate,sbOnly,q]);
 
   const closing=useMemo(()=>base.filter(t=>{const d=dl(t.deadline);return d!==null&&d>=0&&d<=7;}),[base]);
-  const newT=useMemo(()=>base.filter(t=>{if(!t.publishDate)return false;return new Date(t.publishDate).getTime()>(now-7*86400000);}),[base,now]);
+  // TICKET-11: פרסור תאריך הפרסום דרך ה-utility הריכוזי בלבד
+  const newT=useMemo(()=>base.filter(t=>{if(!t.publishDate)return false;const x=parseHeDate(t.publishDate);return x!==null&&x.getTime()>(now-7*86400000);}),[base,now]);
   const scoreOf=useCallback((t:T):number=>{
     if(bizProfile)return scoreTender(t,{categories:bizProfile.categories,region:bizProfile.region,publisher_type:bizProfile.publisher_type},now).display;
     return matchSc(biz,t);
@@ -170,17 +133,14 @@ export default function Dashboard(){
     {icon:'⛁',label:'מקורות',href:'/sources'},
     {icon:'⚙',label:'פרופיל עסקי',href:'/profile'},
   ];
-  // TICKET-13: התחומים נגזרים מהנתונים בפועל — ספירה חיה לכל אשכול,
-  // תחום בלי מכרזים מוסתר, והרשימה ממוינת לפי נפח. (מנגנון המיפוי
-  // קטגוריה→אשכול מרוכז ב-BIZ ומשותף לסינון, לחיפוש ולדירוג.)
+  // TICKET-13: התחומים נגזרים מהנתונים בפועל — ספירה חיה דרך המנוע
+  // המרכזי (כולל נרמול שדה type מהמקור), תחום ריק מוסתר, מיון לפי
+  // נפח, ובסוף bucket "לא מסווג" מדיד למעקב אחר יעד הצמצום.
   const bizOptions=useMemo(()=>{
     const opts:{id:string,label:string}[]=[{id:'',label:'כל התחומים'}];
-    const counted=BIZ
-      .filter(b=>(b as any).kw)
-      .map(b=>({id:b.id,base:b.label,count:all.filter(t=>mBiz(t,b.id)).length}))
-      .filter(x=>x.count>0)
-      .sort((a,b)=>b.count-a.count);
-    for(const c of counted)opts.push({id:c.id,label:`${c.base} (${c.count.toLocaleString('he-IL')})`});
+    const {domains,uncategorized}=domainCounts(all);
+    for(const c of domains)opts.push({id:c.id,label:`${c.label} (${c.count.toLocaleString('he-IL')})`});
+    if(uncategorized>0)opts.push({id:UNCATEGORIZED_ID,label:`${UNCATEGORIZED_LABEL} (${uncategorized.toLocaleString('he-IL')})`});
     return opts;
   },[all]);
   const smallBizCount=useMemo(()=>all.filter(t=>t.smallBiz&&(t.smallBizConfidence==='high'||t.smallBizConfidence==='medium')).length,[all]);

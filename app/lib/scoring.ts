@@ -40,21 +40,14 @@ export interface ScorableTender {
   deadline?: string;    // YYYY-MM-DD
 }
 
-export const CAT_KW: Record<string, string[]> = {
-  tech: ['טכנולוגי', 'תוכנה', 'מחשב', 'דיגיטל', 'סייבר', 'פיתוח', 'מערכת', 'IT', 'ענן'],
-  consulting: ['ייעוץ', 'יעוץ', 'ניהול', 'אסטרטגי', 'כלכל', 'פרויקט', 'תכנון'],
-  legal: ['משפט', 'רגולצי', 'עו"ד', 'ייצוג', 'חוזה', 'חשבונאות', 'ביקורת'],
-  construction: ['בניה', 'בנייה', 'תשתית', 'עבודות', 'קבלן', 'שיפוץ', 'אדריכל'],
-  cleaning: ['ניקיון', 'תחזוקה', 'חיטוי'],
-  security: ['שמירה', 'אבטחה', 'מאבטח', 'בטיחות'],
-  health: ['רפואי', 'בריאות', 'רפואה', 'מכשור רפואי', 'סיעוד'],
-  education: ['חינוך', 'הכשרה', 'הדרכה', 'קורס', 'אקדמי'],
-  catering: ['מזון', 'קייטרינג', 'אוכל', 'כשר', 'הסעדה'],
-  transport: ['הובלה', 'תחבורה', 'רכב', 'לוגיסטי', 'הסעות'],
-  marketing: ['שיווק', 'פרסום', 'מיתוג', 'קמפיין'],
-  environment: ['סביבה', 'קיימות', 'פסולת', 'מחזור', 'אנרגיה ירוקה'],
-  other: [],
-};
+// TICKET-12: אשכולות הקטגוריות נגזרים מהמנוע המרכזי — אותן מילות
+// מפתח בדיוק כמו הסינון והחיפוש בדשבורד. 'other' נשמר לתאימות פרופיל.
+import { DOMAINS } from './domains';
+import { parseHeDate } from './tenderMeta';
+export const CAT_KW: Record<string, string[]> = Object.fromEntries([
+  ...DOMAINS.map(d => [d.id, d.kw] as [string, string[]]),
+  ['other', [] as string[]],
+]);
 
 export const REG_KW: Record<string, string[]> = {
   north: ['צפון', 'עכו', 'נצרת', 'טבריה', 'גליל'],
@@ -111,8 +104,9 @@ export function scoreTender(t: ScorableTender, profile: ScoringProfile, now = Da
 
   // --- 2. דחיפות (0-20) ---
   let urgency = 5; // ללא מועד — ניטרלי-נמוך
-  if (t.deadline) {
-    const days = Math.ceil((new Date(t.deadline).getTime() - now) / 86400000);
+  const deadlineDate = t.deadline ? parseHeDate(t.deadline) : null; // TICKET-11: פרסור ריכוזי
+  if (deadlineDate) {
+    const days = Math.ceil((deadlineDate.getTime() - now) / 86400000);
     if (days < 0) urgency = 0;            // עבר המועד
     else if (days <= 2) urgency = 6;      // כמעט מאוחר מדי
     else if (days <= 14) urgency = 20;    // חלון הפעולה האידיאלי
@@ -123,8 +117,9 @@ export function scoreTender(t: ScorableTender, profile: ScoringProfile, now = Da
 
   // --- 3. טריות (0-10) ---
   let freshness = 2;
-  if (t.publishDate) {
-    const age = (now - new Date(t.publishDate).getTime()) / 86400000;
+  const publishDate = t.publishDate ? parseHeDate(t.publishDate) : null; // TICKET-11: פרסור ריכוזי
+  if (publishDate) {
+    const age = (now - publishDate.getTime()) / 86400000;
     if (age <= 7) freshness = 10;
     else if (age <= 30) freshness = 6;
   }

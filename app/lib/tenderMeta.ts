@@ -19,16 +19,15 @@ export function bandColor(score: number): string {
   return "#2b6fc4";
 }
 
-const KW: Record<string, string[]> = {
-  consulting: ["ייעוץ", "יעוץ", "ניהול", "אסטרטגיה"],
-  tech: ["תוכנה", "מחשוב", "טכנולוגיה", "פיתוח", "סייבר"],
-};
+// TICKET-12: הציון בדף הפרט נשען על אותם אשכולות מילות מפתח של
+// המנוע המרכזי (app/lib/domains.ts) — לא על רשימה פרטית נפרדת.
+import { DOMAINS } from "./domains";
 
 export function scoreFor(title: string, publisher = ""): number {
   const h = (title + " " + publisher).toLowerCase();
   let best = 55 + ((title.length % 3) * 10);
-  for (const k in KW) {
-    const hits = KW[k].filter((w) => h.includes(w.toLowerCase())).length;
+  for (const d of DOMAINS) {
+    const hits = d.kw.filter((w) => h.includes(w.toLowerCase())).length;
     if (hits) best = Math.max(best, Math.min(95, 50 + hits * 15));
   }
   return best;
