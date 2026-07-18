@@ -7,6 +7,10 @@
     {
       "path": "/api/smallbiz",
       "schedule": "30 4 * * *"
+    },
+    {
+      "path": "/api/sources-sync",
+      "schedule": "45 4 * * *"
     }
   ]
 }

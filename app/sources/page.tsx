@@ -5,7 +5,7 @@ import InternalShell from '../components/InternalShell';
 import { DARK, BLUE, MUTED, BORDER } from '../lib/tenderMeta';
 import { fetchDedupedTenders } from '../lib/tenderData';
 
-type SourceStatus = 'active' | 'candidate';
+type SourceStatus = 'active' | 'pilot' | 'candidate';
 
 const SOURCES: { name: string; desc: string; host: string; url: string; icon: string; status: SourceStatus }[] = [
   // ---------- מקורות פעילים ----------
@@ -40,7 +40,7 @@ const SOURCES: { name: string; desc: string; host: string; url: string; icon: st
     host: 'apps.land.gov.il',
     url: 'https://apps.land.gov.il/MichrazimSite/',
     icon: '🗺️',
-    status: 'candidate',
+    status: 'pilot',
   },
   {
     name: "משרד הביטחון — אתר סחר אלקטרוני",
@@ -48,7 +48,7 @@ const SOURCES: { name: string; desc: string; host: string; url: string; icon: st
     host: 'online.mod.gov.il',
     url: 'https://www.online.mod.gov.il/Online2016/Pages/General/Balam/BalamList.aspx',
     icon: '🛡️',
-    status: 'candidate',
+    status: 'pilot',
   },
   {
     name: "משכ\"ל — החברה למשק וכלכלה",
@@ -56,7 +56,7 @@ const SOURCES: { name: string; desc: string; host: string; url: string; icon: st
     host: 'mashcal.co.il',
     url: 'https://www.mashcal.co.il/our-tenders/',
     icon: '🏘️',
-    status: 'candidate',
+    status: 'pilot',
   },
   {
     name: "מפעל הפיס",
@@ -64,7 +64,7 @@ const SOURCES: { name: string; desc: string; host: string; url: string; icon: st
     host: 'pais.co.il',
     url: 'https://www.pais.co.il/Tenders/',
     icon: '🎯',
-    status: 'candidate',
+    status: 'pilot',
   },
   {
     name: "קופת חולים מאוחדת",
@@ -72,7 +72,7 @@ const SOURCES: { name: string; desc: string; host: string; url: string; icon: st
     host: 'meuhedet.co.il',
     url: 'https://www.meuhedet.co.il/מכרזים/מכרזים-פעילים/',
     icon: '🏥',
-    status: 'candidate',
+    status: 'pilot',
   },
   {
     name: "מכבי שירותי בריאות",
@@ -80,7 +80,7 @@ const SOURCES: { name: string; desc: string; host: string; url: string; icon: st
     host: 'maccabi4u.co.il',
     url: 'https://www.maccabi4u.co.il/bids/',
     icon: '⚕️',
-    status: 'candidate',
+    status: 'pilot',
   },
   {
     name: "המוסד לביטוח לאומי",
@@ -88,7 +88,7 @@ const SOURCES: { name: string; desc: string; host: string; url: string; icon: st
     host: 'btl.gov.il',
     url: 'https://www.btl.gov.il/About/tenders/Pages/default.aspx',
     icon: '🏦',
-    status: 'candidate',
+    status: 'pilot',
   },
   {
     name: "נתיבי ישראל",
@@ -96,7 +96,7 @@ const SOURCES: { name: string; desc: string; host: string; url: string; icon: st
     host: 'iroads.co.il',
     url: 'https://www.iroads.co.il/מכרזים/מכרזים/',
     icon: '🛣️',
-    status: 'candidate',
+    status: 'pilot',
   },
   {
     name: "נתיבי איילון",
@@ -104,7 +104,7 @@ const SOURCES: { name: string; desc: string; host: string; url: string; icon: st
     host: 'ayalonhw.co.il',
     url: 'https://www.ayalonhw.co.il/tenders/tenders-lobby/',
     icon: '🚦',
-    status: 'candidate',
+    status: 'pilot',
   },
   {
     name: "חברת החשמל",
@@ -117,6 +117,7 @@ const SOURCES: { name: string; desc: string; host: string; url: string; icon: st
 ];
 
 const ACTIVE = SOURCES.filter((s) => s.status === 'active');
+const PILOTS = SOURCES.filter((s) => s.status === 'pilot');
 const CANDIDATES = SOURCES.filter((s) => s.status === 'candidate');
 
 function Spinner() {
@@ -143,6 +144,7 @@ export default function SourcesPage() {
   const kpiCells = [
     { v: loading ? <Spinner /> : (count === null ? '…' : count.toLocaleString('he-IL')), l: "מכרזים זמינים", c: DARK },
     { v: String(ACTIVE.length), l: "מקורות פעילים", c: '#1e7d45' },
+    { v: String(PILOTS.length), l: "בהרצה", c: '#8a5db8' },
     { v: String(CANDIDATES.length), l: "מועמדים לאינטגרציה", c: '#a06a1b' },
     { v: loading ? <Spinner /> : updated, l: "עדכון אחרון", c: BLUE },
   ];
@@ -166,7 +168,7 @@ export default function SourcesPage() {
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
                 <span style={{ fontSize: 15.5, fontWeight: 700, color: DARK }}>{s.name}</span>
-                <span style={{ fontSize: 11.5, fontWeight: 600, color: s.status === 'active' ? '#1e7d45' : '#a06a1b', background: s.status === 'active' ? '#e7f6ec' : '#fdf3e3', borderRadius: 6, padding: '2px 8px' }}>{s.status === 'active' ? "פעיל" : "מועמד לאינטגרציה"}</span>
+                <span style={{ fontSize: 11.5, fontWeight: 600, color: s.status === 'active' ? '#1e7d45' : s.status === 'pilot' ? '#8a5db8' : '#a06a1b', background: s.status === 'active' ? '#e7f6ec' : s.status === 'pilot' ? '#f3ecfb' : '#fdf3e3', borderRadius: 6, padding: '2px 8px' }}>{s.status === 'active' ? "פעיל" : s.status === 'pilot' ? "בהרצה" : "מועמד לאינטגרציה"}</span>
               </div>
               <div style={{ fontSize: 13.5, color: MUTED, marginBottom: 10, lineHeight: 1.5 }}>{s.desc}</div>
               <a href={s.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, fontWeight: 600, color: BLUE, textDecoration: 'none' }}>{"לצפייה במקור"} ← {s.host}</a>
