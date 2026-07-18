@@ -6,21 +6,32 @@ export async function fetchDedupedTenders() {
     const seen = new Set();
     const arr: any[] = [];
     let fetchedAt = '';
-    const loadPage = async (offset: number) => {
-          const r = await fetch('/api/tenders?offset=' + offset).then((res) => res.json()).catch(() => ({ tenders: [] }));
+    const PAGE = 1000;
+    const MAX_PAGES = 20; // תקרת ביטחון: עד 20,000 מכרזים
+
+    for (let page = 0; page < MAX_PAGES; page++) {
+          const offset = page * PAGE;
+          const r = await fetch('/api/tenders?offset=' + offset)
+                .then((res) => res.json())
+                .catch(() => ({ tenders: [] }));
           if (r.fetchedAt) fetchedAt = r.fetchedAt;
           const batch = r.tenders || [];
+
+          let added = 0;
           for (const t of batch) {
                   const k = tenderKey(t);
                   if (!seen.has(k)) {
                             seen.add(k);
                             arr.push(t);
+                            added++;
                   }
           }
-          // Safety cap: avoid unbounded recursion in case pagination never ends
-          if (batch.length === 1000 && offset < 50000) await loadPage(offset + 1000);
-    };
-    await loadPage(0);
+
+          // עצירה: עמוד חלקי (הגענו לסוף), עמוד ריק, או עמוד שלא
+          // הוסיף אף רשומה חדשה (הגנה מפני לולאה אינסופית אם ה-API
+          // מחזיר שוב ושוב את אותו החלון).
+          if (batch.length < PAGE || added === 0) break;
+    }
 
   if (typeof window !== 'undefined') {
         try {
