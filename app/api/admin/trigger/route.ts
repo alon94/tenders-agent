@@ -4,7 +4,7 @@ import { requireAdmin } from '@/app/lib/ops';
 
 export const dynamic = 'force-dynamic';
 
-// POST /api/admin/trigger { type: 'sync' | 'smallbiz' }
+// POST /api/admin/trigger { type: 'sync' | 'smallbiz' | 'sources' }
 // הפעלה ידנית של צינור מה-UI — רצה ברקע (waitUntil), התשובה מיידית.
 export async function POST(req: Request) {
   const admin = await requireAdmin(req);
@@ -13,7 +13,7 @@ export async function POST(req: Request) {
 
   const body = await req.json().catch(() => ({}));
   const type = body?.type;
-  if (type !== 'sync' && type !== 'smallbiz') {
+  if (type !== 'sync' && type !== 'smallbiz' && type !== 'sources') {
     return NextResponse.json({ error: 'invalid type' }, { status: 400 });
   }
   if (!process.env.CRON_SECRET) {
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
   }
 
   const origin = new URL(req.url).origin;
-  const path = type === 'sync' ? '/api/cron' : '/api/smallbiz';
+  const path = type === 'sync' ? '/api/cron' : type === 'sources' ? '/api/sources-sync' : '/api/smallbiz';
 
   waitUntil(
     fetch(`${origin}${path}`, { headers: { 'x-cron-secret': process.env.CRON_SECRET } })

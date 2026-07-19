@@ -73,7 +73,7 @@ export async function ensureOpsTables(): Promise<void> {
 
 // --- רישום תפעולי (best-effort) ---
 export async function recordSyncRun(run: {
-  type: 'sync' | 'smallbiz';
+  type: 'sync' | 'smallbiz' | 'sources';
   started_at: string;
   duration_ms: number;
   trigger: string;

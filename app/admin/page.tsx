@@ -63,7 +63,7 @@ export default function AdminPage() {
     load(s);
   }, [load]);
 
-  async function trigger(type: 'sync' | 'smallbiz') {
+  async function trigger(type: 'sync' | 'smallbiz' | 'sources') {
     if (!session || triggering) return;
     setTriggering(type);
     setToast('');
@@ -74,7 +74,7 @@ export default function AdminPage() {
         body: JSON.stringify({ type }),
       });
       const d = await r.json();
-      setToast(r.ok ? `✓ ${type === 'sync' ? 'סנכרון' : 'בדיקת עסקים קטנים'} הופעל — התוצאה תופיע בטבלת הריצות בעוד 1-5 דקות` : `שגיאה: ${d.error}`);
+      setToast(r.ok ? `✓ ${type === 'sync' ? 'סנכרון' : type === 'sources' ? 'סריקת מקורות חדשים' : 'בדיקת עסקים קטנים'} הופעל — התוצאה תופיע בטבלת הריצות בעוד 1-5 דקות` : `שגיאה: ${d.error}`);
     } catch { setToast('שגיאת תקשורת'); }
     setTriggering(null);
   }
@@ -116,7 +116,7 @@ export default function AdminPage() {
     { v: `${c.sbFound}/${c.sbChecked}`, l: 'עסקים קטנים: נמצאו/נבדקו' },
   ];
 
-  const pipeCard = (type: 'sync' | 'smallbiz', title: string, schedule: string) => {
+  const pipeCard = (type: 'sync' | 'smallbiz' | 'sources', title: string, schedule: string) => {
     const last = data.lastByType[type];
     const ok = last && !last.error;
     const staleMs = last ? Date.now() - new Date(last.started_at).getTime() : Infinity;
@@ -169,6 +169,7 @@ export default function AdminPage() {
       <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 8 }}>
         {pipeCard('sync', 'סנכרון מכרזים + דוח יומי', 'יומי · 07:00')}
         {pipeCard('smallbiz', 'זיהוי העדפת עסקים קטנים', 'יומי · 07:30 + שרשור')}
+        {pipeCard('sources', 'סריקת מקורות חדשים', 'יומי · 04:45')}
       </div>
       {toast && <div style={{ background: '#e8f1fb', border: '1px solid #cfe0f4', color: '#1e5aa8', borderRadius: 8, padding: '9px 14px', fontSize: 13, marginBottom: 8 }}>{toast}</div>}
 
@@ -182,7 +183,7 @@ export default function AdminPage() {
             {data.runs.map((r) => (
               <tr key={r.id}>
                 <td style={td}>{fmtTime(r.started_at)}</td>
-                <td style={td}>{r.type === 'sync' ? 'סנכרון' : 'עסקים קטנים'}</td>
+                <td style={td}>{r.type === 'sync' ? 'סנכרון' : r.type === 'sources' ? 'מקורות חדשים' : 'עסקים קטנים'}</td>
                 <td style={td}>{fmtDur(r.duration_ms)}</td>
                 <td style={td}>{TRIGGER_HE[r.trigger || ''] || r.trigger || '—'}</td>
                 <td style={{ ...td, fontFamily: 'monospace', fontSize: 11, direction: 'ltr', textAlign: 'left' }}>{JSON.stringify(r.counts_json || {}).slice(0, 80)}</td>
