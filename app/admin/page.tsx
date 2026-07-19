@@ -45,10 +45,19 @@ export default function AdminPage() {
   const [state, setState] = useState<'loading' | 'noauth' | 'forbidden' | 'ready' | 'error'>('loading');
   const [triggering, setTriggering] = useState<string | null>(null);
   const [toast, setToast] = useState('');
+  const [pw, setPw] = useState('');
+  const [pwErr, setPwErr] = useState('');
+  const [pwBusy, setPwBusy] = useState(false);
 
-  const load = useCallback(async (s: AuthSession) => {
+  // טוקן אדמין-סיסמה נשמר בין רענונים; נשלח כ-Bearer בדיוק כמו טוקן Supabase
+  const adminToken = useCallback((): string | null => {
+    if (typeof window === 'undefined') return null;
+    return session?.access_token || localStorage.getItem('pwadm_token');
+  }, [session]);
+
+  const loadWith = useCallback(async (bearer: string) => {
     try {
-      const r = await fetch('/api/admin/overview', { headers: { Authorization: `Bearer ${s.access_token}` } });
+      const r = await fetch('/api/admin/overview', { headers: { Authorization: `Bearer ${bearer}` } });
       if (r.status === 403) { setState('forbidden'); return; }
       if (!r.ok) { setState('error'); return; }
       setData(await r.json());
@@ -56,21 +65,41 @@ export default function AdminPage() {
     } catch { setState('error'); }
   }, []);
 
+  async function pwLogin() {
+    if (pwBusy || !pw) return;
+    setPwBusy(true); setPwErr('');
+    try {
+      const r = await fetch('/api/admin/login', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw }),
+      });
+      const d = await r.json();
+      if (!r.ok) { setPwErr(d.error || 'שגיאה'); setPwBusy(false); return; }
+      localStorage.setItem('pwadm_token', d.token);
+      setState('loading');
+      await loadWith(d.token);
+    } catch { setPwErr('שגיאת תקשורת'); }
+    setPwBusy(false);
+  }
+
   useEffect(() => {
     const s = getSession();
     setSession(s);
-    if (!s) { setState('noauth'); return; }
-    load(s);
-  }, [load]);
+    const stored = typeof window !== 'undefined' ? localStorage.getItem('pwadm_token') : null;
+    const bearer = s?.access_token || stored;
+    if (!bearer) { setState('noauth'); return; }
+    loadWith(bearer);
+  }, [loadWith]);
 
   async function trigger(type: 'sync' | 'smallbiz' | 'sources') {
-    if (!session || triggering) return;
+    const bearer = adminToken();
+    if (!bearer || triggering) return;
     setTriggering(type);
     setToast('');
     try {
       const r = await fetch('/api/admin/trigger', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${bearer}` },
         body: JSON.stringify({ type }),
       });
       const d = await r.json();
@@ -91,19 +120,28 @@ export default function AdminPage() {
     </div>
   );
 
+  const pwForm = (heading: string, sub: string) => shell(
+    <div style={{ padding: 60, textAlign: 'center' }}>
+      <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 8 }}>{heading}</div>
+      <div style={{ color: MUTED, fontSize: 14, marginBottom: 20 }}>{sub}</div>
+      <div style={{ maxWidth: 320, margin: '0 auto', background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10, color: DARK }}>כניסת מנהל בסיסמה</div>
+        <input type="password" value={pw} onChange={e => setPw(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && pwLogin()} placeholder="סיסמת ניהול"
+          style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: 14, fontFamily: 'inherit', marginBottom: 10, direction: 'rtl' }} />
+        <button onClick={pwLogin} disabled={pwBusy || !pw}
+          style={{ width: '100%', background: pwBusy ? '#9db8d8' : BLUE, color: '#fff', border: 'none', borderRadius: 8, padding: '9px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+          {pwBusy ? 'מתחבר…' : 'כניסה'}
+        </button>
+        {pwErr && <div style={{ color: '#b04a34', fontSize: 12.5, marginTop: 8 }}>{pwErr}</div>}
+        <a href="/signin" style={{ display: 'block', color: BLUE, fontSize: 12.5, marginTop: 12, textDecoration: 'none' }}>או התחברות רגילה עם חשבון ←</a>
+      </div>
+    </div>
+  );
+
   if (state === 'loading') return shell(<div style={{ padding: 60, textAlign: 'center', color: MUTED }}>טוען…</div>);
-  if (state === 'noauth') return shell(
-    <div style={{ padding: 60, textAlign: 'center' }}>
-      <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 10 }}>נדרשת התחברות</div>
-      <a href="/signin" style={{ color: BLUE, fontWeight: 600 }}>לעמוד ההתחברות ←</a>
-    </div>
-  );
-  if (state === 'forbidden') return shell(
-    <div style={{ padding: 60, textAlign: 'center' }}>
-      <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 8 }}>אין הרשאת ניהול</div>
-      <div style={{ color: MUTED, fontSize: 14 }}>החשבון המחובר אינו מוגדר כמנהל מערכת.</div>
-    </div>
-  );
+  if (state === 'noauth') return pwForm('נדרשת התחברות', 'התחבר עם חשבון מנהל, או הזן סיסמת ניהול.');
+  if (state === 'forbidden') return pwForm('אין הרשאת ניהול', 'החשבון המחובר אינו מנהל — אפשר להיכנס עם סיסמת ניהול.');
   if (state === 'error' || !data) return shell(<div style={{ padding: 60, textAlign: 'center', color: '#b04a34' }}>שגיאה בטעינת הנתונים — נסה לרענן.</div>);
 
   const c = data.counts;
@@ -214,7 +252,7 @@ export default function AdminPage() {
         </table>
       </div>
 
-      <button onClick={() => session && load(session)} style={{ marginTop: 18, background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '9px 18px', fontSize: 13, fontWeight: 600, color: '#4a5a6a', cursor: 'pointer', fontFamily: 'inherit' }}>↻ רענון נתונים</button>
+      <button onClick={() => { const b = adminToken(); if (b) loadWith(b); }} style={{ marginTop: 18, background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '9px 18px', fontSize: 13, fontWeight: 600, color: '#4a5a6a', cursor: 'pointer', fontFamily: 'inherit' }}>↻ רענון נתונים</button>
     </>
   );
 }

@@ -9,6 +9,8 @@
 //  שרת בלבד — משתמש ב-SERVICE_ROLE_KEY וב-POSTGRES_URL.
 // ============================================================
 
+import crypto from 'crypto';
+
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -133,7 +135,14 @@ export interface AdminIdentity { email: string; role: string; }
 export async function requireAdmin(req: Request): Promise<AdminIdentity | null> {
   const auth = req.headers.get('authorization') || '';
   const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
-  if (!token || !SUPABASE_URL) return null;
+  if (!token) return null;
+
+  // מסלול חלופי: טוקן סיסמת-אדמין (עוקף את Supabase Auth לגמרי).
+  // מאפשר כניסה גם כשאין חשבון Supabase או שהאימות מולו נכשל.
+  const pw = verifyAdminToken(token);
+  if (pw) return pw;
+
+  if (!SUPABASE_URL) return null;
 
   // טוקן → פרטי משתמש (GoTrue)
   const userRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
@@ -207,4 +216,47 @@ export async function recentEmails(limit = 30) {
     headers: svcHeaders(), cache: 'no-store',
   });
   return res.ok ? res.json() : [];
+}
+
+// ============================================================
+//  כניסת אדמין באמצעות סיסמה (מסלול חלופי ל-Supabase Auth)
+//
+//  ADMIN_PASSWORD במשתני הסביבה מפעיל את המסלול. הכניסה מנפיקה
+//  טוקן חתום (HMAC על CRON_SECRET) בתוקף 12 שעות, שנשלח כ-Bearer
+//  בדיוק כמו טוקן Supabase — כך ש-requireAdmin מקבל את שניהם.
+// ============================================================
+
+const ADMIN_TOKEN_PREFIX = 'pwadm.';
+const ADMIN_TOKEN_TTL_MS = 12 * 3600 * 1000;
+
+function hmac(data: string): string {
+  const key = process.env.CRON_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || 'fallback-key';
+  return crypto.createHmac('sha256', key).update(data).digest('base64url');
+}
+
+/** מאמת סיסמה ומנפיק טוקן אדמין חתום. מחזיר null אם הסיסמה שגויה. */
+export function issueAdminToken(password: string): string | null {
+  const expected = process.env.ADMIN_PASSWORD;
+  if (!expected || password !== expected) return null;
+  const payload = `${SEED_SUPER_ADMIN}|super|${Date.now() + ADMIN_TOKEN_TTL_MS}`;
+  const b64 = Buffer.from(payload).toString('base64url');
+  return `${ADMIN_TOKEN_PREFIX}${b64}.${hmac(b64)}`;
+}
+
+/** מאמת טוקן אדמין־סיסמה. מחזיר את הזהות או null. */
+export function verifyAdminToken(token: string): AdminIdentity | null {
+  if (!token.startsWith(ADMIN_TOKEN_PREFIX)) return null;
+  const rest = token.slice(ADMIN_TOKEN_PREFIX.length);
+  const dot = rest.lastIndexOf('.');
+  if (dot < 0) return null;
+  const b64 = rest.slice(0, dot);
+  const sig = rest.slice(dot + 1);
+  if (hmac(b64) !== sig) return null; // חתימה לא תקינה
+  try {
+    const [email, role, expStr] = Buffer.from(b64, 'base64url').toString().split('|');
+    if (Number(expStr) < Date.now()) return null; // פג תוקף
+    return { email, role };
+  } catch {
+    return null;
+  }
 }
