@@ -145,15 +145,27 @@ export async function requireAdmin(req: Request): Promise<AdminIdentity | null> 
   const email = user?.email;
   if (!email) return null;
 
-  // מייל → הרשאה בטבלת admins
+  // מייל → הרשאה בטבלת admins (התאמה ללא תלות ברישיות)
   await ensureOpsTables();
-  const res = await fetch(restUrl(`/admins?email=eq.${encodeURIComponent(email)}&select=email,role`), {
+  const res = await fetch(restUrl(`/admins?email=ilike.${encodeURIComponent(email)}&select=email,role`), {
     headers: svcHeaders(),
     cache: 'no-store',
   });
   if (!res.ok) return null;
   const rows = await res.json().catch(() => []);
-  return rows?.[0] ? { email: rows[0].email, role: rows[0].role } : null;
+  if (rows?.[0]) return { email: rows[0].email, role: rows[0].role };
+
+  // תיקון עצמי: אם זה ה-super admin המוגדר אך השורה חסרה (המיגרציה
+  // רצה לפני שהערך נקבע, או נמחקה) — משלימים אותה כאן.
+  if (email.toLowerCase() === SEED_SUPER_ADMIN.toLowerCase()) {
+    await fetch(restUrl('/admins'), {
+      method: 'POST',
+      headers: svcHeaders({ Prefer: 'return=minimal,resolution=merge-duplicates' }),
+      body: JSON.stringify({ email: SEED_SUPER_ADMIN, role: 'super' }),
+    }).catch(() => {});
+    return { email: SEED_SUPER_ADMIN, role: 'super' };
+  }
+  return null;
 }
 
 // --- ספירות למסך הסקירה ---
