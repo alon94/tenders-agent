@@ -13,6 +13,8 @@ const BLUE = '#2b6fc4';
 const BORDER = '#e6eaee';
 const MUTED = '#7a8794';
 
+interface SeriesPt { bucket: string; count: number }
+interface UserRow { id: string; email: string; created_at: string; last_sign_in_at: string | null; email_confirmed_at: string | null }
 interface RunRow {
   id: number; type: string; started_at: string; duration_ms: number | null;
   trigger: string | null; counts_json: Record<string, unknown> | null; error: string | null;
@@ -46,6 +48,11 @@ export default function AdminPage() {
   const [triggering, setTriggering] = useState<string | null>(null);
   const [toast, setToast] = useState('');
   const [pw, setPw] = useState('');
+  const [gran, setGran] = useState<'day' | 'month' | 'year'>('day');
+  const [fromD, setFromD] = useState('');
+  const [toD, setToD] = useState('');
+  const [analytics, setAnalytics] = useState<{ tenders: SeriesPt[]; logins: SeriesPt[]; runs: SeriesPt[] } | null>(null);
+  const [users, setUsers] = useState<UserRow[] | null>(null);
   const [pwErr, setPwErr] = useState('');
   const [pwBusy, setPwBusy] = useState(false);
 
@@ -64,6 +71,28 @@ export default function AdminPage() {
       setState('ready');
     } catch { setState('error'); }
   }, []);
+
+  const loadAnalytics = useCallback(async () => {
+    const b = adminToken(); if (!b) return;
+    const q = new URLSearchParams({ granularity: gran });
+    if (fromD) q.set('from', fromD);
+    if (toD) q.set('to', toD);
+    try {
+      const r = await fetch(`/api/admin/analytics?${q}`, { headers: { Authorization: `Bearer ${b}` } });
+      if (r.ok) setAnalytics(await r.json());
+    } catch { /* ignore */ }
+  }, [adminToken, gran, fromD, toD]);
+
+  const loadUsers = useCallback(async () => {
+    const b = adminToken(); if (!b) return;
+    try {
+      const r = await fetch('/api/admin/users', { headers: { Authorization: `Bearer ${b}` } });
+      if (r.ok) setUsers((await r.json()).users);
+    } catch { /* ignore */ }
+  }, [adminToken]);
+
+  useEffect(() => { if (state === 'ready') { loadAnalytics(); } }, [state, loadAnalytics]);
+  useEffect(() => { if (state === 'ready') { loadUsers(); } }, [state, loadUsers]);
 
   async function pwLogin() {
     if (pwBusy || !pw) return;
@@ -119,6 +148,30 @@ export default function AdminPage() {
       <main style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 20px 40px' }}>{content}</main>
     </div>
   );
+
+  const barChart = (title: string, pts: SeriesPt[], color: string) => {
+    const max = Math.max(1, ...pts.map(p => p.count));
+    const w = Math.max(320, pts.length * 34);
+    return (
+      <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, padding: 18, flex: 1, minWidth: 320, overflowX: 'auto' }}>
+        <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12 }}>{title}</div>
+        {pts.length === 0 ? <div style={{ color: MUTED, fontSize: 13 }}>אין נתונים בטווח</div> : (
+          <svg width={w} height={150} style={{ direction: 'ltr' }}>
+            {pts.map((p, i) => {
+              const h = Math.round((p.count / max) * 100);
+              return (
+                <g key={p.bucket}>
+                  <rect x={i * 34 + 4} y={120 - h} width={24} height={h} rx={3} fill={color} />
+                  <text x={i * 34 + 16} y={116 - h} textAnchor="middle" fontSize={10} fill="#4a5a6a">{p.count.toLocaleString('he-IL')}</text>
+                  <text x={i * 34 + 16} y={138} textAnchor="middle" fontSize={8.5} fill="#7a8794">{gran === 'day' ? p.bucket.slice(5) : p.bucket}</text>
+                </g>
+              );
+            })}
+          </svg>
+        )}
+      </div>
+    );
+  };
 
   const pwForm = (heading: string, sub: string) => shell(
     <div style={{ padding: 60, textAlign: 'center' }}>
@@ -248,6 +301,48 @@ export default function AdminPage() {
                 <td style={td}>{e.status}</td>
               </tr>
             ))}
+          </tbody>
+        </table>
+      </div>
+
+      <h2 style={{ fontSize: 15.5, fontWeight: 700, margin: '22px 0 10px' }}>אנליטיקה</h2>
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 14, flexWrap: 'wrap' }}>
+        {(['day', 'month', 'year'] as const).map(g => (
+          <button key={g} onClick={() => setGran(g)}
+            style={{ background: gran === g ? DARK : '#fff', color: gran === g ? '#fff' : '#4a5a6a', border: `1px solid ${gran === g ? DARK : BORDER}`, borderRadius: 8, padding: '7px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+            {g === 'day' ? 'יומי' : g === 'month' ? 'חודשי' : 'שנתי'}
+          </button>
+        ))}
+        <span style={{ fontSize: 12.5, color: MUTED }}>מ־</span>
+        <input type="date" value={fromD} onChange={e => setFromD(e.target.value)} style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: '6px 10px', fontSize: 13, fontFamily: 'inherit' }} />
+        <span style={{ fontSize: 12.5, color: MUTED }}>עד</span>
+        <input type="date" value={toD} onChange={e => setToD(e.target.value)} style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: '6px 10px', fontSize: 13, fontFamily: 'inherit' }} />
+      </div>
+      <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+        {barChart('מכרזים שנקלטו', analytics?.tenders || [], '#2b6fc4')}
+        {barChart('כניסות משתמשים', analytics?.logins || [], '#1e9e5a')}
+        {barChart('ריצות צינורות', analytics?.runs || [], '#8a5db8')}
+      </div>
+
+      <h2 style={{ fontSize: 15.5, fontWeight: 700, margin: '22px 0 10px' }}>משתמשים רשומים {users ? `(${users.length})` : ''}</h2>
+      <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, overflow: 'hidden' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <thead><tr style={{ background: '#f6f8fa', textAlign: 'right' }}>
+            <th style={{ padding: '10px 14px', fontWeight: 600 }}>מייל</th>
+            <th style={{ padding: '10px 14px', fontWeight: 600 }}>נרשם</th>
+            <th style={{ padding: '10px 14px', fontWeight: 600 }}>כניסה אחרונה</th>
+            <th style={{ padding: '10px 14px', fontWeight: 600 }}>מאומת</th>
+          </tr></thead>
+          <tbody>
+            {(users || []).map(u => (
+              <tr key={u.id} style={{ borderTop: `1px solid ${BORDER}` }}>
+                <td style={{ padding: '9px 14px', direction: 'ltr', textAlign: 'right' }}>{u.email}</td>
+                <td style={{ padding: '9px 14px' }}>{fmtTime(u.created_at)}</td>
+                <td style={{ padding: '9px 14px' }}>{u.last_sign_in_at ? fmtTime(u.last_sign_in_at) : '—'}</td>
+                <td style={{ padding: '9px 14px' }}>{u.email_confirmed_at ? '✓' : '—'}</td>
+              </tr>
+            ))}
+            {users && users.length === 0 && <tr><td colSpan={4} style={{ padding: 20, textAlign: 'center', color: MUTED }}>אין משתמשים</td></tr>}
           </tbody>
         </table>
       </div>

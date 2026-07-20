@@ -55,6 +55,12 @@ export async function ensureOpsTables(): Promise<void> {
         counts_json jsonb,
         error text
       );
+      create table if not exists login_events (
+        id bigserial primary key,
+        email text not null,
+        at timestamptz not null default now()
+      );
+      create index if not exists login_events_at_idx on login_events (at);
       create table if not exists email_log (
         id bigserial primary key,
         sent_at timestamptz not null default now(),
@@ -259,4 +265,82 @@ export function verifyAdminToken(token: string): AdminIdentity | null {
   } catch {
     return null;
   }
+}
+
+
+// ============================================================
+//  אנליטיקה וניהול משתמשים
+// ============================================================
+
+/** רישום אירוע כניסה (best-effort — לא מפיל את זרימת ההתחברות). */
+export async function recordLoginEvent(email: string): Promise<void> {
+  try {
+    await ensureOpsTables();
+    await fetch(restUrl('/login_events'), {
+      method: 'POST',
+      headers: svcHeaders({ Prefer: 'return=minimal' }),
+      body: JSON.stringify({ email }),
+    });
+  } catch (e) {
+    console.error('ops.recordLoginEvent failed:', e);
+  }
+}
+
+export interface RegisteredUser {
+  id: string; email: string; created_at: string; last_sign_in_at: string | null;
+  email_confirmed_at: string | null;
+}
+
+/** רשימת המשתמשים הרשומים דרך Supabase Auth Admin API (service key). */
+export async function listRegisteredUsers(): Promise<RegisteredUser[]> {
+  if (!SUPABASE_URL || !SERVICE_KEY) return [];
+  const out: RegisteredUser[] = [];
+  for (let page = 1; page <= 20; page++) {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/admin/users?page=${page}&per_page=100`, {
+      headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+      cache: 'no-store',
+    });
+    if (!res.ok) break;
+    const data = await res.json().catch(() => null);
+    const users = (data?.users || data || []) as Record<string, unknown>[];
+    if (!Array.isArray(users) || users.length === 0) break;
+    for (const u of users) {
+      out.push({
+        id: String(u.id || ''),
+        email: String(u.email || ''),
+        created_at: String(u.created_at || ''),
+        last_sign_in_at: (u.last_sign_in_at as string) || null,
+        email_confirmed_at: (u.email_confirmed_at as string) || null,
+      });
+    }
+    if (users.length < 100) break;
+  }
+  return out;
+}
+
+export type Granularity = 'day' | 'month' | 'year';
+
+export function bucketKey(iso: string, g: Granularity): string {
+  if (!iso) return '';
+  const d = iso.slice(0, 10);
+  return g === 'day' ? d : g === 'month' ? d.slice(0, 7) : d.slice(0, 4);
+}
+
+/** סדרת ספירות לפי תקופה מטבלה כלשהי (עמודת תאריך אחת). */
+export async function seriesFromTable(
+  table: string, dateCol: string, g: Granularity, fromIso?: string, toIso?: string, extraFilter = ''
+): Promise<{ bucket: string; count: number }[]> {
+  const filters: string[] = [`select=${dateCol}`, 'limit=20000'];
+  if (fromIso) filters.push(`${dateCol}=gte.${fromIso}`);
+  if (toIso) filters.push(`${dateCol}=lte.${toIso}`);
+  if (extraFilter) filters.push(extraFilter);
+  const res = await fetch(restUrl(`/${table}?${filters.join('&')}`), { headers: svcHeaders(), cache: 'no-store' });
+  if (!res.ok) return [];
+  const rows = (await res.json().catch(() => [])) as Record<string, string>[];
+  const counts = new Map<string, number>();
+  for (const r of rows) {
+    const k = bucketKey(String(r[dateCol] || ''), g);
+    if (k) counts.set(k, (counts.get(k) || 0) + 1);
+  }
+  return Array.from(counts.entries()).map(([bucket, count]) => ({ bucket, count })).sort((a, b) => a.bucket.localeCompare(b.bucket));
 }

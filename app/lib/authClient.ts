@@ -87,6 +87,13 @@ export async function signUp(email: string, password: string, meta?: Record<stri
   return { session: null, needsConfirmation: true };
 }
 
+// רישום כניסה לאנליטיקה — fire-and-forget, לעולם לא חוסם את ההתחברות
+function trackLogin(token: string) {
+  try {
+    fetch('/api/track-login', { method: 'POST', headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
+  } catch { /* ignore */ }
+}
+
 export async function signIn(email: string, password: string) {
   const res = await fetch(authUrl('/token?grant_type=password'), {
     method: 'POST',
@@ -97,7 +104,9 @@ export async function signIn(email: string, password: string) {
   if (!res.ok) {
     throw new Error(messageFrom(data, 'שגיאה בהתחברות'));
   }
-  return saveSession(data);
+  const sess = saveSession(data);
+  if (sess?.access_token) trackLogin(sess.access_token);
+  return sess;
 }
 
 // Redirects the browser to Google via Supabase's OAuth authorize endpoint.
@@ -138,6 +147,7 @@ export async function completeOAuthSession(): Promise<AuthSession | null> {
     expires_in: expires_in ? parseInt(expires_in, 10) : 3600,
     user,
   });
+  if (session?.access_token) trackLogin(session.access_token);
   window.history.replaceState(null, '', window.location.pathname);
   return session;
 }
