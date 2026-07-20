@@ -132,7 +132,13 @@ export default function AdminPage() {
         body: JSON.stringify({ type }),
       });
       const d = await r.json();
-      setToast(r.ok ? `✓ ${type === 'sync' ? 'סנכרון' : type === 'sources' ? 'סריקת מקורות חדשים' : 'בדיקת עסקים קטנים'} הופעל — התוצאה תופיע בטבלת הריצות בעוד 1-5 דקות` : `שגיאה: ${d.error}`);
+      setToast(r.ok ? `✓ ${type === 'sync' ? 'סנכרון' : type === 'sources' ? 'סריקת מקורות חדשים' : 'בדיקת עסקים קטנים'} הופעל — הטבלה תתרענן אוטומטית` : `שגיאה: ${d.error}`);
+      if (r.ok) {
+        // רענון אוטומטי של הנתונים בעוד 20ש', דקה ו-2.5 דקות
+        for (const delay of [20000, 60000, 150000]) {
+          setTimeout(() => { const b2 = adminToken(); if (b2) { loadWith(b2); loadAnalytics(); } }, delay);
+        }
+      }
     } catch { setToast('שגיאת תקשורת'); }
     setTriggering(null);
   }

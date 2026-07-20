@@ -3,6 +3,7 @@ import { waitUntil } from '@vercel/functions';
 import { requireAdmin } from '@/app/lib/ops';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // מרווח ל-waitUntil גם כשהצינור המופעל איטי
 
 // POST /api/admin/trigger { type: 'sync' | 'smallbiz' | 'sources' }
 // הפעלה ידנית של צינור מה-UI — רצה ברקע (waitUntil), התשובה מיידית.
