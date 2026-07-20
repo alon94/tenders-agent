@@ -15,7 +15,9 @@ export const maxDuration = 300; // Fluid Compute מאפשר עד 5 דקות גם
 
 const BATCH_SIZE = 30;      // עד 30 מכרזים לריצה
 const CONCURRENCY = 4;      // 4 מכרזים מעובדים בו-זמנית
-const TIME_BUDGET_MS = 250000; // עצירה מסודרת אחרי ~4 דקות כדי לא להיקטע
+const TIME_BUDGET_MS = 45000;  // תקציב 45ש' — בטוח תחת תקרת 60ש' של Hobby
+                               // (הראיות: ריצות נחתכו ב-59.4ש'); אם Fluid
+                               // מופעל זה פשוט אומר יותר חוליות שרשרת
 const MAX_CHAIN = 40;       // מעצור בטיחות: עד 40 ריצות משורשרות (~1,200 מכרזים)
 
 // מיגרציה עצמית: מוודא שעמודות small_biz_* קיימות (חד-פעמי בפועל,
@@ -69,9 +71,21 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const chainDepthParam = parseInt(new URL(req.url).searchParams.get('chain') || '0', 10);
+  const origin = new URL(req.url).origin;
+  const runTrigger = detectTrigger(req);
+
+  // מבנה "ענה מיד, עבד ברקע": התשובה חוזרת תוך <1ש', והעיבוד רץ
+  // ב-waitUntil בתקציב זמן. כך קריאת השרשור של ההורה מסתיימת מיידית
+  // וההורה לא צריך לשרוד את כל ריצת הילד — מה ששבר את השרשרת תחת
+  // תקרת 60 השניות של Hobby (ההורה חי 59ש' + המתין ~60ש' לילד → נהרג).
+  waitUntil(runSmallBizBatch(chainDepthParam, origin, runTrigger));
+  return NextResponse.json({ accepted: true, chain_depth: chainDepthParam });
+}
+
+async function runSmallBizBatch(chainDepth: number, origin: string, runTrigger: string) {
   const runStartedAt = new Date().toISOString();
   const runT0 = Date.now();
-  const runTrigger = detectTrigger(req);
 
   try {
     await ensureSmallBizColumns();
@@ -138,18 +152,14 @@ export async function GET(req: Request) {
     console.log('SmallBiz: processed', results.length, 'tenders:', JSON.stringify(results));
 
     // --- לולאת שרשור: אם נשארו מכרזים בתור, הריצה מפעילה את הבאה ---
-    // תנאי המשך: האצווה הייתה מלאה (כנראה יש עוד) או שנעצרנו לפני שסיימנו אותה.
-    const chainDepth = parseInt(new URL(req.url).searchParams.get('chain') || '0', 10);
+    // הילד עונה תוך <1ש' (מבנה ענה-מיד), כך שה-await כאן זול ובטוח.
     const hasMore = batch.length === BATCH_SIZE || results.length < batch.length;
     let chained = false;
     if (hasMore && chainDepth < MAX_CHAIN && process.env.CRON_SECRET) {
-      const origin = new URL(req.url).origin;
       chained = true;
-      waitUntil(
-        fetch(`${origin}/api/smallbiz?chain=${chainDepth + 1}`, {
-          headers: { 'x-cron-secret': process.env.CRON_SECRET },
-        }).catch((e) => console.error('SmallBiz chain trigger failed:', e))
-      );
+      await fetch(`${origin}/api/smallbiz?chain=${chainDepth + 1}`, {
+        headers: { 'x-cron-secret': process.env.CRON_SECRET },
+      }).catch((e) => console.error('SmallBiz chain trigger failed:', e));
       console.log('SmallBiz: chaining next batch, depth', chainDepth + 1);
     }
 
@@ -158,18 +168,9 @@ export async function GET(req: Request) {
       counts: { processed: results.length, found: results.filter((r) => r.small_biz === true).length, chain_depth: chainDepth, chained },
     });
 
-    return NextResponse.json({
-      success: true,
-      processed: results.length,
-      found_preference: results.filter((r) => r.small_biz === true).length,
-      llm_enabled: !!process.env.ANTHROPIC_API_KEY,
-      chain_depth: chainDepth,
-      chained_next: chained,
-      results,
-    });
+    console.log('SmallBiz batch done:', { chainDepth, processed: results.length, chained });
   } catch (err) {
     console.error('SmallBiz error:', err);
-    await recordSyncRun({ type: 'smallbiz', started_at: runStartedAt, duration_ms: Date.now() - runT0, trigger: runTrigger, counts: {}, error: String(err) });
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    await recordSyncRun({ type: 'smallbiz', started_at: runStartedAt, duration_ms: Date.now() - runT0, trigger: runTrigger, counts: { chain_depth: chainDepth }, error: String(err) });
   }
 }
