@@ -75,6 +75,33 @@ export async function GET(req: Request) {
   const origin = new URL(req.url).origin;
   const runTrigger = detectTrigger(req);
 
+  // מצב sweep חד-פעמי (?sweep=1): מסמן את כל המכרזים שאינם ניתנים
+  // לבדיקה (ללא חוברת מכרז או שפג מועדם) כ"נבדקו" — כדי שהתור ישקף
+  // רק מועמדים אמיתיים ומהריצה הבאה ייבדקו חדשים בלבד. ללא קריאות LLM.
+  if (new URL(req.url).searchParams.get('sweep') === '1') {
+    const today = new Date().toISOString().split('T')[0];
+    const filter = `small_biz_checked_at=is.null&or=(publication_id.is.null,deadline.lt.${today},deadline.is.null)`;
+    const countRes = await fetch(`${restUrl('/tenders')}?${filter}&select=id&limit=1`, {
+      headers: authHeaders({ Prefer: 'count=exact' }), cache: 'no-store',
+    });
+    const toSweep = parseInt((countRes.headers.get('content-range') || '/0').split('/')[1] || '0', 10);
+    await ensureSmallBizColumns();
+    const patchRes = await fetch(`${restUrl('/tenders')}?${filter}`, {
+      method: 'PATCH',
+      headers: authHeaders({ Prefer: 'return=minimal' }),
+      body: JSON.stringify({
+        small_biz: null,
+        small_biz_summary: 'לא ניתן לבדיקה — אין חוברת מכרז זמינה או שחלף מועד ההגשה',
+        small_biz_checked_at: new Date().toISOString(),
+      }),
+    });
+    await recordSyncRun({
+      type: 'smallbiz', started_at: new Date().toISOString(), duration_ms: 0, trigger: detectTrigger(req),
+      counts: { sweep: true, marked_uncheckable: toSweep, patch_ok: patchRes.ok },
+    });
+    return NextResponse.json({ sweep: true, marked_uncheckable: toSweep, patch_ok: patchRes.ok });
+  }
+
   // מבנה "ענה מיד, עבד ברקע": התשובה חוזרת תוך <1ש', והעיבוד רץ
   // ב-waitUntil בתקציב זמן. כך קריאת השרשור של ההורה מסתיימת מיידית
   // וההורה לא צריך לשרוד את כל ריצת הילד — מה ששבר את השרשרת תחת

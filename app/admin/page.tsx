@@ -134,8 +134,8 @@ export default function AdminPage() {
       const d = await r.json();
       setToast(r.ok ? `✓ ${type === 'sync' ? 'סנכרון' : type === 'sources' ? 'סריקת מקורות חדשים' : 'בדיקת עסקים קטנים'} הופעל — הטבלה תתרענן אוטומטית` : `שגיאה: ${d.error}`);
       if (r.ok) {
-        // רענון אוטומטי של הנתונים בעוד 20ש', דקה ו-2.5 דקות
-        for (const delay of [20000, 60000, 150000]) {
+        // מדיניות רענון: רענון מהיר אחרי 20ש' ורענון מלא אחרי 2 דקות
+        for (const delay of [20000, 120000]) {
           setTimeout(() => { const b2 = adminToken(); if (b2) { loadWith(b2); loadAnalytics(); } }, delay);
         }
       }
