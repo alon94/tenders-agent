@@ -205,6 +205,24 @@ export const NEW_SOURCES: NewSource[] = [
   genericSource("ayalon", "נתיבי איילון", "נתיבי איילון", [
     proxied("https://www.ayalonhw.co.il/tenders/tenders-lobby/"),
   ], { hrefMatch: /tender/i, note: "WAF מחזיר 403 גם עם כותרות דפדפן — נדרש IL_PROXY_URL" }),
+  // ---------- גל שני: תחבורה, תעופה, אקדמיה, פיתוח עירוני ----------
+  genericSource("rail", "רכבת ישראל", "רכבת ישראל", [
+    "https://www.rail.co.il/?page=GeneralAuctions&lan=he",
+    "https://www.rail.co.il/cargotenders/pages/cargotender.aspx",
+  ]),
+  genericSource("nta", 'נת"ע — מטרו וקווי רכבת קלה', 'נת"ע נתיבי תחבורה עירוניים', [
+    "https://www.nta.co.il/tenders/",
+  ], { hrefMatch: /tender/i }),
+  genericSource("iaa", "רשות שדות התעופה", "רשות שדות התעופה", [
+    "https://www.iaa.gov.il/he-IL/Tenders/TendersArchive/Pages/default.aspx",
+    "https://www.iaa.gov.il/he/tenders-and-contracts/",
+  ]),
+  genericSource("tau", "אוניברסיטת תל אביב — מכרזים והתקשרויות", "אוניברסיטת תל אביב", [
+    "https://tenders.tau.ac.il/tenders",
+  ], { hrefMatch: /tender/i }),
+  genericSource("jda", "הרשות לפיתוח ירושלים", "הרשות לפיתוח ירושלים", [
+    "https://www.jda.gov.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/",
+  ]),
   genericSource("iec", "חברת החשמל", "חברת החשמל לישראל", [
     "https://www.iec.co.il/content/suppliers/content-pages/tendersinfo",
   ], {
