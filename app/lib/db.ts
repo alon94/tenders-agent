@@ -102,12 +102,19 @@ export async function upsertTenders(tenders: TenderRecord[]): Promise<{ count: n
 }
 
 // Reads tenders from the DB with optional search + pagination.
-export async function getTenders(opts: { search?: string; offset?: number; limit?: number } = {}): Promise<TenderRecord[]> {
-    const { search, offset = 0, limit = 1000 } = opts;
+export async function getTenders(opts: { search?: string; offset?: number; limit?: number; activeOnly?: boolean } = {}): Promise<TenderRecord[]> {
+    const { search, offset = 0, limit = 1000, activeOnly = false } = opts;
 
   const params = new URLSearchParams();
     params.set("select", "*");
     params.set("order", "publish_date.desc.nullslast,deadline.desc.nullslast");
+    if (activeOnly) {
+      // חגורת ביטחון שרת-צד: מכרזים שמועד הגשתם עבר לא נשלחים ללקוח
+      // כלל — מחסן גם דפדפנים שמריצים bundle ישן מהמטמון. עטוף ב-and
+      // כדי לא להתנגש עם פרמטר ה-or של החיפוש.
+      const today = new Date().toISOString().split("T")[0];
+      params.set("and", `(or(deadline.gte.${today},deadline.is.null))`);
+    }
       // Use Range headers for pagination (PostgREST / Supabase ignores
       // offset as a query param for large tables). Limit/offset are sent
       // via headers below.

@@ -9,8 +9,10 @@ export async function GET(req: Request) {
           const { searchParams } = new URL(req.url);
           const search = searchParams.get("q");
           const offset = parseInt(searchParams.get("offset") || "0");
+          // ברירת מחדל: פעילים בלבד. ?all=1 מחזיר גם את שפג מועדם (להיסטוריה).
+          const activeOnly = searchParams.get("all") !== "1";
 
-      const rows = await getTenders({ search: search || undefined, offset, limit: 1000 });
+      const rows = await getTenders({ search: search || undefined, offset, limit: 1000, activeOnly });
 
       const tenders = rows.map((row, i) => ({
               id: String(row.id ?? `${offset}_${i}`),
