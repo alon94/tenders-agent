@@ -128,7 +128,7 @@ const SOURCES: { name: string; desc: string; host: string; url: string; icon: st
     host: 'iaa.gov.il',
     url: 'https://www.iaa.gov.il/he-IL/Tenders/TendersArchive/Pages/default.aspx',
     icon: '✈️',
-    status: 'pilot',
+    status: 'active',
   },
   {
     name: "אוניברסיטת תל אביב",
@@ -136,7 +136,7 @@ const SOURCES: { name: string; desc: string; host: string; url: string; icon: st
     host: 'tenders.tau.ac.il',
     url: 'https://tenders.tau.ac.il/tenders',
     icon: '🎓',
-    status: 'pilot',
+    status: 'active',
   },
   {
     name: "הרשות לפיתוח ירושלים",
@@ -144,7 +144,7 @@ const SOURCES: { name: string; desc: string; host: string; url: string; icon: st
     host: 'jda.gov.il',
     url: 'https://www.jda.gov.il/מכרזים/',
     icon: '🏛️',
-    status: 'pilot',
+    status: 'active',
   },
   {
     name: "חברת החשמל",
