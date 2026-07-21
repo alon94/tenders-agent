@@ -207,15 +207,16 @@ export const NEW_SOURCES: NewSource[] = [
   ], { hrefMatch: /tender/i, note: "WAF מחזיר 403 גם עם כותרות דפדפן — נדרש IL_PROXY_URL" }),
   // ---------- גל שני: תחבורה, תעופה, אקדמיה, פיתוח עירוני ----------
   genericSource("rail", "רכבת ישראל", "רכבת ישראל", [
-    "https://www.rail.co.il/?page=GeneralAuctions&lan=he",
-    "https://www.rail.co.il/cargotenders/pages/cargotender.aspx",
-  ]),
+    proxied("https://www.rail.co.il/?page=GeneralAuctions&lan=he"),
+    proxied("https://www.rail.co.il/cargotenders/pages/cargotender.aspx"),
+  ], { note: "WAF מחזיר 403 לשרתי חו\"ל — נדרש IL_PROXY_URL" }),
   genericSource("nta", 'נת"ע — מטרו וקווי רכבת קלה', 'נת"ע נתיבי תחבורה עירוניים', [
-    "https://www.nta.co.il/tenders/",
-  ], { hrefMatch: /tender/i }),
+    proxied("https://www.nta.co.il/tenders/"),
+  ], { hrefMatch: /tender/i, note: "WAF מחזיר 403 לשרתי חו\"ל — נדרש IL_PROXY_URL" }),
   genericSource("iaa", "רשות שדות התעופה", "רשות שדות התעופה", [
-    "https://www.iaa.gov.il/he-IL/Tenders/TendersArchive/Pages/default.aspx",
-    "https://www.iaa.gov.il/he/tenders-and-contracts/",
+    // מבנה האתר החדש: הגרסה העברית ללא קידומת /he
+    "https://www.iaa.gov.il/tenders-and-contracts/active-tenders/",
+    "https://www.iaa.gov.il/tenders-and-contracts/tenders-archive/",
   ]),
   genericSource("tau", "אוניברסיטת תל אביב — מכרזים והתקשרויות", "אוניברסיטת תל אביב", [
     "https://tenders.tau.ac.il/tenders",
