@@ -65,7 +65,7 @@ export default function AdminPage() {
   const loadWith = useCallback(async (bearer: string) => {
     try {
       const r = await fetch('/api/admin/overview', { headers: { Authorization: `Bearer ${bearer}` } });
-      if (r.status === 403) { setState('forbidden'); return; }
+      if (r.status === 403) { localStorage.removeItem('pwadm_token'); setState('forbidden'); return; }
       if (!r.ok) { setState('error'); return; }
       setData(await r.json());
       setState('ready');
@@ -132,6 +132,14 @@ export default function AdminPage() {
         body: JSON.stringify({ type }),
       });
       const d = await r.json();
+      if (r.status === 403) {
+        // טוקן פג — ניקוי וחזרה לטופס הכניסה
+        localStorage.removeItem('pwadm_token');
+        setState('forbidden');
+        setToast('פג תוקף הכניסה — יש להתחבר מחדש');
+        setTriggering(null);
+        return;
+      }
       setToast(r.ok ? `✓ ${type === 'sync' ? 'סנכרון' : type === 'sources' ? 'סריקת מקורות חדשים' : 'בדיקת עסקים קטנים'} הופעל — הטבלה תתרענן אוטומטית` : `שגיאה: ${d.error}`);
       if (r.ok) {
         // מדיניות רענון: רענון מהיר אחרי 20ש' ורענון מלא אחרי 2 דקות

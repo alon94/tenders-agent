@@ -233,7 +233,7 @@ export async function recentEmails(limit = 30) {
 // ============================================================
 
 const ADMIN_TOKEN_PREFIX = 'pwadm.';
-const ADMIN_TOKEN_TTL_MS = 12 * 3600 * 1000;
+const ADMIN_TOKEN_TTL_MS = 7 * 24 * 3600 * 1000; // שבוע — כניסה יומית נוחה
 
 function hmac(data: string): string {
   const key = process.env.CRON_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || 'fallback-key';
