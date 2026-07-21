@@ -264,7 +264,7 @@ export default function Dashboard(){
             <div style={{background:'#fff',border:`1px solid ${BORDER}`,borderRadius:10,overflow:'hidden'}}>
               {isMobile?(
                 loading?(
-                  <div style={{padding:50,textAlign:'center',color:MUTED,fontSize:14}}>טוען מכרזים מ-4 מקורות…</div>
+                  <div style={{padding:50,textAlign:'center',color:MUTED,fontSize:14}}>טוען מכרזים מ-10 מקורות…</div>
                 ):rows.length===0?(
                   <div style={{padding:50,textAlign:'center',color:MUTED,fontSize:14}}>לא נמצאו מכרזים התואמים לסינון</div>
                 ):rows.map((t,i)=>renderCard(t,i))
@@ -275,7 +275,7 @@ export default function Dashboard(){
                       <span>ציון</span><span>נושא המכרז</span><span>סטטוס</span><span>מועד הגשה</span><span></span>
                     </div>
                     {loading?(
-                      <div style={{padding:50,textAlign:'center',color:MUTED,fontSize:14}}>טוען מכרזים מ-4 מקורות…</div>
+                      <div style={{padding:50,textAlign:'center',color:MUTED,fontSize:14}}>טוען מכרזים מ-10 מקורות…</div>
                     ):rows.length===0?(
                       <div style={{padding:50,textAlign:'center',color:MUTED,fontSize:14}}>לא נמצאו מכרזים התואמים לסינון</div>
                     ):rows.map((t,i)=>{

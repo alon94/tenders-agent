@@ -24,9 +24,12 @@ export async function GET(req: Request) {
   if (!admin) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
   const today = new Date().toISOString().split("T")[0];
-  const [total, checked, foundTrue, foundFalse, checkedNull, uncheckedEligible, uncheckedNoBooklet, uncheckedPastDeadline] =
+  const [total, activeCnt, expiredCnt, closedStatus, checked, foundTrue, foundFalse, checkedNull, uncheckedEligible, uncheckedNoBooklet, uncheckedPastDeadline] =
     await Promise.all([
       countExact(""),
+      countExact(`or=(deadline.gte.${today},deadline.is.null)`),
+      countExact(`deadline=lt.${today}`),
+      countExact(`status=eq.${encodeURIComponent("סגור")}`),
       countExact("small_biz_checked_at=not.is.null"),
       countExact("small_biz=is.true"),
       countExact("small_biz=is.false"),
@@ -38,6 +41,9 @@ export async function GET(req: Request) {
 
   return NextResponse.json({
     "סה\"כ מכרזים במאגר": total,
+    "פעילים (מועד עתידי או ללא מועד)": activeCnt,
+    "לא פעילים (מועד הגשה עבר)": expiredCnt,
+    "מסומנים בסטטוס סגור": closedStatus,
     "נבדקו (יש חותמת בדיקה)": checked,
     "מתוכם — נמצאה העדפה": foundTrue,
     "מתוכם — נבדקו ואין העדפה": foundFalse,

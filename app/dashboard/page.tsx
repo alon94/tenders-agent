@@ -287,7 +287,7 @@ export default function Dashboard(){
                 <span>ציון</span><span>נושא המכרז</span><span>סטטוס</span><span>מועד הגשה</span><span></span>
               </div>)}
               {loading?(
-                                <div style={{padding:50,textAlign:'center',color:MUTED,fontSize:14}}>טוען מכרזים מ-2 מקורות…</div>
+                                <div style={{padding:50,textAlign:'center',color:MUTED,fontSize:14}}>טוען מכרזים מ-10 מקורות…</div>
               ):rows.length===0?(
                 <div style={{padding:50,textAlign:'center',color:MUTED,fontSize:14}}>לא נמצאו מכרזים התואמים לסינון</div>
               ):rows.map((t,i)=>{
