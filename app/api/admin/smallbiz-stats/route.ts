@@ -50,7 +50,7 @@ export async function GET(req: Request) {
     "מתוכם — נבדקו ללא הכרעה (שגיאה/לא רלוונטי)": checkedNull,
     "טרם נבדקו — זכאים (יש חוברת + מועד עתידי)": uncheckedEligible,
     "טרם נבדקו — אין חוברת מכרז": uncheckedNoBooklet,
-    "טרם נבדקו — יש חוברת אך פג המועד": uncheckedPastDeadline,
+    "טרם נבדקו — יש חוברת אך פג המועד או ללא מועד (בעיקר פטורים)": uncheckedPastDeadline,
     "אחוז העדפה מבין הנבדקים": checked > 0 ? `${Math.round((foundTrue / checked) * 100)}%` : "—",
   });
 }
