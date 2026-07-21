@@ -105,7 +105,18 @@ export default function Dashboard(){
     if(pub)r=r.filter(t=>matchPublisher(t,pub));
     if(!showClosed)r=r.filter(t=>{const d=dl(t.deadline);return d===null||d>=0;});
     if(!showNoDate)r=r.filter(t=>!!t.deadline);
-    r=r.filter(t=>{const d=dl(t.deadline);if(d===null)return showNoDate;if(d<0)return showClosed;return d<=maxD;});
+    r=r.filter(t=>{
+      const d=dl(t.deadline);
+      if(d!==null&&d<0)return showClosed; // פג מועד — רק בבקשה מפורשת
+      if(d===null){
+        // ללא מועד הגשה: מוצג רק אם פורסם בשנה האחרונה (חוסם רשומות
+        // מוניציפליות עתיקות עם סטטוס "פתוח" שמעולם לא עודכן)
+        if(!showNoDate)return false;
+        const p=parseHeDate(t.publishDate);
+        return p===null||p.getTime()>Date.now()-365*86400000;
+      }
+      return d<=maxD;
+    });
     if(sbOnly)r=r.filter(t=>t.smallBiz&&(t.smallBizConfidence==='high'||t.smallBizConfidence==='medium'));
     if(q.trim())r=r.filter(t=>matchQuery(t,q));
     return r;

@@ -196,7 +196,9 @@ function rowToRecord(row: ObudgetRow): TenderRecord {
 async function fetchMuniPage(offset: number): Promise<ObudgetRow[]> {
     const today = new Date().toISOString().split("T")[0];
     const cutoffDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-    const filter = `(claim_date > '${today}' OR status = 'פתוח' OR (claim_date IS NULL AND publication_date > '${cutoffDate}'))`;
+    // סטטוס "פתוח" לבדו אינו מספיק — רשויות לא מעדכנות סטטוס, ומכרזי
+    // 2014 נשארים "פתוחים" לנצח. דורשים גם פרסום בתוך חלון הזמן.
+    const filter = `(claim_date > '${today}' OR (status = 'פתוח' AND publication_date > '${cutoffDate}') OR (claim_date IS NULL AND publication_date > '${cutoffDate}'))`;
     const cacheBuster = `AND '${Date.now()}' IS NOT NULL`;
 
   const sql = `SELECT publication_id, tender_id, description, publisher, publisher_unit, claim_date, publication_date, status, page_url, tender_type_he FROM muni_tenders WHERE ${filter} ${cacheBuster} ORDER BY publication_date DESC NULLS LAST, claim_date DESC NULLS LAST LIMIT 1000 OFFSET ${offset}`;

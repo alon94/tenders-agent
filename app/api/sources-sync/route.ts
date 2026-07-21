@@ -18,6 +18,25 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
+  // ?close_expired=1 — ניקוי חד-פעמי: כל מכרז שמועד הגשתו עבר ועדיין
+  // מסומן "פתוח" מקבל סטטוס "סגור" (מתקן סטטוסים עתיקים מהמקור).
+  if (url.searchParams.get("close_expired") === "1") {
+    const today = new Date().toISOString().split("T")[0];
+    const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+    const filter = `deadline=lt.${today}&status=eq.${encodeURIComponent("פתוח")}`;
+    const cnt = await fetch(`${SUPABASE_URL}/rest/v1/tenders?${filter}&select=id&limit=1`, {
+      headers: { apikey: KEY, Authorization: `Bearer ${KEY}`, Prefer: "count=exact" }, cache: "no-store",
+    });
+    const affected = parseInt((cnt.headers.get("content-range") || "/0").split("/")[1] || "0", 10);
+    const patch = await fetch(`${SUPABASE_URL}/rest/v1/tenders?${filter}`, {
+      method: "PATCH",
+      headers: { apikey: KEY, Authorization: `Bearer ${KEY}`, "Content-Type": "application/json", Prefer: "return=minimal" },
+      body: JSON.stringify({ status: "סגור" }),
+    });
+    return NextResponse.json({ close_expired: true, affected, patch_ok: patch.ok });
+  }
+
   const only = url.searchParams.get("source") || undefined;
   const dry = url.searchParams.get("dry") === "1";
 
