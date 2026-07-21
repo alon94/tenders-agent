@@ -102,6 +102,28 @@ export async function GET(req: Request) {
     return NextResponse.json({ sweep: true, marked_uncheckable: toSweep, patch_ok: patchRes.ok });
   }
 
+  // ?requeue=1 — מחזיר לתור מכרזים שה-sweep סימן בטעות: יש חוברת,
+  // ללא מועד, פורסמו בחצי השנה האחרונה ואינם פטור ממכרז.
+  if (new URL(req.url).searchParams.get('requeue') === '1') {
+    const cutoff = new Date(Date.now() - 180 * 86400000).toISOString().split('T')[0];
+    const sweepMsg = encodeURIComponent('לא ניתן לבדיקה — אין חוברת מכרז זמינה או שחלף מועד ההגשה');
+    const filter = `small_biz_summary=eq.${sweepMsg}&publication_id=not.is.null&deadline=is.null&publish_date=gte.${cutoff}&type=not.ilike.${encodeURIComponent('*פטור*')}`;
+    const cnt = await fetch(`${restUrl('/tenders')}?${filter}&select=id&limit=1`, {
+      headers: authHeaders({ Prefer: 'count=exact' }), cache: 'no-store',
+    });
+    const affected = parseInt((cnt.headers.get('content-range') || '/0').split('/')[1] || '0', 10);
+    const patch = await fetch(`${restUrl('/tenders')}?${filter}`, {
+      method: 'PATCH',
+      headers: authHeaders({ Prefer: 'return=minimal' }),
+      body: JSON.stringify({ small_biz_checked_at: null, small_biz_summary: null }),
+    });
+    await recordSyncRun({
+      type: 'smallbiz', started_at: new Date().toISOString(), duration_ms: 0, trigger: detectTrigger(req),
+      counts: { requeue: true, requeued: affected, patch_ok: patch.ok },
+    });
+    return NextResponse.json({ requeue: true, requeued: affected, patch_ok: patch.ok });
+  }
+
   // מבנה "ענה מיד, עבד ברקע": התשובה חוזרת תוך <1ש', והעיבוד רץ
   // ב-waitUntil בתקציב זמן. כך קריאת השרשור של ההורה מסתיימת מיידית
   // וההורה לא צריך לשרוד את כל ריצת הילד — מה ששבר את השרשרת תחת
@@ -122,8 +144,12 @@ async function runSmallBizBatch(chainDepth: number, origin: string, runTrigger: 
     const params = new URLSearchParams();
     params.set('select', 'id,title,publication_id,deadline');
     params.set('small_biz_checked_at', 'is.null');
-    params.set('deadline', `gte.${today}`);
+    // זכאות: יש חוברת, וגם — מועד עתידי, או ללא מועד אך פורסם בחצי
+    // השנה האחרונה ואינו פטור ממכרז (ל-obudget יש אלפי מכרזים אמיתיים
+    // עם claim_date חסר — בלעדי זה הם לא ייבדקו לעולם).
+    const cutoff180 = new Date(Date.now() - 180 * 86400000).toISOString().split('T')[0];
     params.set('publication_id', 'not.is.null');
+    params.set('or', `(deadline.gte.${today},and(deadline.is.null,publish_date.gte.${cutoff180},type.not.ilike.*פטור*))`);
     params.set('order', 'publish_date.desc.nullslast');
     params.set('limit', String(BATCH_SIZE));
 
