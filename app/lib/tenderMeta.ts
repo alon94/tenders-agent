@@ -75,7 +75,14 @@ export function fmtDate(d: string): string {
   return x.toLocaleDateString("he-IL", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
-/** הודעת פטור ממכרז / ספק יחיד — מזוהה לפי שדה הסוג מהמקור. */
-export function isExempt(type?: string | null): boolean {
-  return !!type && /פטור|ספק יחיד/.test(type);
+/**
+ * הודעת פטור / ספק יחיד / אישור הארכת התקשרות — לא מכרז בר-הגשה.
+ * מזוהה לפי שדה הסוג, ובנוסף לפי תבניות כותרת מובהקות. התבניות
+ * מכוונות בזהירות: "הארכת התקשרות"/"מאשרים הארכה" נתפסות, אבל
+ * "הארכת מועד ההגשה" (מכרז אמיתי שהאריך דדליין) — לא.
+ */
+export function isExempt(type?: string | null, title?: string | null): boolean {
+  if (type && /פטור|ספק יחיד/.test(type)) return true;
+  if (title && /(פטור ממכרז|ספק יחיד|מאשרים הארכה|הארכת (ה)?התקשרות|הרחבת (ה)?התקשרות|מימוש אופציה)/.test(title)) return true;
+  return false;
 }

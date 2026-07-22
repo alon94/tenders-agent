@@ -49,7 +49,7 @@ export default function TenderPage() {
     ['תחום', (t.topics && t.topics.join(', ')) || '\u2014'],
     ['תאריך פרסום', fmtDate(t.publishDate || '')],
     ['עודכן', fmtDate(t.updateDate || '')],
-    ['מועד אחרון', isExempt(t.type) ? 'פטור ממכרז' : fmtDate(t.deadline || '')],
+    ['מועד אחרון', isExempt(t.type, t.title) ? 'פטור / הודעת התקשרות' : fmtDate(t.deadline || '')],
   ];
 
   return (
@@ -106,9 +106,9 @@ export default function TenderPage() {
         <div style={{ flex: '0 0 300px', display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Card>
             <div style={{ fontSize: 11.5, color: '#8a97a3' }}>מועד אחרון להגשה</div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: '#b04a34', margin: '4px 0 2px' }}>{isExempt(t.type) ? 'פטור ממכרז' : fmtDate(t.deadline || '')}</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: '#b04a34', margin: '4px 0 2px' }}>{isExempt(t.type, t.title) ? 'פטור / הודעת התקשרות' : fmtDate(t.deadline || '')}</div>
             {d !== null && d >= 0 && <div style={{ fontSize: 12.5, color: '#7a8794' }}>נותרו {d} ימים</div>}
-            <a href={t.submissionUrl || t.url || '#'} target="_blank" rel="noreferrer" style={{ display: 'block', textAlign: 'center', marginTop: 12, background: '#2b6fc4', color: '#fff', borderRadius: 10, padding: '11px', fontSize: 13.5, fontWeight: 600, textDecoration: 'none' }}>הגשת הצעה ↗</a>
+            <a href={t.submissionUrl || t.url || '#'} target="_blank" rel="noreferrer" style={{ display: 'block', textAlign: 'center', marginTop: 12, background: '#2b6fc4', color: '#fff', borderRadius: 10, padding: '11px', fontSize: 13.5, fontWeight: 600, textDecoration: 'none' }}>{isExempt(t.type, t.title) ? 'צפייה בהודעה במקור ↗' : 'הגשת הצעה ↗'}</a>
             <button style={{ display: 'block', width: '100%', marginTop: 8, background: '#fff', color: '#5b6b7a', border: '1px solid ' + BORDER, borderRadius: 10, padding: '10px', fontSize: 13, cursor: 'pointer' }}>☆ שמירה למעקב</button>
           </Card>
           <Card style={{ background: '#f0f6fd', border: '1px solid #cfe0f4' }}>

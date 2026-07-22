@@ -103,7 +103,7 @@ export default function Dashboard(){
 
   const base=useMemo(()=>{
     let r=all;
-    if(exemptView)r=r.filter(t=>isExempt(t.type));
+    if(exemptView)r=r.filter(t=>isExempt(t.type,t.title));
     if(biz)r=r.filter(t=>matchDomain(t,biz));
     if(pub)r=r.filter(t=>matchPublisher(t,pub));
     if(!showClosed)r=r.filter(t=>{const d=dl(t.deadline);return d===null||d>=0;});
@@ -316,7 +316,7 @@ export default function Dashboard(){
                 <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginTop:13,paddingTop:12,borderTop:'1px solid #eef1f4'}}>
                   <div style={{fontSize:12.5}}>
                     <span style={{color:'#7a8794'}}>הגשה עד </span>
-                    <span style={{color:DARK,fontWeight:700}}>{isExempt(t.type)?<span style={{color:'#8a5db8',background:'#f3ecfb',borderRadius:6,padding:'2px 8px',fontSize:12,fontWeight:600}}>פטור</span>:fd(t.deadline)}</span>
+                    <span style={{color:DARK,fontWeight:700}}>{isExempt(t.type,t.title)?<span style={{color:'#8a5db8',background:'#f3ecfb',borderRadius:6,padding:'2px 8px',fontSize:12,fontWeight:600}}>פטור</span>:fd(t.deadline)}</span>
                     {d!==null&&d>=0&&<span style={{color:d<=7?'#b04a34':'#7a8794'}}> · נותרו {d} ימים</span>}
                   </div>
                   <div style={{display:'flex',alignItems:'center',gap:8}}>
@@ -341,7 +341,7 @@ export default function Dashboard(){
                       {tags.map((g,gi)=>(<span key={gi} style={{fontSize:11.5,fontWeight:600,padding:'3px 10px',borderRadius:6,background:g.bg,color:g.fg,border:`1px solid ${g.bd}`}}>{g.label}</span>))}
                     </div>
                     <div style={{fontSize:13}}>
-                      <div style={{color:DARK,fontWeight:600}}>{isExempt(t.type)?<span style={{color:'#8a5db8',background:'#f3ecfb',borderRadius:6,padding:'2px 8px',fontSize:12,fontWeight:600}}>פטור</span>:fd(t.deadline)}</div>
+                      <div style={{color:DARK,fontWeight:600}}>{isExempt(t.type,t.title)?<span style={{color:'#8a5db8',background:'#f3ecfb',borderRadius:6,padding:'2px 8px',fontSize:12,fontWeight:600}}>פטור</span>:fd(t.deadline)}</div>
                       {d!==null&&d>=0&&<div style={{color:d<=7?'#b04a34':'#7a8794',fontSize:12,marginTop:3}}>נותרו {d} ימים</div>}
                     </div>
                     <div style={{display:'flex',justifyContent:'flex-end',alignItems:'center',gap:6}}>
