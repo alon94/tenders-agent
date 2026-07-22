@@ -2,13 +2,13 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import InternalShell from '../../components/InternalShell';
-import { BORDER, DARK, bandColor, scoreFor, statusTags, daysLeft, fmtDate } from '../../lib/tenderMeta';
+import { BORDER, DARK, bandColor, scoreFor, statusTags, daysLeft, fmtDate , isExempt } from '../../lib/tenderMeta';
 
 interface Doc { name?: string; title?: string; type?: string; date?: string; url: string; description?: string }
 interface TenderDetail {
   id: string; title?: string; publisher?: string; publicationNumber?: string; status?: string;
   procedureNumber?: string; publishDate?: string; updateDate?: string; submissionStart?: string;
-  deadline?: string; contactName?: string; contactEmail?: string; topics?: string[];
+  deadline?: string; type?: string; contactName?: string; contactEmail?: string; topics?: string[];
   documents?: Doc[]; submissionUrl?: string; url?: string;
 }
 
@@ -49,7 +49,7 @@ export default function TenderPage() {
     ['תחום', (t.topics && t.topics.join(', ')) || '\u2014'],
     ['תאריך פרסום', fmtDate(t.publishDate || '')],
     ['עודכן', fmtDate(t.updateDate || '')],
-    ['מועד אחרון', fmtDate(t.deadline || '')],
+    ['מועד אחרון', isExempt(t.type) ? 'פטור ממכרז' : fmtDate(t.deadline || '')],
   ];
 
   return (
@@ -106,7 +106,7 @@ export default function TenderPage() {
         <div style={{ flex: '0 0 300px', display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Card>
             <div style={{ fontSize: 11.5, color: '#8a97a3' }}>מועד אחרון להגשה</div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: '#b04a34', margin: '4px 0 2px' }}>{fmtDate(t.deadline || '')}</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: '#b04a34', margin: '4px 0 2px' }}>{isExempt(t.type) ? 'פטור ממכרז' : fmtDate(t.deadline || '')}</div>
             {d !== null && d >= 0 && <div style={{ fontSize: 12.5, color: '#7a8794' }}>נותרו {d} ימים</div>}
             <a href={t.submissionUrl || t.url || '#'} target="_blank" rel="noreferrer" style={{ display: 'block', textAlign: 'center', marginTop: 12, background: '#2b6fc4', color: '#fff', borderRadius: 10, padding: '11px', fontSize: 13.5, fontWeight: 600, textDecoration: 'none' }}>הגשת הצעה ↗</a>
             <button style={{ display: 'block', width: '100%', marginTop: 8, background: '#fff', color: '#5b6b7a', border: '1px solid ' + BORDER, borderRadius: 10, padding: '10px', fontSize: 13, cursor: 'pointer' }}>☆ שמירה למעקב</button>

@@ -74,3 +74,8 @@ export function fmtDate(d: string): string {
   if (x === null) return "—";
   return x.toLocaleDateString("he-IL", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
+
+/** הודעת פטור ממכרז / ספק יחיד — מזוהה לפי שדה הסוג מהמקור. */
+export function isExempt(type?: string | null): boolean {
+  return !!type && /פטור|ספק יחיד/.test(type);
+}

@@ -5,7 +5,7 @@ import MobileTabBar from "../components/MobileTabBar";
 import MobileMenu from "../components/MobileMenu";
 import { fetchDedupedTenders } from '../lib/tenderData';
 import { getSession, signOut, AUTH_EVENT, type AuthSession } from '../lib/authClient';
-import { parseHeDate } from '../lib/tenderMeta';
+import { parseHeDate, isExempt } from '../lib/tenderMeta';
 import { fetchMyProfile, type BusinessProfile } from '../lib/profileApi';
 import { scoreTender } from '../lib/scoring';
 // TICKET-12/13: מנוע ההתאמה המרכזי — סינון, חיפוש, סיווג וספירת
@@ -61,6 +61,8 @@ export default function Dashboard(){
     window.location.href = '/signin';
   }
 
+  // מצב תצוגת פטורים: /dashboard?view=exempt (מהסרגל הצדי)
+  const[exemptView]=useState<boolean>(()=>typeof window!=='undefined'&&new URLSearchParams(window.location.search).get('view')==='exempt');
   const[all,setAll]=useState<T[]>([]);
   const[loading,setLoading]=useState(true);
   const[fetchedAt,setFetchedAt]=useState('');
@@ -101,6 +103,7 @@ export default function Dashboard(){
 
   const base=useMemo(()=>{
     let r=all;
+    if(exemptView)r=r.filter(t=>isExempt(t.type));
     if(biz)r=r.filter(t=>matchDomain(t,biz));
     if(pub)r=r.filter(t=>matchPublisher(t,pub));
     if(!showClosed)r=r.filter(t=>{const d=dl(t.deadline);return d===null||d>=0;});
@@ -142,7 +145,8 @@ export default function Dashboard(){
   const rows=shown.slice((pg-1)*PER,pg*PER);
 
   const sideNav=[
-    {icon:'◧',label:'גילוי מכרזים',href:'/dashboard',active:true},
+    {icon:'◧',label:'גילוי מכרזים',href:'/dashboard',active:!exemptView},
+    {icon:'⊘',label:'מכרזים פטורים',href:'/dashboard?view=exempt',active:exemptView},
     {icon:'★',label:'מכרזים מסומנים',href:'/marked'},
     {icon:'◈',label:'סוכן חכם',href:'/agent'},
     {icon:'▤',label:'ערבויות וליווי',href:'/guarantee'},
@@ -215,7 +219,7 @@ export default function Dashboard(){
           {/* header */}
           <div style={{background:'#fff',borderBottom:`1px solid ${BORDER}`,padding:isMobile?'12px 14px':'15px 26px',display:'flex',alignItems:'center',gap:isMobile?10:18,position:'sticky',top:0,zIndex:5}}>
             {isMobile && <MobileMenu/>}
-            <div style={{fontWeight:700,fontSize:isMobile?16:20,color:DARK,flex:'0 0 auto'}}>גילוי מכרזים</div>
+            <div style={{fontWeight:700,fontSize:isMobile?16:20,color:DARK,flex:'0 0 auto'}}>{exemptView?'מכרזים פטורים':'גילוי מכרזים'}</div>
             <div style={{flex:1,minWidth:0,display:'flex',alignItems:'center',gap:9,background:'#f4f6f8',border:'1px solid #e2e7ec',borderRadius:8,padding:'9px 14px',maxWidth:440}}>
               <span style={{color:'#9aa6b2',fontSize:15}}>⌕</span>
               <input value={q} onChange={e=>{setQ(e.target.value);setPg(1);}} placeholder="חיפוש: נושא, גוף מפרסם, מספר מכרז…" style={{flex:1,border:'none',outline:'none',background:'transparent',fontSize:13.5,color:DARK,fontFamily:'inherit'}}/>
@@ -312,7 +316,7 @@ export default function Dashboard(){
                 <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginTop:13,paddingTop:12,borderTop:'1px solid #eef1f4'}}>
                   <div style={{fontSize:12.5}}>
                     <span style={{color:'#7a8794'}}>הגשה עד </span>
-                    <span style={{color:DARK,fontWeight:700}}>{fd(t.deadline)}</span>
+                    <span style={{color:DARK,fontWeight:700}}>{isExempt(t.type)?<span style={{color:'#8a5db8',background:'#f3ecfb',borderRadius:6,padding:'2px 8px',fontSize:12,fontWeight:600}}>פטור</span>:fd(t.deadline)}</span>
                     {d!==null&&d>=0&&<span style={{color:d<=7?'#b04a34':'#7a8794'}}> · נותרו {d} ימים</span>}
                   </div>
                   <div style={{display:'flex',alignItems:'center',gap:8}}>
@@ -337,7 +341,7 @@ export default function Dashboard(){
                       {tags.map((g,gi)=>(<span key={gi} style={{fontSize:11.5,fontWeight:600,padding:'3px 10px',borderRadius:6,background:g.bg,color:g.fg,border:`1px solid ${g.bd}`}}>{g.label}</span>))}
                     </div>
                     <div style={{fontSize:13}}>
-                      <div style={{color:DARK,fontWeight:600}}>{fd(t.deadline)}</div>
+                      <div style={{color:DARK,fontWeight:600}}>{isExempt(t.type)?<span style={{color:'#8a5db8',background:'#f3ecfb',borderRadius:6,padding:'2px 8px',fontSize:12,fontWeight:600}}>פטור</span>:fd(t.deadline)}</div>
                       {d!==null&&d>=0&&<div style={{color:d<=7?'#b04a34':'#7a8794',fontSize:12,marginTop:3}}>נותרו {d} ימים</div>}
                     </div>
                     <div style={{display:'flex',justifyContent:'flex-end',alignItems:'center',gap:6}}>
