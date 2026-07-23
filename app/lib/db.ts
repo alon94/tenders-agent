@@ -270,7 +270,7 @@ interface MrGovRow {
 }
 
 function stripTags(html: string): string {
-    return html.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#039;|&apos;/g, "'").replace(/\s+/g, " ").trim();
+    return html.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#0?39;|&apos;|&#x27;/gi, "'").replace(/\s+/g, " ").trim();
 }
 
 function parseMrGovSearchPage(html: string): MrGovRow[] {
@@ -288,7 +288,7 @@ function parseMrGovSearchPage(html: string): MrGovRow[] {
         const titleMatch = chunk.match(/^[^>]*>([\s\S]*?)<\/a>/);
           const title = titleMatch ? stripTags(titleMatch[1]) : "";
 
-        const publisher = (text.match(/שם המפרסם:\s*(.+?)\s*מס' פרסום/) || [])[1] || null;
+        const publisher = (text.match(/שם המפרסם:\s*(.+?)\s*מס.{0,4}?פרסום/) || [])[1] || null;
           const status = (text.match(/סטטוס:\s*(.+?)\s*\|/) || [])[1] || null;
           const publishDate = (text.match(/תאריך פרסום:\s*(\d{2}\/\d{2}\/\d{4})/) || [])[1];
           const updateDate = (text.match(/תאריך עדכון:\s*(\d{2}\/\d{2}\/\d{4})/) || [])[1];
