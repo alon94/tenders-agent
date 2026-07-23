@@ -61,8 +61,9 @@ export default function Dashboard(){
     window.location.href = '/signin';
   }
 
-  // מצב תצוגת פטורים: /dashboard?view=exempt (מהסרגל הצדי)
+  // מצבי תצוגה מהסרגל: ?view=exempt / ?view=smallbiz, וחיפוש התחלתי ?q=
   const[exemptView]=useState<boolean>(()=>typeof window!=='undefined'&&new URLSearchParams(window.location.search).get('view')==='exempt');
+  const[sbView]=useState<boolean>(()=>typeof window!=='undefined'&&new URLSearchParams(window.location.search).get('view')==='smallbiz');
   const[all,setAll]=useState<T[]>([]);
   const[loading,setLoading]=useState(true);
   const[fetchedAt,setFetchedAt]=useState('');
@@ -74,7 +75,7 @@ export default function Dashboard(){
   const[showNoDate,setShowNoDate]=useState(true);
   const[sbOnly,setSbOnly]=useState(false);
   const[tab,setTab]=useState<'all'|'closing'|'new'>('all');
-  const[q,setQ]=useState('');
+  const[q,setQ]=useState(()=>typeof window!=='undefined'?(new URLSearchParams(window.location.search).get('q')||''):'');
   const[pg,setPg]=useState(1);
   const[showFilters,setShowFilters]=useState(false);
   const PER=25;
@@ -104,6 +105,7 @@ export default function Dashboard(){
   const base=useMemo(()=>{
     let r=all;
     if(exemptView)r=r.filter(t=>isExempt(t.type,t.title));
+    if(sbView)r=r.filter(t=>t.smallBiz&&(t.smallBizConfidence==='high'||t.smallBizConfidence==='medium'));
     if(biz)r=r.filter(t=>matchDomain(t,biz));
     if(pub)r=r.filter(t=>matchPublisher(t,pub));
     if(!showClosed)r=r.filter(t=>{const d=dl(t.deadline);return d===null||d>=0;});
@@ -144,11 +146,15 @@ export default function Dashboard(){
   const tp=Math.ceil(shown.length/PER);
   const rows=shown.slice((pg-1)*PER,pg*PER);
 
+  const activeCnt=useMemo(()=>all.filter(t=>{const d=dl(t.deadline);return d===null||d>=0;}).length,[all]);
+  const exemptCnt=useMemo(()=>all.filter(t=>isExempt(t.type,t.title)).length,[all]);
+  const sbCnt=useMemo(()=>all.filter(t=>t.smallBiz&&(t.smallBizConfidence==='high'||t.smallBizConfidence==='medium')).length,[all]);
   const sideNav=[
-    {icon:'◧',label:'גילוי מכרזים',href:'/dashboard',active:!exemptView},
-    {icon:'⊘',label:'מכרזים פטורים',href:'/dashboard?view=exempt',active:exemptView},
+    {icon:'◧',label:'גילוי מכרזים',href:'/dashboard',active:!exemptView&&!sbView,count:activeCnt},
+    {icon:'⊘',label:'מכרזים פטורים',href:'/dashboard?view=exempt',active:exemptView,count:exemptCnt},
+    {icon:'⭐',label:'העדפה לעסקים קטנים',href:'/dashboard?view=smallbiz',active:sbView,count:sbCnt},
     {icon:'★',label:'מכרזים מסומנים',href:'/marked'},
-    {icon:'◈',label:'סוכן חכם',href:'/agent'},
+    {icon:'◈',label:'מכרזי הסוכן החכם',href:'/agent'},
     {icon:'▤',label:'ערבויות וליווי',href:'/guarantee'},
     {icon:'⛁',label:'מקורות',href:'/sources'},
     {icon:'⚙',label:'פרופיל עסקי',href:'/profile'},
@@ -191,7 +197,13 @@ export default function Dashboard(){
               background:s.active?'#e8f1fb':'transparent',
               color:s.active?'#1e5aa8':'#5b6b7a',
               borderInlineStart:s.active?`3px solid ${BLUE}`:'3px solid transparent'}}>
-              <span style={{fontSize:16,opacity:s.active?1:.65}}>{s.icon}</span>{s.label}
+              <span style={{fontSize:16,opacity:s.active?1:.65}}>{s.icon}</span>
+              <span style={{flex:1}}>{s.label}</span>
+              {'count' in s&&(s as any).count>0&&(
+                <span style={{fontSize:11,fontWeight:700,color:s.active?'#1e5aa8':'#8a97a3',background:s.active?'#fff':'#eef1f4',borderRadius:999,padding:'1px 8px'}}>
+                  {((s as any).count as number).toLocaleString('he-IL')}
+                </span>
+              )}
             </a>
           ))}
           <div style={{marginTop:'auto',border:`1px solid ${BORDER}`,borderRadius:12,padding:16}}>
@@ -219,10 +231,11 @@ export default function Dashboard(){
           {/* header */}
           <div style={{background:'#fff',borderBottom:`1px solid ${BORDER}`,padding:isMobile?'12px 14px':'15px 26px',display:'flex',alignItems:'center',gap:isMobile?10:18,position:'sticky',top:0,zIndex:5}}>
             {isMobile && <MobileMenu/>}
-            <div style={{fontWeight:700,fontSize:isMobile?16:20,color:DARK,flex:'0 0 auto'}}>{exemptView?'מכרזים פטורים':'גילוי מכרזים'}</div>
-            <div style={{flex:1,minWidth:0,display:'flex',alignItems:'center',gap:9,background:'#f4f6f8',border:'1px solid #e2e7ec',borderRadius:8,padding:'9px 14px',maxWidth:440}}>
-              <span style={{color:'#9aa6b2',fontSize:15}}>⌕</span>
-              <input value={q} onChange={e=>{setQ(e.target.value);setPg(1);}} placeholder="חיפוש: נושא, גוף מפרסם, מספר מכרז…" style={{flex:1,border:'none',outline:'none',background:'transparent',fontSize:13.5,color:DARK,fontFamily:'inherit'}}/>
+            <div style={{fontWeight:700,fontSize:isMobile?16:20,color:DARK,flex:'0 0 auto'}}>{exemptView?'מכרזים פטורים':sbView?'העדפה לעסקים קטנים':'גילוי מכרזים'}</div>
+            <div style={{flex:1,minWidth:0,display:'flex',alignItems:'center',gap:10,background:'#fff',border:'1.5px solid '+BLUE,borderRadius:10,padding:'12px 16px',maxWidth:520,boxShadow:'0 2px 10px rgba(43,111,196,0.12)'}}>
+              <span style={{color:BLUE,fontSize:17,fontWeight:700}}>⌕</span>
+              <input value={q} onChange={e=>{setQ(e.target.value);setPg(1);}} placeholder="חיפוש: נושא, גוף מפרסם, מספר מכרז…" style={{flex:1,border:'none',outline:'none',background:'transparent',fontSize:14.5,color:DARK,fontFamily:'inherit'}}/>
+              {q&&<span onClick={()=>{setQ('');setPg(1);}} style={{color:'#9aa6b2',cursor:'pointer',fontSize:15}}>✕</span>}
             </div>
             {!isMobile && (<>
 <span style={{marginInlineStart:'auto',fontSize:12.5,color:'#7a8794',display:'inline-flex',alignItems:'center',gap:7,flex:'0 0 auto'}}>

@@ -19,12 +19,15 @@ const BORDER = '#e6eaee';
 const ACTIVE_BG = '#e8f1fb';
 const ACTIVE_FG = '#1e5aa8';
 
-const NAV = [
-  { icon: '◧', label: 'גילוי', href: '/dashboard' },
-  { icon: '★', label: 'מסומנים', href: '/marked' },
-  { icon: '◈', label: 'סוכן חכם', href: '/agent' },
-  { icon: '▤', label: 'ערבויות', href: '/guarantee' },
+const NAV: { icon: string; label: string; href: string; countKey?: 'active' | 'exempt' | 'smallbiz' }[] = [
+  { icon: '◧', label: 'גילוי מכרזים', href: '/dashboard', countKey: 'active' },
+  { icon: '⊘', label: 'מכרזים פטורים', href: '/dashboard?view=exempt', countKey: 'exempt' },
+  { icon: '⭐', label: 'העדפה לעסקים קטנים', href: '/dashboard?view=smallbiz', countKey: 'smallbiz' },
+  { icon: '★', label: 'מכרזים מסומנים', href: '/marked' },
+  { icon: '◈', label: 'מכרזי הסוכן החכם', href: '/agent' },
+  { icon: '▤', label: 'ערבויות וליווי', href: '/guarantee' },
   { icon: '⛁', label: 'מקורות', href: '/sources' },
+  { icon: '⚙', label: 'פרופיל עסקי', href: '/profile' },
 ];
 
 export default function InternalShell({
@@ -41,6 +44,13 @@ export default function InternalShell({
   const isMobile = useIsMobile();
   const path = usePathname();
   const [session, setSession] = useState<AuthSession | null>(null);
+  const [counts, setCounts] = useState<{ active?: number; exempt?: number; smallbiz?: number }>({});
+  const [navQ, setNavQ] = useState('');
+
+  useEffect(() => {
+    fetch('/api/nav-counts').then(r => r.ok ? r.json() : {}).then(setCounts).catch(() => {});
+  }, []);
+  const goSearch = () => { if (navQ.trim()) window.location.href = '/dashboard?q=' + encodeURIComponent(navQ.trim()); };
 
   useEffect(() => {
     setSession(getSession());
@@ -112,9 +122,14 @@ export default function InternalShell({
               <div style={{ fontSize: 11, color: '#8a97a3' }}>מועדון עסקים 360</div>
             </div>
           </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f4f6f8', border: `1.5px solid ${BLUE}33`, borderRadius: 10, padding: '9px 12px', marginBottom: 14 }}>
+            <span style={{ color: BLUE, fontSize: 15 }}>⌕</span>
+            <input value={navQ} onChange={e => setNavQ(e.target.value)} onKeyDown={e => e.key === 'Enter' && goSearch()}
+              placeholder="חיפוש מכרזים…" style={{ flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'transparent', fontSize: 13, color: DARK, fontFamily: 'inherit' }} />
+          </div>
           <div>
             {NAV.map((item) => {
-              const active = path === item.href || (path != null && path.startsWith(item.href + '/'));
+              const active = (path === item.href.split('?')[0] && !item.href.includes('?')) || (path != null && item.href.indexOf('?') < 0 && path.startsWith(item.href + '/'));
               return (
                 <a
                   key={item.href}
@@ -134,7 +149,12 @@ export default function InternalShell({
                   }}
                 >
                   <span style={{ fontSize: 15 }}>{item.icon}</span>
-                  <span>{item.label}</span>
+                  <span style={{ flex: 1 }}>{item.label}</span>
+                  {item.countKey && counts[item.countKey] !== undefined && (
+                    <span style={{ fontSize: 11, fontWeight: 700, color: active ? ACTIVE_FG : '#8a97a3', background: active ? '#fff' : '#eef1f4', borderRadius: 999, padding: '1px 8px' }}>
+                      {counts[item.countKey]!.toLocaleString('he-IL')}
+                    </span>
+                  )}
                 </a>
               );
             })}

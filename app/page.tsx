@@ -117,8 +117,9 @@ export default function Dashboard(){
   const sideNav=[
     {icon:'◧',label:'גילוי מכרזים',href:'/dashboard',active:true},
     {icon:'⊘',label:'מכרזים פטורים',href:'/dashboard?view=exempt'},
+    {icon:'⭐',label:'העדפה לעסקים קטנים',href:'/dashboard?view=smallbiz'},
     {icon:'★',label:'מכרזים מסומנים',href:'/marked'},
-    {icon:'◈',label:'סוכן חכם',href:'/agent'},
+    {icon:'◈',label:'מכרזי הסוכן החכם',href:'/agent'},
     {icon:'▤',label:'ערבויות וליווי',href:'/guarantee'},
     {icon:'⛁',label:'מקורות',href:'/sources'},
     {icon:'⚙',label:'פרופיל עסקי',href:'/profile'},
