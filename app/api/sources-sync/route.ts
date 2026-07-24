@@ -67,5 +67,5 @@ export async function GET(req: Request) {
     ms: Date.now() - started,
     totals,
     sources: reports,
-  });
+  }, { headers: { "content-type": "application/json; charset=utf-8" } });
 }

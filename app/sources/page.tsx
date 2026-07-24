@@ -112,7 +112,7 @@ const SOURCES: { name: string; desc: string; host: string; url: string; icon: st
     host: 'bids.dekel.co.il',
     url: 'https://bids.dekel.co.il/',
     icon: '📋',
-    status: 'pilot',
+    status: 'active',
   },
   {
     name: "רכבת ישראל",
