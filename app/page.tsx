@@ -18,11 +18,21 @@ const MUTED = "#5b6b7a";
 
 interface Counts { active?: number; exempt?: number; smallbiz?: number }
 interface Sample { id: string; title: string; publisher: string }
+interface Slide { id?: number; title: string; subtitle?: string | null; badge?: string | null; cta_label?: string | null; cta_href?: string | null }
+
+// שקופיות ברירת מחדל — מוצגות עד שמנהל המערכת מגדיר משלו
+const FALLBACK_SLIDES: Slide[] = [
+  { badge: "חדש במערכת", title: "דקל מכרז נוסף למקורות", subtitle: "עיריית ירושלים, מוריה, אוניברסיטת בן גוריון ונתיבי איילון — כולם במקום אחד.", cta_label: "לצפייה במכרזים", cta_href: "/dashboard" },
+  { badge: "בלעדי", title: "מכרזים עם העדפה לעסקים קטנים", subtitle: "המערכת קוראת את חוברות המכרז ומאתרת את סעיף ההעדפה עבורך.", cta_label: "לצפייה במכרזים המסומנים", cta_href: "/dashboard?view=smallbiz" },
+  { badge: "הסוכן החכם", title: "דירוג לפי הפרופיל העסקי שלך", subtitle: "הגדר תחום, אזור וסוגי גופים — והמכרזים הרלוונטיים יעלו לראש הרשימה.", cta_label: "להגדרת פרופיל", cta_href: "/profile" },
+];
 
 export default function Home() {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [counts, setCounts] = useState<Counts>({});
   const [sample, setSample] = useState<Sample[]>([]);
+  const [slides, setSlides] = useState<Slide[]>(FALLBACK_SLIDES);
+  const [si, setSi] = useState(0);
 
   useEffect(() => { setSession(getSession()); }, []);
   useEffect(() => {
@@ -31,7 +41,19 @@ export default function Home() {
       .then(r => r.ok ? r.json() : { tenders: [] })
       .then(d => setSample((d.tenders || []).filter((t: Sample) => t.title && t.title.length > 12).slice(0, 12)))
       .catch(() => {});
+    fetch("/api/slides")
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.slides?.length) setSlides(d.slides); })
+      .catch(() => {});
   }, []);
+
+  // סיבוב אוטומטי — נעצר כשהמשתמש מבקש הפחתת תנועה
+  useEffect(() => {
+    if (slides.length < 2) return;
+    if (typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    const t = setInterval(() => setSi(v => (v + 1) % slides.length), 6500);
+    return () => clearInterval(t);
+  }, [slides.length]);
 
   const n = (v?: number) => (v === undefined ? "—" : v.toLocaleString("he-IL"));
   const primaryHref = session ? "/dashboard" : "/signup";
@@ -154,6 +176,42 @@ export default function Home() {
                 <div style={{ fontSize: 14.5, color: MUTED, lineHeight: 1.6 }}>{d}</div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- סליידר שיווקי (מנוהל מ-/admin) ---------- */}
+      <section style={{ padding: "56px 0", background: "#fff" }}>
+        <div className="wrap">
+          <div style={{ position: "relative", border: `1px solid ${LINE}`, borderRadius: 18, overflow: "hidden", background: `linear-gradient(135deg,${INK} 0%,#164a7a 100%)`, color: "#fff", minHeight: 232 }}>
+            {slides.map((sl, i) => (
+              <div key={sl.id ?? i} aria-hidden={i !== si}
+                style={{
+                  padding: "38px clamp(24px,5vw,54px)",
+                  display: i === si ? "block" : "none",
+                }}>
+                {sl.badge && (
+                  <span style={{ display: "inline-block", border: `1px solid ${GOLD}`, color: GOLD, borderRadius: 999, padding: "5px 13px", fontSize: 12.5, fontWeight: 700, marginBottom: 16 }}>{sl.badge}</span>
+                )}
+                <div className="h" style={{ fontSize: "clamp(23px,3.2vw,34px)", marginBottom: 12, maxWidth: 760 }}>{sl.title}</div>
+                {sl.subtitle && <p style={{ color: "#c6d4e4", fontSize: 16.5, lineHeight: 1.65, margin: "0 0 22px", maxWidth: 640 }}>{sl.subtitle}</p>}
+                {sl.cta_label && (
+                  <a className="btn btn-p" href={sl.cta_href || "/dashboard"} style={{ padding: "12px 22px", fontSize: 15 }}>{sl.cta_label} ←</a>
+                )}
+              </div>
+            ))}
+
+            {slides.length > 1 && (
+              <div style={{ position: "absolute", insetInlineEnd: 22, bottom: 20, display: "flex", gap: 8 }}>
+                {slides.map((_, i) => (
+                  <button key={i} onClick={() => setSi(i)} aria-label={`שקופית ${i + 1}`}
+                    style={{
+                      width: i === si ? 26 : 9, height: 9, borderRadius: 999, border: "none", cursor: "pointer",
+                      background: i === si ? GOLD : "rgba(255,255,255,.38)", transition: "width .2s ease",
+                    }} />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>

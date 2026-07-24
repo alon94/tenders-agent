@@ -13,6 +13,7 @@ const BLUE = '#2b6fc4';
 const BORDER = '#e6eaee';
 const MUTED = '#7a8794';
 
+interface SlideRow { id?: number; title: string; subtitle?: string | null; badge?: string | null; cta_label?: string | null; cta_href?: string | null; sort_order?: number; active?: boolean }
 interface SeriesPt { bucket: string; count: number }
 interface UserRow { id: string; email: string; created_at: string; last_sign_in_at: string | null; email_confirmed_at: string | null }
 interface RunRow {
@@ -41,6 +42,8 @@ function fmtDur(ms: number | null): string {
 }
 const TRIGGER_HE: Record<string, string> = { cron: 'מתוזמן', manual: 'ידני', chain: 'שרשור' };
 
+const inp: React.CSSProperties = { border: '1px solid #e6eaee', borderRadius: 8, padding: '8px 11px', fontSize: 13, fontFamily: 'inherit', direction: 'rtl' };
+
 export default function AdminPage() {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [data, setData] = useState<Overview | null>(null);
@@ -53,6 +56,9 @@ export default function AdminPage() {
   const [toD, setToD] = useState('');
   const [analytics, setAnalytics] = useState<{ tenders: SeriesPt[]; logins: SeriesPt[]; runs: SeriesPt[] } | null>(null);
   const [users, setUsers] = useState<UserRow[] | null>(null);
+  const [slides, setSlides] = useState<SlideRow[]>([]);
+  const [draft, setDraft] = useState<SlideRow>({ title: '', subtitle: '', badge: '', cta_label: '', cta_href: '/dashboard', sort_order: 0, active: true });
+  const [slideBusy, setSlideBusy] = useState(false);
   const [pwErr, setPwErr] = useState('');
   const [pwBusy, setPwBusy] = useState(false);
 
@@ -93,6 +99,40 @@ export default function AdminPage() {
 
   useEffect(() => { if (state === 'ready') { loadAnalytics(); } }, [state, loadAnalytics]);
   useEffect(() => { if (state === 'ready') { loadUsers(); } }, [state, loadUsers]);
+
+  const loadSlides = useCallback(async () => {
+    const b = adminToken(); if (!b) return;
+    try {
+      const r = await fetch('/api/admin/slides', { headers: { Authorization: `Bearer ${b}` } });
+      if (r.ok) setSlides((await r.json()).slides || []);
+    } catch { /* ignore */ }
+  }, [adminToken]);
+  useEffect(() => { if (state === 'ready') loadSlides(); }, [state, loadSlides]);
+
+  async function saveSlide(sl: SlideRow) {
+    const b = adminToken(); if (!b || slideBusy) return;
+    setSlideBusy(true);
+    try {
+      const r = await fetch('/api/admin/slides', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${b}` },
+        body: JSON.stringify(sl),
+      });
+      const d = await r.json();
+      setToast(r.ok && d.ok ? '✓ השקופית נשמרה' : `שגיאה: ${d.error || 'שמירה נכשלה'}`);
+      if (r.ok) { setDraft({ title: '', subtitle: '', badge: '', cta_label: '', cta_href: '/dashboard', sort_order: 0, active: true }); loadSlides(); }
+    } catch { setToast('שגיאת תקשורת'); }
+    setSlideBusy(false);
+  }
+
+  async function removeSlide(id?: number) {
+    const b = adminToken(); if (!b || !id) return;
+    if (!confirm('למחוק את השקופית?')) return;
+    try {
+      const r = await fetch(`/api/admin/slides?id=${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${b}` } });
+      setToast(r.ok ? '✓ נמחקה' : 'מחיקה נכשלה');
+      loadSlides();
+    } catch { setToast('שגיאת תקשורת'); }
+  }
 
   async function pwLogin() {
     if (pwBusy || !pw) return;
@@ -317,6 +357,41 @@ export default function AdminPage() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <h2 style={{ fontSize: 15.5, fontWeight: 700, margin: '22px 0 10px' }}>סליידר שיווקי בדף הבית</h2>
+      <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, padding: 16, marginBottom: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 10, marginBottom: 10 }}>
+          <input placeholder="כותרת (חובה)" value={draft.title} onChange={e => setDraft({ ...draft, title: e.target.value })} style={inp} />
+          <input placeholder="תגית עליונה (למשל: חדש)" value={draft.badge || ''} onChange={e => setDraft({ ...draft, badge: e.target.value })} style={inp} />
+          <input placeholder="טקסט כפתור" value={draft.cta_label || ''} onChange={e => setDraft({ ...draft, cta_label: e.target.value })} style={inp} />
+          <input placeholder="קישור הכפתור" value={draft.cta_href || ''} onChange={e => setDraft({ ...draft, cta_href: e.target.value })} style={inp} />
+          <input placeholder="סדר הצגה" type="number" value={draft.sort_order ?? 0} onChange={e => setDraft({ ...draft, sort_order: Number(e.target.value) })} style={inp} />
+        </div>
+        <textarea placeholder="טקסט משנה" value={draft.subtitle || ''} onChange={e => setDraft({ ...draft, subtitle: e.target.value })}
+          style={{ ...inp, width: '100%', minHeight: 62, resize: 'vertical', marginBottom: 10 }} />
+        <button onClick={() => saveSlide(draft)} disabled={slideBusy || !draft.title}
+          style={{ background: draft.title ? BLUE : '#9db8d8', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 20px', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+          {slideBusy ? 'שומר…' : '+ הוספת שקופית'}
+        </button>
+      </div>
+      <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, overflow: 'hidden', marginBottom: 6 }}>
+        {slides.length === 0 && <div style={{ padding: 18, textAlign: 'center', color: MUTED, fontSize: 13 }}>אין שקופיות — דף הבית מציג את ברירת המחדל</div>}
+        {slides.map((sl, i) => (
+          <div key={sl.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', borderTop: i ? `1px solid ${BORDER}` : 'none' }}>
+            <span style={{ fontSize: 11.5, fontWeight: 700, color: MUTED, minWidth: 22 }}>{sl.sort_order ?? 0}</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 600 }}>{sl.badge ? `[${sl.badge}] ` : ''}{sl.title}</div>
+              <div style={{ fontSize: 12, color: MUTED, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sl.subtitle}</div>
+            </div>
+            <button onClick={() => saveSlide({ ...sl, active: !sl.active })}
+              style={{ background: sl.active ? '#e7f6ec' : '#f2f5f8', color: sl.active ? '#1e7d45' : MUTED, border: 'none', borderRadius: 7, padding: '5px 11px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+              {sl.active ? 'פעילה' : 'מוסתרת'}
+            </button>
+            <button onClick={() => removeSlide(sl.id)}
+              style={{ background: 'transparent', color: '#b04a34', border: 'none', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>מחיקה</button>
+          </div>
+        ))}
       </div>
 
       <h2 style={{ fontSize: 15.5, fontWeight: 700, margin: '22px 0 10px' }}>אנליטיקה</h2>

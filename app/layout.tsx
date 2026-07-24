@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import FloatingTenders from './components/FloatingTenders'
 
 export const metadata: Metadata = {
     title: 'שווה מכרזים | נתונים חיים ממינהל הרכש הממשלתי',
@@ -15,6 +16,7 @@ export default function RootLayout({
         <html lang="he" dir="rtl">
             <body>
                 {children}
+                <FloatingTenders />
                 <style>{`
 @media (max-width: 768px) {
     [style*="flex: 0 0 238px"],

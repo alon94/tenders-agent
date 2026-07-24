@@ -55,6 +55,17 @@ export async function ensureOpsTables(): Promise<void> {
         counts_json jsonb,
         error text
       );
+      create table if not exists marketing_slides (
+        id bigserial primary key,
+        title text not null,
+        subtitle text,
+        badge text,
+        cta_label text,
+        cta_href text,
+        sort_order int not null default 0,
+        active boolean not null default true,
+        updated_at timestamptz not null default now()
+      );
       create table if not exists login_events (
         id bigserial primary key,
         email text not null,
@@ -343,4 +354,46 @@ export async function seriesFromTable(
     if (k) counts.set(k, (counts.get(k) || 0) + 1);
   }
   return Array.from(counts.entries()).map(([bucket, count]) => ({ bucket, count })).sort((a, b) => a.bucket.localeCompare(b.bucket));
+}
+
+
+// ============================================================
+//  שקופיות שיווקיות לדף הבית — ניתנות לעריכה ממערכת הניהול
+// ============================================================
+export interface Slide {
+  id?: number; title: string; subtitle?: string | null; badge?: string | null;
+  cta_label?: string | null; cta_href?: string | null; sort_order?: number; active?: boolean;
+}
+
+export async function listSlides(onlyActive = false): Promise<Slide[]> {
+  await ensureOpsTables();
+  const f = onlyActive ? 'active=is.true&' : '';
+  const res = await fetch(restUrl(`/marketing_slides?${f}order=sort_order.asc,id.asc`), {
+    headers: svcHeaders(), cache: 'no-store',
+  });
+  if (!res.ok) return [];
+  return (await res.json().catch(() => [])) as Slide[];
+}
+
+export async function saveSlide(slide: Slide): Promise<boolean> {
+  await ensureOpsTables();
+  const body = {
+    title: slide.title, subtitle: slide.subtitle ?? null, badge: slide.badge ?? null,
+    cta_label: slide.cta_label ?? null, cta_href: slide.cta_href ?? null,
+    sort_order: slide.sort_order ?? 0, active: slide.active ?? true, updated_at: new Date().toISOString(),
+  };
+  const res = slide.id
+    ? await fetch(restUrl(`/marketing_slides?id=eq.${slide.id}`), {
+        method: 'PATCH', headers: svcHeaders({ Prefer: 'return=minimal' }), body: JSON.stringify(body) })
+    : await fetch(restUrl('/marketing_slides'), {
+        method: 'POST', headers: svcHeaders({ Prefer: 'return=minimal' }), body: JSON.stringify(body) });
+  return res.ok;
+}
+
+export async function deleteSlide(id: number): Promise<boolean> {
+  await ensureOpsTables();
+  const res = await fetch(restUrl(`/marketing_slides?id=eq.${id}`), {
+    method: 'DELETE', headers: svcHeaders({ Prefer: 'return=minimal' }),
+  });
+  return res.ok;
 }
