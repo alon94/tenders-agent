@@ -210,6 +210,22 @@ export async function fetchDocsTextFromPage(pageUrl: string): Promise<string> {
       if (combined.length > 200000) break;
     } catch { /* מסמך בודד שנכשל לא עוצר */ }
   }
+
+  // Fallback: אתרים כמו רש"ת אינם מפרסמים את חוברת המכרז להורדה
+  // (נדרשת פנייה למנהל הנכס), אך דף המודעה עצמו מכיל את תנאי הסף
+  // בתמצית — ולעיתים גם אזכור העדפה. עדיף לסווג אותו מכלום.
+  if (!combined.trim()) {
+    const text = html
+      .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&quot;/g, '"')
+      .replace(/&#0?39;|&apos;|&#x27;/gi, "'")
+      .replace(/\s+/g, ' ')
+      .trim();
+    // סף מינימלי — דף ניווט ריק אינו שווה קריאת LLM
+    if (text.length > 400) return text.slice(0, 60000);
+  }
   return combined;
 }
 
