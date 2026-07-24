@@ -183,14 +183,26 @@ async function runSmallBizBatch(chainDepth: number, origin: string, runTrigger: 
     const cutoff180 = new Date(Date.now() - 365 * 86400000).toISOString().split('T')[0];
     // זכאות: חוברת mr.gov.il, או מקור שממנו ניתן לשלוף מסמכים מדף
     // המכרז (רש"ת, מכבי — מנוע השליפה הגנרי).
-    params.set('and', `(or(publication_id.not.is.null,source.in.(iaa,maccabi)),or(deadline.gte.${today},and(deadline.is.null,publish_date.gte.${cutoff180},type.not.ilike.*פטור*)))`);
     params.set('order', 'publish_date.desc.nullslast');
     params.set('limit', String(BATCH_SIZE));
 
-    const res = await fetch(`${restUrl('/tenders')}?${params.toString()}`, {
-      headers: authHeaders(),
-      cache: 'no-store',
-    });
+    // שתי שאילתות מפורשות במקום תנאי מקונן שביר:
+    // A) מכרזי mr.gov.il עם חוברת — מועד עתידי, או ללא מועד אך טרי
+    //    ואינו פטור (מונע הצפה של אלפי הודעות).
+    // B) מקורות עם שליפת מסמכים מדף המכרז (רש"ת, מכבי) — לרשומות
+    //    אלה אין תאריך פרסום מהקציר, ולכן אין להתנות בו.
+    const qA = new URLSearchParams(params);
+    qA.set('publication_id', 'not.is.null');
+    qA.set('or', `(deadline.gte.${today},and(deadline.is.null,publish_date.gte.${cutoff180},type.not.ilike.*פטור*))`);
+    const qB = new URLSearchParams(params);
+    qB.set('source', 'in.(iaa,maccabi)');
+    qB.set('or', `(deadline.gte.${today},deadline.is.null)`);
+
+    const [resA, resB] = await Promise.all([
+      fetch(`${restUrl('/tenders')}?${qA.toString()}`, { headers: authHeaders(), cache: 'no-store' }),
+      fetch(`${restUrl('/tenders')}?${qB.toString()}`, { headers: authHeaders(), cache: 'no-store' }),
+    ]);
+    const res = resA.ok ? resA : resB;
     if (!res.ok) {
       const text = await res.text().catch(() => '');
       // אם העמודות עוד לא קיימות בטבלה — הודעה ברורה
@@ -203,7 +215,12 @@ async function runSmallBizBatch(chainDepth: number, origin: string, runTrigger: 
       throw new Error(`Supabase query failed (${res.status}): ${text}`);
     }
 
-    const rawBatch = (await res.json()) as { id: string; title: string; type?: string | null; publication_id?: string | null; url?: string | null; source?: string }[];
+    type Row = { id: string; title: string; type?: string | null; publication_id?: string | null; url?: string | null; source?: string };
+    const rowsA: Row[] = resA.ok ? await resA.json().catch(() => []) : [];
+    const rowsB: Row[] = resB.ok ? await resB.json().catch(() => []) : [];
+    // מקורות המסמכים תחילה — הם החדשים והמעניינים, ואינם רבים
+    const seenIds = new Set<string>();
+    const rawBatch: Row[] = [...rowsB, ...rowsA].filter((r) => (seenIds.has(r.id) ? false : (seenIds.add(r.id), true))).slice(0, BATCH_SIZE);
     // הודעות התקשרות/פטור לפי תבניות כותרת — מסומנות "נבדקו" מיידית,
     // בלי לשרוף קריאת LLM: ההעדפה ממילא לא רלוונטית להודעה שאינה מכרז.
     const notices = rawBatch.filter((t) => isExempt(t.type, t.title));

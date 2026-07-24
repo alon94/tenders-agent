@@ -34,7 +34,7 @@ export async function GET(req: Request) {
       countExact("small_biz=is.true"),
       countExact("small_biz=is.false"),
       countExact("small_biz_checked_at=not.is.null&small_biz=is.null"),
-      countExact(`small_biz_checked_at=is.null&publication_id=not.is.null&deadline=gte.${today}`),
+      countExact(`small_biz_checked_at=is.null&or=(publication_id.not.is.null,source.in.(iaa,maccabi))&or=(deadline.gte.${today},deadline.is.null)`),
       countExact("small_biz_checked_at=is.null&publication_id=is.null"),
       countExact(`small_biz_checked_at=is.null&publication_id=not.is.null&or=(deadline.lt.${today},deadline.is.null)`),
     ]);
