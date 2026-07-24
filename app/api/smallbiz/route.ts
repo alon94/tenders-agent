@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { waitUntil } from '@vercel/functions';
 import { classifySmallBiz, fetchTenderPdfText } from '@/app/lib/smallbiz';
 import { recordSyncRun, detectTrigger } from '@/app/lib/ops';
+import { isExempt } from '@/app/lib/tenderMeta';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // Fluid Compute מאפשר עד 5 דקות גם ב-Hobby
@@ -105,7 +106,7 @@ export async function GET(req: Request) {
   // ?requeue=1 — מחזיר לתור מכרזים שה-sweep סימן בטעות: יש חוברת,
   // ללא מועד, פורסמו בחצי השנה האחרונה ואינם פטור ממכרז.
   if (new URL(req.url).searchParams.get('requeue') === '1') {
-    const cutoff = new Date(Date.now() - 180 * 86400000).toISOString().split('T')[0];
+    const cutoff = new Date(Date.now() - 365 * 86400000).toISOString().split('T')[0];
     const sweepMsg = encodeURIComponent('לא ניתן לבדיקה — אין חוברת מכרז זמינה או שחלף מועד ההגשה');
     const filter = `small_biz_summary=eq.${sweepMsg}&publication_id=not.is.null&deadline=is.null&publish_date=gte.${cutoff}&type=not.ilike.${encodeURIComponent('*פטור*')}`;
     const cnt = await fetch(`${restUrl('/tenders')}?${filter}&select=id&limit=1`, {
@@ -142,12 +143,12 @@ async function runSmallBizBatch(chainDepth: number, origin: string, runTrigger: 
 
     // אצווה: טרם נבדקו, דדליין עתידי, מקור ממשלתי (למוניציפליים אין חוברות ב-mr.gov.il)
     const params = new URLSearchParams();
-    params.set('select', 'id,title,publication_id,deadline');
+    params.set('select', 'id,title,type,publication_id,deadline');
     params.set('small_biz_checked_at', 'is.null');
     // זכאות: יש חוברת, וגם — מועד עתידי, או ללא מועד אך פורסם בחצי
     // השנה האחרונה ואינו פטור ממכרז (ל-obudget יש אלפי מכרזים אמיתיים
     // עם claim_date חסר — בלעדי זה הם לא ייבדקו לעולם).
-    const cutoff180 = new Date(Date.now() - 180 * 86400000).toISOString().split('T')[0];
+    const cutoff180 = new Date(Date.now() - 365 * 86400000).toISOString().split('T')[0];
     params.set('publication_id', 'not.is.null');
     params.set('or', `(deadline.gte.${today},and(deadline.is.null,publish_date.gte.${cutoff180},type.not.ilike.*פטור*))`);
     params.set('order', 'publish_date.desc.nullslast');
@@ -169,7 +170,21 @@ async function runSmallBizBatch(chainDepth: number, origin: string, runTrigger: 
       throw new Error(`Supabase query failed (${res.status}): ${text}`);
     }
 
-    const batch = (await res.json()) as { id: string; title: string; publication_id: string }[];
+    const rawBatch = (await res.json()) as { id: string; title: string; type?: string | null; publication_id: string }[];
+    // הודעות התקשרות/פטור לפי תבניות כותרת — מסומנות "נבדקו" מיידית,
+    // בלי לשרוף קריאת LLM: ההעדפה ממילא לא רלוונטית להודעה שאינה מכרז.
+    const notices = rawBatch.filter((t) => isExempt(t.type, t.title));
+    if (notices.length) {
+      await Promise.all(notices.map((t) =>
+        fetch(`${restUrl('/tenders')}?id=eq.${encodeURIComponent(t.id)}`, {
+          method: 'PATCH',
+          headers: authHeaders({ Prefer: 'return=minimal' }),
+          body: JSON.stringify({ small_biz: null, small_biz_summary: 'הודעת התקשרות/פטור — בדיקת העדפה לא רלוונטית', small_biz_checked_at: new Date().toISOString() }),
+        }).catch(() => {})
+      ));
+      console.log('SmallBiz: marked', notices.length, 'notices as not-applicable (no LLM)');
+    }
+    const batch = rawBatch.filter((t) => !isExempt(t.type, t.title));
     const results: { id: string; small_biz: boolean | null; confidence: string | null }[] = [];
     const startedAt = Date.now();
 
@@ -206,7 +221,7 @@ async function runSmallBizBatch(chainDepth: number, origin: string, runTrigger: 
 
     // --- לולאת שרשור: אם נשארו מכרזים בתור, הריצה מפעילה את הבאה ---
     // הילד עונה תוך <1ש' (מבנה ענה-מיד), כך שה-await כאן זול ובטוח.
-    const hasMore = batch.length === BATCH_SIZE || results.length < batch.length;
+    const hasMore = rawBatch.length === BATCH_SIZE || results.length < batch.length;
     let chained = false;
     if (hasMore && chainDepth < MAX_CHAIN && process.env.CRON_SECRET) {
       chained = true;
