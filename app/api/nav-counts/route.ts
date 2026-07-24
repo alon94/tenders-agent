@@ -23,7 +23,7 @@ export async function GET() {
   const [active, exempt, smallbiz] = await Promise.all([
     cnt(activeF),
     cnt(exemptF),
-    cnt(`small_biz=is.true&${activeF}`),
+    cnt(`small_biz=is.true&small_biz_confidence=in.(high,medium)&${activeF}`),
   ]);
   return NextResponse.json(
     { active, exempt, smallbiz },

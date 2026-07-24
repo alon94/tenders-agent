@@ -3,6 +3,9 @@ import { useEffect, useRef, useState } from 'react';
 import InternalShell from '../components/InternalShell';
 import { BORDER, DARK } from '../lib/tenderMeta';
 import { fetchMyProfile, type BusinessProfile } from '../lib/profileApi';
+import { fetchDedupedTenders } from '../lib/tenderData';
+import { scoreTender } from '../lib/scoring';
+import { parseHeDate } from '../lib/tenderMeta';
 
 type Step = { icon: string; title: string; sub: string; state: 'done' | 'active' | 'pending' };
 type TenderCard = {
@@ -110,6 +113,28 @@ export default function AgentPage() {
     })();
   }, []);
 
+  // מכרזים מותאמים לפרופיל — מדורגים ע"י מנוע הדירוג של הסוכן
+  const [matched, setMatched] = useState<{ id: string; title: string; publisher: string; deadline: string; score: number }[]>([]);
+  const [matchedLoading, setMatchedLoading] = useState(true);
+  const [hasProfile, setHasProfile] = useState<boolean | null>(null);
+  useEffect(() => {
+    (async () => {
+      try {
+        const prof = profileRef.current ?? (await fetchMyProfile().catch(() => null));
+        setHasProfile(!!prof && Array.isArray(prof.categories) && prof.categories.length > 0);
+        const res: any = await fetchDedupedTenders();
+        const ts: any[] = res.tenders || [];
+        const scored = ts
+          .filter((t) => { const d = parseHeDate(t.deadline); return d === null || d.getTime() >= Date.now(); })
+          .map((t) => ({ id: t.id, title: t.title, publisher: t.publisher || '', deadline: t.deadline || '', score: scoreTender(t, (prof || { categories: [], region: 'all', publisher_type: 'all' }) as any).display }))
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 10);
+        setMatched(scored);
+      } catch { /* פאנל ההתאמות אינו קריטי */ }
+      setMatchedLoading(false);
+    })();
+  }, []);
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [messages, thinking]);
@@ -149,6 +174,31 @@ export default function AgentPage() {
       subtitle={loading ? 'טוען…' : '● פעיל · סורק ' + scanning.toLocaleString('he-IL') + ' מכרזים'}
     >
       <div style={{ maxWidth: 760 }}>
+        {/* המכרזים המובילים לפי הפרופיל העסקי */}
+        <div style={{ background: '#fff', border: '1px solid ' + BORDER, borderRadius: 14, padding: 18, marginBottom: 18 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: DARK, flex: 1 }}>◈ המכרזים המתאימים ביותר לפרופיל שלך</div>
+            <a href="/profile" style={{ fontSize: 12, color: '#2b6fc4', textDecoration: 'none' }}>עריכת פרופיל ←</a>
+          </div>
+          {hasProfile === false && (
+            <div style={{ fontSize: 13, color: '#7a8794', padding: '6px 0' }}>
+              טרם הוגדר פרופיל עסקי — ההתאמות כלליות. <a href="/profile" style={{ color: '#2b6fc4' }}>הגדר פרופיל</a> כדי שהסוכן ידרג לפי התחומים, האזור והגופים שלך.
+            </div>
+          )}
+          {matchedLoading && <div style={{ fontSize: 13, color: '#7a8794' }}>מדרג מכרזים לפי הפרופיל…</div>}
+          {!matchedLoading && matched.map((m, i) => (
+            <a key={m.id} href={'/tender/' + m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '9px 0', borderTop: i ? '1px solid #eef1f4' : 'none', textDecoration: 'none' }}>
+              <span style={{ width: 34, height: 34, borderRadius: 9, background: '#e8f1fb', color: '#1e5aa8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, flex: '0 0 auto' }}>{m.score}</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 600, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.title}</div>
+                <div style={{ fontSize: 12, color: '#7a8794' }}>{m.publisher || '—'}{m.deadline ? ' · מועד: ' + m.deadline.split('T')[0].split('-').reverse().join('.') : ''}</div>
+              </div>
+              <span style={{ color: '#9aa6b2', fontSize: 13 }}>‹</span>
+            </a>
+          ))}
+          {!matchedLoading && matched.length === 0 && <div style={{ fontSize: 13, color: '#7a8794' }}>לא נמצאו מכרזים מתאימים כרגע.</div>}
+        </div>
+
         <div style={{ background: '#fff', border: '1px solid ' + BORDER, borderRadius: 14, padding: 18, marginBottom: 18 }}>
           <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14, color: DARK }}>⚙ תהליך העבודה של הסוכן</div>
           {loading && <div style={{ fontSize: 13, color: '#7a8794' }}>סורק מכרזים ומחשב התאמות…</div>}
