@@ -117,9 +117,49 @@ export default function Home() {
             מסווגים לפי תחום, ומדרגים לפי הפרופיל העסקי שלך — כדי שתראה רק את מה שרלוונטי לך.
           </p>
 
-          <div style={{ display: "flex", gap: 13, flexWrap: "wrap", marginBottom: 46 }}>
+          <div style={{ display: "flex", gap: 13, flexWrap: "wrap", marginBottom: 30 }}>
             <a className="btn btn-p" href={primaryHref}>{primaryLabel} ←</a>
             <a className="btn btn-s" href="/dashboard">לצפייה במכרזים</a>
+          </div>
+
+          {/* סליידר שיווקי — מנוהל מ-/admin. פאנל זכוכיתי כדי להיקרא על רקע הנייבי */}
+          <div style={{
+            position: "relative", marginBottom: 40,
+            background: "rgba(255,255,255,.07)", border: "1px solid rgba(255,255,255,.16)",
+            borderInlineStart: `3px solid ${GOLD}`, borderRadius: 14,
+            padding: "22px clamp(20px,3vw,30px) 22px", backdropFilter: "blur(6px)",
+            minHeight: 132,
+          }}>
+            {slides.map((sl, i) => (
+              <div key={sl.id ?? i} aria-hidden={i !== si} style={{ display: i === si ? "block" : "none", paddingBottom: slides.length > 1 ? 16 : 0 }}>
+                {sl.badge && (
+                  <span style={{ display: "inline-block", color: GOLD, fontSize: 12, fontWeight: 700, letterSpacing: ".05em", marginBottom: 8 }}>
+                    {sl.badge}
+                  </span>
+                )}
+                <div className="h" style={{ fontSize: "clamp(18px,2.2vw,23px)", marginBottom: 7, color: "#fff" }}>{sl.title}</div>
+                {sl.subtitle && (
+                  <p style={{ color: "#b9cbdf", fontSize: 15, lineHeight: 1.6, margin: "0 0 10px", maxWidth: 620 }}>{sl.subtitle}</p>
+                )}
+                {sl.cta_label && (
+                  <a href={sl.cta_href || "/dashboard"} style={{ color: GOLD, fontWeight: 700, fontSize: 14.5, textDecoration: "none" }}>
+                    {sl.cta_label} ←
+                  </a>
+                )}
+              </div>
+            ))}
+
+            {slides.length > 1 && (
+              <div style={{ position: "absolute", insetInlineStart: "clamp(20px,3vw,30px)", bottom: 16, display: "flex", gap: 7 }}>
+                {slides.map((_, i) => (
+                  <button key={i} onClick={() => setSi(i)} aria-label={`שקופית ${i + 1}`}
+                    style={{
+                      width: i === si ? 24 : 8, height: 8, borderRadius: 999, border: "none", cursor: "pointer", padding: 0,
+                      background: i === si ? GOLD : "rgba(255,255,255,.32)", transition: "width .2s ease",
+                    }} />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* מדדים חיים */}
@@ -176,42 +216,6 @@ export default function Home() {
                 <div style={{ fontSize: 14.5, color: MUTED, lineHeight: 1.6 }}>{d}</div>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ---------- סליידר שיווקי (מנוהל מ-/admin) ---------- */}
-      <section style={{ padding: "56px 0", background: "#fff" }}>
-        <div className="wrap">
-          <div style={{ position: "relative", border: `1px solid ${LINE}`, borderRadius: 18, overflow: "hidden", background: `linear-gradient(135deg,${INK} 0%,#164a7a 100%)`, color: "#fff", minHeight: 232 }}>
-            {slides.map((sl, i) => (
-              <div key={sl.id ?? i} aria-hidden={i !== si}
-                style={{
-                  padding: "38px clamp(24px,5vw,54px)",
-                  display: i === si ? "block" : "none",
-                }}>
-                {sl.badge && (
-                  <span style={{ display: "inline-block", border: `1px solid ${GOLD}`, color: GOLD, borderRadius: 999, padding: "5px 13px", fontSize: 12.5, fontWeight: 700, marginBottom: 16 }}>{sl.badge}</span>
-                )}
-                <div className="h" style={{ fontSize: "clamp(23px,3.2vw,34px)", marginBottom: 12, maxWidth: 760 }}>{sl.title}</div>
-                {sl.subtitle && <p style={{ color: "#c6d4e4", fontSize: 16.5, lineHeight: 1.65, margin: "0 0 22px", maxWidth: 640 }}>{sl.subtitle}</p>}
-                {sl.cta_label && (
-                  <a className="btn btn-p" href={sl.cta_href || "/dashboard"} style={{ padding: "12px 22px", fontSize: 15 }}>{sl.cta_label} ←</a>
-                )}
-              </div>
-            ))}
-
-            {slides.length > 1 && (
-              <div style={{ position: "absolute", insetInlineEnd: 22, bottom: 20, display: "flex", gap: 8 }}>
-                {slides.map((_, i) => (
-                  <button key={i} onClick={() => setSi(i)} aria-label={`שקופית ${i + 1}`}
-                    style={{
-                      width: i === si ? 26 : 9, height: 9, borderRadius: 999, border: "none", cursor: "pointer",
-                      background: i === si ? GOLD : "rgba(255,255,255,.38)", transition: "width .2s ease",
-                    }} />
-                ))}
-              </div>
-            )}
           </div>
         </div>
       </section>
