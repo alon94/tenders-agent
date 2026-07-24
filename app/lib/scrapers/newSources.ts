@@ -279,6 +279,10 @@ export const NEW_SOURCES: NewSource[] = [
   genericSource("jda", "הרשות לפיתוח ירושלים", "הרשות לפיתוח ירושלים", [
     "https://www.jda.gov.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/",
   ]),
+  genericSource("innovation", "רשות החדשנות — קולות קוראים", "רשות החדשנות", [
+    "https://innovationisrael.org.il/kol_kore/",
+    "https://innovationisrael.org.il/programs/",
+  ], { match: /קול קורא|מסלול|פנייה לציבור|הליך תחרותי/, hrefMatch: /kol[_-]kore/i }),
   genericSource("iec", "חברת החשמל", "חברת החשמל לישראל", [
     "https://www.iec.co.il/content/suppliers/content-pages/tendersinfo",
   ], {

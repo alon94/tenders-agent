@@ -155,6 +155,14 @@ const SOURCES: { name: string; desc: string; host: string; url: string; icon: st
     status: 'active',
   },
   {
+    name: "רשות החדשנות — קולות קוראים",
+    desc: "מסלולי הטבה, קולות קוראים והליכים תחרותיים למענקי מו\"פ — רלוונטי לחברות טכנולוגיה, סטארט-אפים ותעשייה",
+    host: 'innovationisrael.org.il',
+    url: 'https://innovationisrael.org.il/kol_kore/',
+    icon: '💡',
+    status: 'pilot',
+  },
+  {
     name: "חברת החשמל",
     desc: "מכרזים ממוכנים ופורטל ספקים — הערה: האתר חסום מחוץ לישראל, נדרש proxy ישראלי לסריקה אוטומטית",
     host: 'iec.co.il',
