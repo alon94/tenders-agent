@@ -303,24 +303,28 @@ export interface SourceRunReport {
 }
 
 export async function runNewSourceScrapers(opts: { only?: string; dry?: boolean } = {}): Promise<SourceRunReport[]> {
-  const reports: SourceRunReport[] = [];
   const targets = NEW_SOURCES.filter((s) => (opts.only ? s.id === opts.only : s.enabled));
-  for (const s of targets) {
-    const t0 = Date.now();
-    try {
-      const recs = await s.run();
-      // סינון היגיינה: כותרת מינימלית ו-id ייחודי
-      const clean = recs.filter((r) => r.title && r.title.length >= 8);
-      let upserted = 0;
-      if (!opts.dry && clean.length) {
-        const res = await upsertTenders(clean);
-        upserted = res.count;
+
+  // הרצה מקבילה: בטור, מקורות חסומים "אוכלים" את תקציב הזמן בהמתנה
+  // ומפילים את כל הריצה בטיים-אאוט של הפלטפורמה. במקביל — משך
+  // הריצה נקבע ע"י המקור האיטי ביותר בלבד.
+  const reports: SourceRunReport[] = await Promise.all(
+    targets.map(async (s): Promise<SourceRunReport> => {
+      const t0 = Date.now();
+      try {
+        const recs = await s.run();
+        const clean = recs.filter((r) => r.title && r.title.length >= 8);
+        let upserted = 0;
+        if (!opts.dry && clean.length) {
+          const res = await upsertTenders(clean);
+          upserted = res.count;
+        }
+        return { id: s.id, name: s.name, ok: true, fetched: clean.length, upserted, ms: Date.now() - t0, note: s.note };
+      } catch (e) {
+        return { id: s.id, name: s.name, ok: false, fetched: 0, upserted: 0, ms: Date.now() - t0, error: String(e), note: s.note };
       }
-      reports.push({ id: s.id, name: s.name, ok: true, fetched: clean.length, upserted, ms: Date.now() - t0, note: s.note });
-    } catch (e) {
-      reports.push({ id: s.id, name: s.name, ok: false, fetched: 0, upserted: 0, ms: Date.now() - t0, error: String(e), note: s.note });
-    }
-  }
+    })
+  );
   // מקורות מושבתים מדווחים גם הם, לשקיפות
   for (const s of NEW_SOURCES.filter((x) => !x.enabled && !opts.only)) {
     reports.push({ id: s.id, name: s.name, ok: false, fetched: 0, upserted: 0, ms: 0, error: "disabled", note: s.note });

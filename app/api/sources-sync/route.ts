@@ -3,7 +3,7 @@ import { runNewSourceScrapers } from "@/app/lib/scrapers/newSources";
 import { recordSyncRun, detectTrigger } from "@/app/lib/ops";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 120;
+export const maxDuration = 60; // תקרת Hobby בפועל
 
 // GET /api/sources-sync?secret=...            ← מריץ את כל המקורות הפעילים
 // GET /api/sources-sync?secret=...&source=rmi ← מקור בודד (גם אם מושבת)
