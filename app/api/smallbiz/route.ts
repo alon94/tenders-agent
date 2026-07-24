@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { waitUntil } from '@vercel/functions';
-import { classifySmallBiz, fetchTenderPdfText } from '@/app/lib/smallbiz';
+import { classifySmallBiz, fetchTenderDocsText } from '@/app/lib/smallbiz';
 import { recordSyncRun, detectTrigger } from '@/app/lib/ops';
 import { isExempt } from '@/app/lib/tenderMeta';
 
@@ -158,14 +158,15 @@ async function runSmallBizBatch(chainDepth: number, origin: string, runTrigger: 
 
     // אצווה: טרם נבדקו, דדליין עתידי, מקור ממשלתי (למוניציפליים אין חוברות ב-mr.gov.il)
     const params = new URLSearchParams();
-    params.set('select', 'id,title,type,publication_id,deadline');
+    params.set('select', 'id,title,type,publication_id,url,source,deadline');
     params.set('small_biz_checked_at', 'is.null');
     // זכאות: יש חוברת, וגם — מועד עתידי, או ללא מועד אך פורסם בחצי
     // השנה האחרונה ואינו פטור ממכרז (ל-obudget יש אלפי מכרזים אמיתיים
     // עם claim_date חסר — בלעדי זה הם לא ייבדקו לעולם).
     const cutoff180 = new Date(Date.now() - 365 * 86400000).toISOString().split('T')[0];
-    params.set('publication_id', 'not.is.null');
-    params.set('or', `(deadline.gte.${today},and(deadline.is.null,publish_date.gte.${cutoff180},type.not.ilike.*פטור*))`);
+    // זכאות: חוברת mr.gov.il, או מקור שממנו ניתן לשלוף מסמכים מדף
+    // המכרז (רש"ת, מכבי — מנוע השליפה הגנרי).
+    params.set('and', `(or(publication_id.not.is.null,source.in.(iaa,maccabi)),or(deadline.gte.${today},and(deadline.is.null,publish_date.gte.${cutoff180},type.not.ilike.*פטור*)))`);
     params.set('order', 'publish_date.desc.nullslast');
     params.set('limit', String(BATCH_SIZE));
 
@@ -185,7 +186,7 @@ async function runSmallBizBatch(chainDepth: number, origin: string, runTrigger: 
       throw new Error(`Supabase query failed (${res.status}): ${text}`);
     }
 
-    const rawBatch = (await res.json()) as { id: string; title: string; type?: string | null; publication_id: string }[];
+    const rawBatch = (await res.json()) as { id: string; title: string; type?: string | null; publication_id?: string | null; url?: string | null; source?: string }[];
     // הודעות התקשרות/פטור לפי תבניות כותרת — מסומנות "נבדקו" מיידית,
     // בלי לשרוף קריאת LLM: ההעדפה ממילא לא רלוונטית להודעה שאינה מכרז.
     const notices = rawBatch.filter((t) => isExempt(t.type, t.title));
@@ -204,10 +205,10 @@ async function runSmallBizBatch(chainDepth: number, origin: string, runTrigger: 
     const startedAt = Date.now();
 
     // עיבוד מכרז בודד + עדכון נקודתי של שדות ההעדפה בלבד
-    async function processOne(t: { id: string; title: string; publication_id: string }) {
+    async function processOne(t: { id: string; title: string; publication_id?: string | null; url?: string | null }) {
       let update: Record<string, unknown>;
       try {
-        const text = await fetchTenderPdfText(t.publication_id);
+        const text = await fetchTenderDocsText(t);
         const cls = await classifySmallBiz(t.title, text);
         update = { ...cls, small_biz_checked_at: new Date().toISOString() };
         results.push({ id: t.id, small_biz: cls.small_biz, confidence: cls.small_biz_confidence });

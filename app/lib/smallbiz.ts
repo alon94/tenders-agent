@@ -157,4 +157,69 @@ export async function fetchTenderPdfText(publicationId: string): Promise<string>
   return combined;
 }
 
+/**
+ * מנוע שליפת מסמכים גנרי: פותח את דף המכרז במקור, מאתר קישורי
+ * PDF/DOC/DOCX, ומחלץ מהם טקסט. משמש מקורות שאין להם publication_id
+ * של mr.gov.il (רש"ת, מכבי, ובהמשך מקורות נוספים) — כך שמנוע זיהוי
+ * ההעדפה פועל עליהם ללא שינוי.
+ */
+export async function fetchDocsTextFromPage(pageUrl: string): Promise<string> {
+  if (!pageUrl) return '';
+  let html = '';
+  try {
+    const res = await fetch(pageUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+        'Accept-Language': 'he-IL,he;q=0.9',
+      },
+      cache: 'no-store',
+    });
+    if (!res.ok) return '';
+    html = await res.text();
+  } catch { return ''; }
+
+  const origin = (() => { try { return new URL(pageUrl).origin; } catch { return ''; } })();
+  const abs = (href: string) => {
+    try { return new URL(href, pageUrl).toString(); } catch { return href.startsWith('/') ? origin + href : href; }
+  };
+
+  const urls = [...html.matchAll(/href="([^"]+\.(?:pdf|docx?|PDF|DOCX?))(?:\?[^"]*)?"/g)]
+    .map((m) => abs(m[1]))
+    .filter((v, i, a) => a.indexOf(v) === i)
+    .slice(0, 3); // עד 3 מסמכים — שמירה על תקציב זמן
+
+  let combined = '';
+  for (const url of urls) {
+    try {
+      const docRes = await fetch(url, { cache: 'no-store' });
+      if (!docRes.ok) continue;
+      const ctype = docRes.headers.get('content-type') || '';
+      const buf = Buffer.from(await docRes.arrayBuffer());
+      if (buf.length > 15 * 1024 * 1024) continue;
+      if (ctype.includes('pdf') || buf.subarray(0, 4).toString() === '%PDF') {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const pdfParse = require('pdf-parse/lib/pdf-parse.js');
+        const parsed = await pdfParse(buf).catch(() => null);
+        if (parsed?.text) combined += '\n' + parsed.text;
+      } else if (ctype.includes('word') || ctype.includes('officedocument') || /\.docx?$/i.test(url)) {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const mammoth = require('mammoth');
+        const out = await mammoth.extractRawText({ buffer: buf }).catch(() => null);
+        if (out?.value) combined += '\n' + out.value;
+      }
+      if (combined.length > 200000) break;
+    } catch { /* מסמך בודד שנכשל לא עוצר */ }
+  }
+  return combined;
+}
+
+/** ניתוב לפי מקור: mr.gov.il דרך publication_id, השאר דרך דף המכרז. */
+export async function fetchTenderDocsText(t: { publication_id?: string | null; url?: string | null }): Promise<string> {
+  if (t.publication_id) {
+    const viaMr = await fetchTenderPdfText(t.publication_id).catch(() => '');
+    if (viaMr) return viaMr;
+  }
+  return t.url ? fetchDocsTextFromPage(t.url) : '';
+}
+
 export type { TenderRecord };
