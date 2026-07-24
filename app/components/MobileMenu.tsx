@@ -17,6 +17,7 @@ const ACTIVE_BG = '#e8f1fb';
 const ACTIVE_FG = '#1e5aa8';
 
 const NAV = [
+  { icon: '⌂', label: 'דף הבית', href: '/' },
   { icon: '◧', label: 'גילוי מכרזים', href: '/dashboard', countKey: 'active' as const },
   { icon: '⊘', label: 'מכרזים פטורים', href: '/dashboard?view=exempt', countKey: 'exempt' as const },
   { icon: '⭐', label: 'העדפה לעסקים קטנים', href: '/dashboard?view=smallbiz', countKey: 'smallbiz' as const },
@@ -115,7 +116,8 @@ export default function MobileMenu() {
             </div>
 
             {NAV.map((item) => {
-              const active = (path === item.href.split('?')[0] && !item.href.includes('?')) || (path != null && item.href.indexOf('?') < 0 && path.startsWith(item.href + '/'));
+              const base = item.href.split('?')[0];
+              const active = item.href.includes('?') ? false : base === '/' ? path === '/' : (path === base || (path != null && path.startsWith(base + '/')));
               return (
                 <a
                   key={item.href}

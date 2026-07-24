@@ -150,6 +150,7 @@ export default function Dashboard(){
   const exemptCnt=useMemo(()=>all.filter(t=>isExempt(t.type,t.title)).length,[all]);
   const sbCnt=useMemo(()=>all.filter(t=>t.smallBiz&&(t.smallBizConfidence==='high'||t.smallBizConfidence==='medium')).length,[all]);
   const sideNav=[
+    {icon:'⌂',label:'דף הבית',href:'/'},
     {icon:'◧',label:'גילוי מכרזים',href:'/dashboard',active:!exemptView&&!sbView,count:activeCnt},
     {icon:'⊘',label:'מכרזים פטורים',href:'/dashboard?view=exempt',active:exemptView,count:exemptCnt},
     {icon:'⭐',label:'העדפה לעסקים קטנים',href:'/dashboard?view=smallbiz',active:sbView,count:sbCnt},

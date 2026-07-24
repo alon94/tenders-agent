@@ -129,7 +129,8 @@ export default function InternalShell({
           </div>
           <div>
             {NAV.map((item) => {
-              const active = (path === item.href.split('?')[0] && !item.href.includes('?')) || (path != null && item.href.indexOf('?') < 0 && path.startsWith(item.href + '/'));
+              const base = item.href.split('?')[0];
+              const active = item.href.includes('?') ? false : base === '/' ? path === '/' : (path === base || (path != null && path.startsWith(base + '/')));
               return (
                 <a
                   key={item.href}

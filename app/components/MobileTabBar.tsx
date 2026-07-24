@@ -3,10 +3,10 @@ import { usePathname } from 'next/navigation';
 import type { CSSProperties } from 'react';
 
 const TABS = [
+  { icon: '⌂', label: 'בית', href: '/' },
   { icon: '▧', label: 'גילוי', href: '/dashboard' },
   { icon: '★', label: 'מסומנים', href: '/marked' },
   { icon: '◈', label: 'הסוכן', href: '/agent' },
-  { icon: '▤', label: 'ערבויות', href: '/guarantee' },
   { icon: '⦁', label: 'מקורות', href: '/sources' },
   { icon: '⚙', label: 'פרופיל', href: '/profile' },
 ];
@@ -27,7 +27,7 @@ export default function MobileTabBar() {
   return (
     <nav style={navStyle}>
       {TABS.map((t) => {
-        const active = path === t.href || (path ? path.startsWith(t.href + '/') : false);
+        const active = t.href === '/' ? path === '/' : (path === t.href || (path ? path.startsWith(t.href + '/') : false));
         const linkStyle: CSSProperties = {
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
           textDecoration: 'none', minWidth: 52, padding: '5px 4px 4px',
