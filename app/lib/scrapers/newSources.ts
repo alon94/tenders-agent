@@ -189,25 +189,38 @@ async function runDekel(): Promise<TenderRecord[]> {
   const recs: TenderRecord[] = [];
   const seen = new Set<string>();
 
-  const linkRe = /<a\b[^>]*href="([^"]*Item\.aspx\?ID=(\d+))"[^>]*?(?:title="([^"]*)")?[^>]*>([\s\S]*?)<\/a>/gi;
+  const decode = (v: string) =>
+    v.replace(/&quot;/g, '"').replace(/&#0?39;|&apos;|&#x27;/gi, "'").replace(/&amp;/g, "&").replace(/&nbsp;/g, " ").trim();
+
+  // לוכדים כל תגית <a> במלואה ובודקים את המאפיינים בנפרד — עמיד
+  // לסדר מאפיינים משתנה ולנוכחות/היעדר title.
+  const anchorRe = /<a\b([^>]*)>([\s\S]*?)<\/a>/gi;
   let m: RegExpExecArray | null;
   let lastEnd = 0;
-  while ((m = linkRe.exec(html)) !== null) {
-    const id = m[2];
+  while ((m = anchorRe.exec(html)) !== null) {
+    const attrs = m[1];
+    const idMatch = attrs.match(/Item\.aspx\?ID=(\d+)/i);
+    if (!idMatch) continue;
+    const id = idMatch[1];
     if (seen.has(id)) { lastEnd = m.index + m[0].length; continue; }
-    const titleAttr = (m[3] || "").trim();
-    const linkText = stripTags(m[4] || "");
-    // כותרת: עדיפות ל-title attribute ("צפייה במכרז: <שם>")
-    let title = titleAttr.replace(/^צפייה ב(?:מכרז|קול קורא)\s*:?\s*/, "").trim();
-    if (title.length < 8) title = linkText;
-    if (!title || title.length < 8) { lastEnd = m.index + m[0].length; continue; }
-    if (/^צפייה/.test(title)) { lastEnd = m.index + m[0].length; continue; }
 
-    // המפרסם והתחום מופיעים בגוש שלפני הקישור
     const chunk = stripTags(html.slice(lastEnd, m.index));
-    const pubMatch = chunk.match(/מפרסם ה(?:מכרז|קול קורא)\s*:?\s*([^:]{3,80}?)(?:\s*עלות|\s*תחום|\s*$)/);
-    const publisher = pubMatch ? pubMatch[1].trim() : src.publisher;
-    const isCall = /קול קורא/.test(titleAttr) || /קול קורא/.test(title);
+
+    // כותרת: מאפיין title ("צפייה במכרז: <שם>"), ואם אין — הכותרת
+    // שקדמה לקישור בגוש (h1-h4), ולבסוף טקסט הקישור.
+    let title = "";
+    const titleAttr = attrs.match(/title="([^"]*)"/i);
+    if (titleAttr) title = decode(titleAttr[1]).replace(/^צפייה ב(?:מכרז|קול קורא)\s*:?\s*/, "").trim();
+    if (title.length < 8) {
+      const heads = [...html.slice(lastEnd, m.index).matchAll(/<h[1-4][^>]*>([\s\S]*?)<\/h[1-4]>/gi)];
+      if (heads.length) title = decode(stripTags(heads[heads.length - 1][1]));
+    }
+    if (title.length < 8) title = decode(stripTags(m[2]));
+    if (title.length < 8 || /^צפייה/.test(title)) { lastEnd = m.index + m[0].length; continue; }
+
+    const pubMatch = chunk.match(/מפרסם ה(?:מכרז|קול קורא)\s*:?\s*(.{3,80}?)(?:\s*עלות|\s*תחום\s*:|\s*$)/);
+    const publisher = pubMatch ? decode(pubMatch[1]) : src.publisher;
+    const isCall = /קול קורא/.test(title) || /קול קורא/.test(chunk.slice(-120));
 
     seen.add(id);
     recs.push({
