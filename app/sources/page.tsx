@@ -107,6 +107,14 @@ const SOURCES: { name: string; desc: string; host: string; url: string; icon: st
     status: 'pilot',
   },
   {
+    name: "דקל מכרז — פלטפורמת מאות גופים",
+    desc: "פלטפורמת פרסום מכרזים מקוונת של רשויות, אוניברסיטאות וחברות ציבוריות — עיריית ירושלים, מוריה, נתיבי איילון, רש\"ת, אוניברסיטת בן גוריון ועוד. הפרסום הרשמי של כל גוף, במקור אחד",
+    host: 'bids.dekel.co.il',
+    url: 'https://bids.dekel.co.il/',
+    icon: '📋',
+    status: 'pilot',
+  },
+  {
     name: "רכבת ישראל",
     desc: "מכרזי רכש, תפעול ומטענים — מכרזים פתוחים, ספק יחיד והודעות פטור",
     host: 'rail.co.il',

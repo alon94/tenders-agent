@@ -176,7 +176,62 @@ function genericSource(
   };
 }
 
+
+// ---------- דקל מכרז: פלטפורמת פרסום של מאות גופים ציבוריים ----------
+// עמוד הבית חושף את כל המכרזים הפומביים ב-HTML פתוח (ללא התחברות),
+// כולל שם המפרסם. זהו הפרסום הרשמי של הגוף עצמו — מקור ראשוני.
+// ערך מיוחד: גופים שחסומים לנו ישירות (נתיבי איילון, רש"ת) מפרסמים כאן.
+async function runDekel(): Promise<TenderRecord[]> {
+  const src = { id: "dekel", publisher: "דקל מכרז" };
+  const base = "https://bids.dekel.co.il/";
+  const html = await fetchText(base);
+  const now = new Date().toISOString();
+  const recs: TenderRecord[] = [];
+  const seen = new Set<string>();
+
+  const linkRe = /<a\b[^>]*href="([^"]*Item\.aspx\?ID=(\d+))"[^>]*?(?:title="([^"]*)")?[^>]*>([\s\S]*?)<\/a>/gi;
+  let m: RegExpExecArray | null;
+  let lastEnd = 0;
+  while ((m = linkRe.exec(html)) !== null) {
+    const id = m[2];
+    if (seen.has(id)) { lastEnd = m.index + m[0].length; continue; }
+    const titleAttr = (m[3] || "").trim();
+    const linkText = stripTags(m[4] || "");
+    // כותרת: עדיפות ל-title attribute ("צפייה במכרז: <שם>")
+    let title = titleAttr.replace(/^צפייה ב(?:מכרז|קול קורא)\s*:?\s*/, "").trim();
+    if (title.length < 8) title = linkText;
+    if (!title || title.length < 8) { lastEnd = m.index + m[0].length; continue; }
+    if (/^צפייה/.test(title)) { lastEnd = m.index + m[0].length; continue; }
+
+    // המפרסם והתחום מופיעים בגוש שלפני הקישור
+    const chunk = stripTags(html.slice(lastEnd, m.index));
+    const pubMatch = chunk.match(/מפרסם ה(?:מכרז|קול קורא)\s*:?\s*([^:]{3,80}?)(?:\s*עלות|\s*תחום|\s*$)/);
+    const publisher = pubMatch ? pubMatch[1].trim() : src.publisher;
+    const isCall = /קול קורא/.test(titleAttr) || /קול קורא/.test(title);
+
+    seen.add(id);
+    recs.push({
+      id: `dekel-${id}`,
+      tender_id: id,
+      publication_id: null,
+      title: title.slice(0, 500),
+      publisher: publisher.slice(0, 200),
+      publisher_unit: null,
+      publish_date: null,
+      deadline: null,
+      status: "פורסם",
+      url: `https://bids.dekel.co.il/Item.aspx?ID=${id}`,
+      type: isCall ? "קול קורא" : "מכרז פומבי",
+      source: src.id,
+      fetched_at: now,
+    });
+    lastEnd = m.index + m[0].length;
+  }
+  return recs;
+}
+
 export const NEW_SOURCES: NewSource[] = [
+  { id: "dekel", name: "דקל מכרז — פלטפורמת מאות גופים", publisher: "דקל מכרז", enabled: true, run: runDekel },
   { id: "rmi", name: 'רמ"י — מכרזי מקרקעין', publisher: "רשות מקרקעי ישראל", enabled: true, run: runRmi },
   { id: "mod", name: "משרד הביטחון — סחר אלקטרוני", publisher: "משרד הביטחון", enabled: true, run: runMod },
   genericSource("mashcal", 'משכ"ל', "החברה למשק וכלכלה של השלטון המקומי", [
