@@ -304,7 +304,27 @@ export default function Dashboard(){
                 <span>ציון</span><span>נושא המכרז</span><span>סטטוס</span><span>מועד הגשה</span><span></span>
               </div>)}
               {loading?(
-                                <div style={{padding:50,textAlign:'center',color:MUTED,fontSize:14}}>טוען מכרזים מ-10 מקורות…</div>
+                <div style={{padding:'34px 22px'}}>
+                  <style>{`@keyframes ldrSpin{to{transform:rotate(360deg)}}@keyframes ldrPulse{0%,100%{opacity:.45}50%{opacity:.9}}@keyframes ldrBar{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}`}</style>
+                  <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:12,marginBottom:26}}>
+                    <span style={{width:34,height:34,border:'3px solid '+BORDER,borderTopColor:BLUE,borderRadius:'50%',display:'inline-block',animation:'ldrSpin 0.8s linear infinite'}}/>
+                    <div style={{fontSize:15.5,fontWeight:700,color:DARK}}>טוען מכרזים מ-10 מקורות…</div>
+                    <div style={{fontSize:12.5,color:MUTED}}>אוספים, מסווגים ומדרגים את המכרזים העדכניים</div>
+                    <div style={{width:'min(320px,80%)',height:4,background:'#eef1f4',borderRadius:99,overflow:'hidden'}}>
+                      <div style={{width:'100%',height:'100%',background:`linear-gradient(90deg,transparent,${BLUE},transparent)`,animation:'ldrBar 1.25s ease-in-out infinite'}}/>
+                    </div>
+                  </div>
+                  {[0,1,2,3,4].map(k=>(
+                    <div key={k} style={{display:'flex',alignItems:'center',gap:14,padding:'13px 0',borderTop:k?'1px solid #f0f3f6':'none',animation:'ldrPulse 1.4s ease-in-out infinite',animationDelay:`${k*0.12}s`}}>
+                      <div style={{width:44,height:34,borderRadius:8,background:'#eef1f4',flex:'0 0 auto'}}/>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{height:12,background:'#eef1f4',borderRadius:6,width:`${88-k*9}%`,marginBottom:8}}/>
+                        <div style={{height:9,background:'#f2f5f8',borderRadius:6,width:`${52-k*5}%`}}/>
+                      </div>
+                      <div style={{width:88,height:11,background:'#eef1f4',borderRadius:6,flex:'0 0 auto'}}/>
+                    </div>
+                  ))}
+                </div>
               ):rows.length===0?(
                 <div style={{padding:50,textAlign:'center',color:MUTED,fontSize:14}}>לא נמצאו מכרזים התואמים לסינון</div>
               ):rows.map((t,i)=>{
@@ -324,8 +344,8 @@ export default function Dashboard(){
                     <span style={{width:26,height:3,borderRadius:2,background:bandColor(score)}}></span>
                   </div>
                 </div>
-                <div style={{fontSize:15,fontWeight:700,color:DARK,lineHeight:1.45,textAlign:'right'}}>{t.title||'ללא כותרת'}</div>
-                <div style={{fontSize:12,color:'#7a8794',marginTop:8}}>{t.publisher||'לא ידוע'} · פורסם {fd(t.publishDate)}</div>
+                <div style={{fontSize:16.5,fontWeight:700,color:DARK,lineHeight:1.45,textAlign:'right'}}>{t.title||'ללא כותרת'}</div>
+                <div style={{fontSize:13,color:'#7a8794',marginTop:8}}>{t.publisher||'לא ידוע'} · פורסם {fd(t.publishDate)}</div>
                 <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginTop:13,paddingTop:12,borderTop:'1px solid #eef1f4'}}>
                   <div style={{fontSize:12.5}}>
                     <span style={{color:'#7a8794'}}>הגשה עד </span>
@@ -346,9 +366,9 @@ export default function Dashboard(){
                     </div>
                     <div style={{minWidth:0,paddingInlineEnd:16}}>
                       {t.url||t.id
-                        ?<a href={`/tender/${t.id}`} style={{fontSize:15,fontWeight:600,color:DARK,lineHeight:1.4,textDecoration:'none',display:'block'}}>{t.title||'ללא כותרת'}</a>
+                        ?<a href={`/tender/${t.id}`} style={{fontSize:16.5,fontWeight:600,color:DARK,lineHeight:1.4,textDecoration:'none',display:'block'}}>{t.title||'ללא כותרת'}</a>
                         :<div style={{fontSize:15,fontWeight:600,color:DARK,lineHeight:1.4}}>{t.title||'ללא כותרת'}</div>}
-                      <div style={{fontSize:12.5,color:'#7a8794',marginTop:5}}>{t.publisher||'לא ידוע'} · פורסם {fd(t.publishDate)}</div>
+                      <div style={{fontSize:13.5,color:'#7a8794',marginTop:5}}>{t.publisher||'לא ידוע'} · פורסם {fd(t.publishDate)}</div>
                     </div>
                     <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
                       {tags.map((g,gi)=>(<span key={gi} style={{fontSize:11.5,fontWeight:600,padding:'3px 10px',borderRadius:6,background:g.bg,color:g.fg,border:`1px solid ${g.bd}`}}>{g.label}</span>))}
