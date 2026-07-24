@@ -1,336 +1,329 @@
 "use client";
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useEffect, useState } from "react";
+import { getSession, type AuthSession } from "./lib/authClient";
 
-/* ============ עיצוב 2a — אנטרפרייז, טבלת נתונים נקייה (רספונסיבי + מובייל) ============ */
+/* ============================================================
+   דף הבית השיווקי — "שווה מכרזים"
+   שפה עיצובית: עולם מסמכי הרכש הממשלתי — דיו נייבי, מספרי
+   פרסום בגופן מונו כמו ברשומות רשמיות, וחותמת זהב כאלמנט
+   החתימה (מגלמת את זיהוי סעיף ההעדפה מתוך חוברת המכרז).
+   ============================================================ */
 
-const BIZ=[
-  {id:'',label:'כל התחומים'},
-  {id:'consulting',label:'ייעוץ וניהול',kw:['ייעוץ','יעוץ','ניהול','אסטרטגיה','הדרכה','ניהול פרויקט']},
-  {id:'tech',label:'טכנולוגיה',kw:['תוכנה','מחשוב','טכנולוגיה','פיתוח','סייבר','IT','AI','ענן','מערכת מידע']},
-  {id:'marketing',label:'שיווק ופרסום',kw:['שיווק','פרסום','קמפיין','יחסי ציבור','מדיה','תוכן','SEO']},
-  {id:'construction',label:'בינוי ותשתיות',kw:['בינוי','בנייה','תשתיות','קבלן','שיפוץ','ביוב','מים','כבישים','אדריכל']},
-  {id:'legal',label:'משפט וחשבונאות',kw:['משפטי','עורך דין','חשבונאות','רואה חשבון','ביקורת','ציות','חוזה']},
-  {id:'education',label:'חינוך והדרכה',kw:['חינוך','הדרכה','הכשרה','קורס','מורה','מרצה','בית ספר']},
-  {id:'security',label:'אבטחה ושמירה',kw:['אבטחה','שמירה','שומר','מאבטח','סיור','בטיחות']},
-  {id:'cleaning',label:'ניקיון ותחזוקה',kw:['ניקיון','תחזוקה','חיטוי','הדברה','גינון']},
-  {id:'catering',label:'קייטרינג ומזון',kw:['קייטרינג','אוכל','מזון','ספק מזון','ארוחה']},
-  {id:'transport',label:'הסעות ולוגיסטיקה',kw:['הסעות','תחבורה','לוגיסטיקה','הובלה','שינוע']},
-  {id:'health',label:'בריאות ורפואה',kw:['בריאות','רפואה','סיעוד','אחות','רופא','שיקום','מרפאה']},
-  {id:'environment',label:'איכות סביבה',kw:['סביבה','אקולוגי','ירוק','פסולת','מחזור','זיהום']},
-];
-const PUBS=[
-  {id:'',label:'כל הגופים'},
-  {id:'gov',label:'משרדי ממשלה',kw:['משרד','רשות','מינהל','אגף','ממשלת']},
-  {id:'local',label:'רשויות מקומיות',kw:['עיריית','עירייה','מועצה','מועצת']},
-  {id:'health',label:'מערכת הבריאות',kw:['בית חולים','קופת חולים','מאוחדת','לאומית','כללית','מדא','הדסה']},
-  {id:'edu',label:'מוסדות חינוך',kw:['אוניברסיטה','מכללה','בית ספר']},
-  {id:'infra',label:'חברות ממשלתיות',kw:['חברת חשמל','מקורות','נמלים','רכבת','נתיבי']},
-];
-interface T{id:string;title:string;publisher:string;publishDate:string;deadline:string;status:string;url:string;type:string;}
-function dl(d:string):number|null{if(!d)return null;const x=new Date(d);return isNaN(x.getTime())?null:Math.ceil((x.getTime()-Date.now())/86400000);}
-function fd(d:string){if(!d)return'—';try{return new Date(d).toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric'});}catch{return d;}}
-function mBiz(t:T,id:string){if(!id)return true;const b=BIZ.find(x=>x.id===id);if(!b||!('kw' in b))return true;const s=(t.title+' '+(t.publisher||'')).toLowerCase();return(b as any).kw.some((k:string)=>s.includes(k.toLowerCase()));}
-function mPub(t:T,id:string){if(!id)return true;const p=PUBS.find(x=>x.id===id);if(!p||!('kw' in p))return true;return(p as any).kw.some((k:string)=>(t.publisher||'').toLowerCase().includes(k.toLowerCase()));}
-function matchSc(biz:string,t:{title:string,publisher:string}):number{if(!biz)return 55+Math.floor((t.title.length%3)*10);const b=BIZ.find(b=>b.id===biz);if(!b||!(b as any).kw)return 55;const h=(t.title+' '+t.publisher).toLowerCase();const hits=(b as any).kw.filter((k:string)=>h.includes(k.toLowerCase())).length;return Math.min(95,50+hits*15);}
-function bandColor(score:number){if(score>=80)return'#1e9e5a';if(score>=65)return'#d9a520';return'#2b6fc4';}
-function statusTags(t:T,days:number|null){
-  const tags:{label:string,bg:string,fg:string,bd:string}[]=[];
-  const s=t.status||'';
-  if(s.includes('פורסם'))tags.push({label:'פורסם',bg:'#e7f6ec',fg:'#1e7d45',bd:'#c6ead2'});
-  else if(s.includes('עדכון'))tags.push({label:'בעדכון',bg:'#fbf3d8',fg:'#96731a',bd:'#f0e3b0'});
-  else if(s.includes('סגור')||s.includes('נסגר'))tags.push({label:s,bg:'#fbe9e7',fg:'#b04a34',bd:'#f2cfc8'});
-  else if(s)tags.push({label:s,bg:'#eef1f4',fg:'#5b6b7a',bd:'#e2e7ec'});
-  if(days!==null&&days>=0&&days<=7)tags.push({label:'נסגר בקרוב',bg:'#fbe9e7',fg:'#b04a34',bd:'#f2cfc8'});
-  if(t.publisher)tags.push({label:t.publisher.length>20?t.publisher.slice(0,20)+'…':t.publisher,bg:'#eaf1fb',fg:'#1e5aa8',bd:'#d3e2f5'});
-  return tags;
-}
+const INK = "#0d2c4a";      // דיו — טקסט וגושים כהים
+const BLUE = "#2b6fc4";     // פעולה — זהה לצבע הפעולה בדשבורד
+const GOLD = "#b8945f";     // חותמת — צבע המותג
+const PAPER = "#f4f7fb";    // נייר
+const LINE = "#dbe3ec";
+const MUTED = "#5b6b7a";
 
-const DARK='#1a2330', BLUE='#2b6fc4', MUTED='#667380', BORDER='#e6eaee';
+interface Counts { active?: number; exempt?: number; smallbiz?: number }
+interface Sample { id: string; title: string; publisher: string }
 
-/* hook רספונסיבי — מזהה מובייל ללא ספריות חיצוניות */
-function useMediaQuery(query:string){
-  const[matches,setMatches]=useState(false);
-  useEffect(()=>{
-    const m=window.matchMedia(query);
-    const on=()=>setMatches(m.matches);
-    on();
-    m.addEventListener?m.addEventListener('change',on):(m as any).addListener(on);
-    return()=>{m.removeEventListener?m.removeEventListener('change',on):(m as any).removeListener(on);};
-  },[query]);
-  return matches;
-}
-export default function Dashboard(){
-  const[all,setAll]=useState<T[]>([]);
-  const[loading,setLoading]=useState(true);
-  const[marked,setMarked]=useState<string[]>([]);
-  const[biz,setBiz]=useState('');
-  const[pub,setPub]=useState('');
-  const[maxD,setMaxD]=useState(365);
-  const[showClosed,setShowClosed]=useState(false);
-  const[showNoDate,setShowNoDate]=useState(true);
-  const[tab,setTab]=useState<'all'|'closing'|'new'>('all');
-  const[q,setQ]=useState('');
-  const[pg,setPg]=useState(1);
-  const[showFilters,setShowFilters]=useState(false);
-  const[navOpen,setNavOpen]=useState(false);
-  const isMobile=useMediaQuery('(max-width: 820px)');
-  const PER=25;
-  const now=useMemo(()=>Date.now(),[]);
+export default function Home() {
+  const [session, setSession] = useState<AuthSession | null>(null);
+  const [counts, setCounts] = useState<Counts>({});
+  const [sample, setSample] = useState<Sample[]>([]);
 
-  useEffect(()=>{
-    try{const m=JSON.parse(localStorage.getItem('markedTenders')||'[]');if(Array.isArray(m))setMarked(m);}catch(e){}
-  },[]);
-  const toggleMark=useCallback((id:string,e?:any)=>{if(e){e.preventDefault();e.stopPropagation();}setMarked(prev=>{const has=prev.includes(id);const next=has?prev.filter(x=>x!==id):[...prev,id];try{localStorage.setItem('markedTenders',JSON.stringify(next));}catch(err){}return next;});},[]);
+  useEffect(() => { setSession(getSession()); }, []);
+  useEffect(() => {
+    fetch("/api/nav-counts").then(r => r.ok ? r.json() : {}).then(setCounts).catch(() => {});
+    fetch("/api/tenders?sample=1")
+      .then(r => r.ok ? r.json() : { tenders: [] })
+      .then(d => setSample((d.tenders || []).filter((t: Sample) => t.title && t.title.length > 12).slice(0, 12)))
+      .catch(() => {});
+  }, []);
 
-  const load=useCallback(async()=>{
-    setLoading(true);
-    try{
-      const rs=await Promise.all([0,1000,2000,3000].map(o=>fetch(`/api/tenders?offset=${o}`).then(r=>r.json()).catch(()=>({tenders:[]}))));
-      const seen=new Set<string>();const arr:T[]=[];
-      for(const r of rs)for(const t of(r.tenders||[])){const k=t.id||t.publication_id||(t.title+t.publishDate);if(!seen.has(k)){seen.add(k);arr.push(t);}}
-      setAll(arr);
-    }finally{setLoading(false);}
-  },[]);
-  useEffect(()=>{load();},[load]);
+  const n = (v?: number) => (v === undefined ? "—" : v.toLocaleString("he-IL"));
+  const primaryHref = session ? "/dashboard" : "/signup";
+  const primaryLabel = session ? "כניסה לדשבורד" : "פתיחת חשבון";
 
-  const base=useMemo(()=>{
-    let r=all;
-    if(biz)r=r.filter(t=>mBiz(t,biz));
-    if(pub)r=r.filter(t=>mPub(t,pub));
-    if(!showClosed)r=r.filter(t=>{const d=dl(t.deadline);return d===null||d>=0;});
-    if(!showNoDate)r=r.filter(t=>!!t.deadline);
-    r=r.filter(t=>{const d=dl(t.deadline);if(d===null)return showNoDate;return d>=0&&d<=maxD;});
-    if(q.trim()){const ql=q.toLowerCase();r=r.filter(t=>(t.title||'').toLowerCase().includes(ql)||(t.publisher||'').toLowerCase().includes(ql));}
-    return r;
-  },[all,biz,pub,maxD,showClosed,showNoDate,q]);
+  return (
+    <div dir="rtl" style={{ background: "#fff", color: INK, fontFamily: "'Assistant',system-ui,sans-serif", overflowX: "hidden" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;900&family=Assistant:wght@400;600&display=swap');
+        *{box-sizing:border-box}
+        body{margin:0}
+        .h{font-family:'Heebo',system-ui,sans-serif;font-weight:900;letter-spacing:-0.02em;line-height:1.12}
+        .mono{font-family:ui-monospace,'Courier New',monospace;font-variant-numeric:tabular-nums}
+        .wrap{max-width:1120px;margin:0 auto;padding:0 22px}
+        .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:10px;
+          padding:14px 26px;font-size:16px;font-weight:700;text-decoration:none;transition:transform .12s ease,box-shadow .12s ease}
+        .btn:hover{transform:translateY(-1px)}
+        .btn-p{background:${BLUE};color:#fff;box-shadow:0 6px 18px rgba(43,111,196,.32)}
+        .btn-s{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.45)}
+        .btn-d{background:${INK};color:#fff}
+        .card{background:#fff;border:1px solid ${LINE};border-radius:14px;padding:26px;transition:transform .14s ease,box-shadow .14s ease}
+        .card:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(13,44,74,.08)}
+        .tick{display:flex;gap:10px;width:max-content;animation:tick 60s linear infinite}
+        @keyframes tick{from{transform:translateX(-50%)}to{transform:translateX(0)}}
+        a:focus-visible,.btn:focus-visible{outline:3px solid ${GOLD};outline-offset:3px}
+        @media (prefers-reduced-motion:reduce){.tick{animation:none}.card:hover,.btn:hover{transform:none}}
+        @media(max-width:720px){.hide-m{display:none}}
+      `}</style>
 
-  const closing=useMemo(()=>base.filter(t=>{const d=dl(t.deadline);return d!==null&&d>=0&&d<=7;}),[base]);
-  const newT=useMemo(()=>base.filter(t=>{if(!t.publishDate)return false;return new Date(t.publishDate).getTime()>(now-7*86400000);}),[base,now]);
-  const shown=useMemo(()=>{
-    const r=tab==='closing'?closing:tab==='new'?newT:base;
-    return [...r].sort((a,b)=>(dl(a.deadline)??9999)-(dl(b.deadline)??9999));
-  },[base,closing,newT,tab]);
-
-  const tp=Math.ceil(shown.length/PER);
-  const rows=shown.slice((pg-1)*PER,pg*PER);
-
-  const sideNav=[
-    {icon:'◧',label:'גילוי מכרזים',href:'/dashboard',active:true},
-    {icon:'⊘',label:'מכרזים פטורים',href:'/dashboard?view=exempt'},
-    {icon:'⭐',label:'העדפה לעסקים קטנים',href:'/dashboard?view=smallbiz'},
-    {icon:'★',label:'מכרזים מסומנים',href:'/marked'},
-    {icon:'◈',label:'מכרזי הסוכן החכם',href:'/agent'},
-    {icon:'▤',label:'ערבויות וליווי',href:'/guarantee'},
-    {icon:'⛁',label:'מקורות',href:'/sources'},
-    {icon:'⚙',label:'פרופיל עסקי',href:'/profile'},
-  ];
-  const kpis=[
-    {value:all.length,label:'מכרזים פעילים במאגר',dot:BLUE},
-    {value:closing.length,label:'נסגרים בשבוע הקרוב',dot:'#b04a34'},
-    {value:newT.length,label:'חדשים ב-7 ימים',dot:'#1e9e5a'},
-    {value:base.length,label:'מוצגים כעת',dot:'#d9a520'},
-  ];
-  const chip:React.CSSProperties={background:'#fff',color:'#5b6b7a',fontWeight:600,fontSize:13,padding:'8px 15px',borderRadius:7,border:'1px solid #e2e7ec',cursor:'pointer'};
-  const selWrap:React.CSSProperties={position:'relative'};
-  const selStyle:React.CSSProperties={background:'#fff',color:'#5b6b7a',fontWeight:600,fontSize:13,padding:'8px 30px 8px 15px',borderRadius:7,border:'1px solid #e2e7ec',cursor:'pointer',appearance:'none',WebkitAppearance:'none',fontFamily:'inherit'};
-  const GRID='70px minmax(240px,1fr) 200px 150px 84px';
-
-  /* ===== כרטיס מכרז — פריסת מובייל ===== */
-  const renderCard=(t:T,i:number)=>{
-    const d=dl(t.deadline);
-    const score=matchSc(biz,t);
-    const tags=statusTags(t,d);
-    const isMarked=marked.includes(t.id);
-    return(
-      <div key={t.id||i} style={{padding:'16px',borderBottom:'1px solid #eef1f4',display:'flex',flexDirection:'column',gap:10}}>
-        <div style={{display:'flex',alignItems:'flex-start',gap:12}}>
-          <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4,flex:'0 0 auto'}}>
-            <span style={{fontSize:22,fontWeight:700,color:DARK,lineHeight:1}}>{score}</span>
-            <span style={{width:30,height:3,borderRadius:2,background:bandColor(score)}}></span>
+      {/* ---------- ניווט ---------- */}
+      <header style={{ borderBottom: `1px solid ${LINE}`, position: "sticky", top: 0, background: "rgba(255,255,255,.94)", backdropFilter: "blur(8px)", zIndex: 50 }}>
+        <div className="wrap" style={{ display: "flex", alignItems: "center", gap: 14, height: 66 }}>
+          <div style={{ width: 34, height: 34, borderRadius: 9, background: BLUE, color: "#fff", display: "grid", placeItems: "center", fontWeight: 800 }}>ש</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 800, fontSize: 16 }}>שווה מכרזים</div>
+            <div style={{ fontSize: 11.5, color: MUTED }}>מועדון עסקים 360</div>
           </div>
-          <div style={{minWidth:0,flex:1}}>
-            {t.url||t.id
-              ?<a href={`/tender/${t.id}`} style={{fontSize:15,fontWeight:600,color:DARK,lineHeight:1.4,textDecoration:'none',display:'block'}}>{t.title||'ללא כותרת'}</a>
-              :<div style={{fontSize:15,fontWeight:600,color:DARK,lineHeight:1.4}}>{t.title||'ללא כותרת'}</div>}
-            <div style={{fontSize:12.5,color:'#7a8794',marginTop:5}}>{t.publisher||'לא ידוע'} · פורסם {fd(t.publishDate)}</div>
+          <a className="hide-m" href="/dashboard" style={{ color: INK, textDecoration: "none", fontWeight: 600, fontSize: 15 }}>המכרזים</a>
+          <a className="hide-m" href="/sources" style={{ color: INK, textDecoration: "none", fontWeight: 600, fontSize: 15 }}>מקורות</a>
+          <a href={session ? "/dashboard" : "/signin"} style={{ color: BLUE, textDecoration: "none", fontWeight: 700, fontSize: 15 }}>
+            {session ? "לדשבורד" : "התחברות"}
+          </a>
+        </div>
+      </header>
+
+      {/* ---------- Hero ---------- */}
+      <section style={{ background: INK, color: "#fff", paddingTop: 68, paddingBottom: 0 }}>
+        <div className="wrap">
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 9, border: `1px solid ${GOLD}`, color: GOLD, borderRadius: 999, padding: "6px 14px", fontSize: 12.5, fontWeight: 600, marginBottom: 26 }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: GOLD }} />
+            שירות של שווה קולקטיב לעסקים קטנים ובינוניים
           </div>
-          <button onClick={(e)=>toggleMark(t.id,e)} title={isMarked?'הסר סימון':'סמן מכרז'} style={{fontSize:18,lineHeight:1,color:isMarked?'#d9a520':'#c2ccd6',background:'transparent',border:'none',cursor:'pointer',padding:4,flex:'0 0 auto'}}>{isMarked?'★':'☆'}</button>
-        </div>
-        <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
-          {tags.map((g,gi)=>(<span key={gi} style={{fontSize:11.5,fontWeight:600,padding:'3px 10px',borderRadius:6,background:g.bg,color:g.fg,border:`1px solid ${g.bd}`}}>{g.label}</span>))}
-        </div>
-        <div style={{fontSize:13,display:'flex',alignItems:'center',gap:10}}>
-          <span style={{color:DARK,fontWeight:600}}>מועד הגשה: {fd(t.deadline)}</span>
-          {d!==null&&d>=0&&<span style={{color:d<=7?'#b04a34':'#7a8794',fontSize:12}}>נותרו {d} ימים</span>}
-        </div>
-      </div>
-    );
-  };
 
-  return(
-    <div style={{minHeight:'100vh',background:'#eef1f4',fontFamily:"'Assistant','Rubik',Arial,sans-serif",direction:'rtl',color:DARK,padding:'0'}}>
-      <div style={{display:'flex',minHeight:'100vh',background:'#f6f8fa'}}>
+          <h1 className="h" style={{ fontSize: "clamp(34px,5.6vw,62px)", margin: "0 0 20px", maxWidth: 880 }}>
+            כל המכרזים הציבוריים בישראל.<br />
+            <span style={{ color: GOLD }}>מסוננים לפי העסק שלך.</span>
+          </h1>
 
-        {/* ===== SIDEBAR ===== */}
-        {(!isMobile||navOpen)&&(
-          <>
-            {isMobile&&navOpen&&<div onClick={()=>setNavOpen(false)} style={{position:'fixed',inset:0,background:'rgba(15,25,40,.4)',zIndex:40}}></div>}
-            <div style={{flex:'0 0 238px',width:238,background:'#fff',borderInlineEnd:`1px solid ${BORDER}`,padding:'22px 16px',display:'flex',flexDirection:'column',gap:3,position:isMobile?'fixed':'sticky',top:0,insetInlineStart:isMobile?0:undefined,zIndex:50,alignSelf:'flex-start',height:'100vh'}}>
-              <a href="/dashboard" style={{display:'flex',alignItems:'center',gap:11,padding:'0 8px 20px',marginBottom:8,borderBottom:'1px solid #eef1f4',textDecoration:'none'}}>
-                <div style={{width:34,height:34,borderRadius:8,background:BLUE,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize:16,fontWeight:800}}>ש</div>
-                <div style={{lineHeight:1.15}}><div style={{fontWeight:700,fontSize:15.5,color:DARK}}>שווה מכרזים</div><div style={{fontSize:11,color:'#8a97a3'}}>מועדון עסקים 360</div></div>
-              </a>
-              {sideNav.map(s=>(
-                <a key={s.label} href={s.href} onClick={()=>isMobile&&setNavOpen(false)} style={{display:'flex',alignItems:'center',gap:11,padding:'11px 12px',borderRadius:9,fontSize:14.5,textDecoration:'none',
-                  fontWeight:s.active?700:500,
-                  background:s.active?'#e8f1fb':'transparent',
-                  color:s.active?'#1e5aa8':'#5b6b7a',
-                  borderInlineStart:s.active?`3px solid ${BLUE}`:'3px solid transparent'}}>
-                  <span style={{fontSize:16,opacity:s.active?1:.65}}>{s.icon}</span>{s.label}
-                </a>
-              ))}
-              <div style={{marginTop:'auto',border:`1px solid ${BORDER}`,borderRadius:12,padding:16}}>
-                <div style={{fontWeight:700,fontSize:14,color:DARK}}>◈ הסוכן החכם</div>
-                <div style={{fontSize:12,color:MUTED,margin:'7px 0 12px',lineHeight:1.5}}>קבלו מכרזים מותאמים לפי הפרופיל העסקי שלכם</div>
-                <a href="/agent" style={{display:'block',background:DARK,color:'#fff',fontWeight:600,fontSize:13,textAlign:'center',padding:9,borderRadius:8,textDecoration:'none'}}>הפעלה</a>
+          <p style={{ fontSize: "clamp(16px,2vw,20px)", lineHeight: 1.62, color: "#c6d4e4", maxWidth: 640, margin: "0 0 34px" }}>
+            מכרזים מתפרסמים בעשרות אתרים נפרדים, כל אחד בפורמט אחר. אנחנו אוספים אותם למקום אחד,
+            מסווגים לפי תחום, ומדרגים לפי הפרופיל העסקי שלך — כדי שתראה רק את מה שרלוונטי לך.
+          </p>
+
+          <div style={{ display: "flex", gap: 13, flexWrap: "wrap", marginBottom: 46 }}>
+            <a className="btn btn-p" href={primaryHref}>{primaryLabel} ←</a>
+            <a className="btn btn-s" href="/dashboard">לצפייה במכרזים</a>
+          </div>
+
+          {/* מדדים חיים */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 1, background: "rgba(255,255,255,.14)", border: "1px solid rgba(255,255,255,.14)", borderRadius: 14, overflow: "hidden" }}>
+            {[
+              { v: n(counts.active), l: "מכרזים פעילים" },
+              { v: "12", l: "מקורות נסרקים" },
+              { v: n(counts.smallbiz), l: "עם העדפה לעסקים קטנים" },
+              { v: "יומי 06:00", l: "תדירות עדכון" },
+            ].map((k) => (
+              <div key={k.l} style={{ background: INK, padding: "20px 18px" }}>
+                <div className="h" style={{ fontSize: 27, color: "#fff" }}>{k.v}</div>
+                <div style={{ fontSize: 12.5, color: "#93a9c1", marginTop: 5 }}>{k.l}</div>
               </div>
-            </div>
-          </>
-        )}
+            ))}
+          </div>
+        </div>
 
-        {/* ===== CONTENT ===== */}
-        <div style={{flex:1,minWidth:0,display:'flex',flexDirection:'column'}}>
-          {/* header */}
-          <div style={{background:'#fff',borderBottom:`1px solid ${BORDER}`,padding:isMobile?'12px 16px':'15px 26px',display:'flex',alignItems:'center',gap:isMobile?10:18,flexWrap:'wrap',position:'sticky',top:0,zIndex:5}}>
-            {isMobile&&<button onClick={()=>setNavOpen(true)} style={{fontSize:20,background:'transparent',border:'none',cursor:'pointer',color:DARK,flex:'0 0 auto',padding:'0 2px'}}>☰</button>}
-            <div style={{fontWeight:700,fontSize:isMobile?17:20,color:DARK,flex:'0 0 auto'}}>גילוי מכרזים</div>
-            <div style={{flex:isMobile?'1 1 100%':'1',order:isMobile?3:0,display:'flex',alignItems:'center',gap:9,background:'#f4f6f8',border:'1px solid #e2e7ec',borderRadius:8,padding:'9px 14px',maxWidth:isMobile?'none':440}}>
-              <span style={{color:'#9aa6b2',fontSize:15}}>⌕</span>
-              <input value={q} onChange={e=>{setQ(e.target.value);setPg(1);}} placeholder="חיפוש: נושא, גוף מפרסם, מספר מכרז…" style={{flex:1,border:'none',outline:'none',background:'transparent',fontSize:13.5,color:DARK,fontFamily:'inherit'}}/>
-            </div>
-            {!isMobile&&(
-              <span style={{marginInlineStart:'auto',fontSize:12.5,color:'#7a8794',display:'inline-flex',alignItems:'center',gap:7,flex:'0 0 auto'}}>
-                <span style={{width:7,height:7,borderRadius:999,background:BLUE}}></span>
-                {loading?'טוען…':`עודכן ${new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})} · `}
-                <a href="https://data.gov.il" target="_blank" rel="noopener noreferrer" style={{color:'#7a8794'}}>data.gov.il</a>
+        {/* טיקר מכרזים אמיתיים — התוכן עצמו הוא ההוכחה */}
+        <div style={{ marginTop: 44, borderTop: "1px solid rgba(255,255,255,.14)", padding: "16px 0", overflow: "hidden", maskImage: "linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)" }}>
+          <div className="tick">
+            {[...sample, ...sample].map((t, i) => (
+              <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 10, whiteSpace: "nowrap", fontSize: 13.5, color: "#9fb4cb", border: "1px solid rgba(255,255,255,.12)", borderRadius: 8, padding: "8px 14px" }}>
+                <span className="mono" style={{ color: GOLD, fontSize: 12 }}>{String(t.id).slice(0, 10)}</span>
+                {t.title.slice(0, 62)}
               </span>
-            )}
-            <a href="/agent" style={{background:BLUE,color:'#fff',fontWeight:600,fontSize:13,padding:'9px 16px',borderRadius:8,textDecoration:'none',flex:'0 0 auto',marginInlineStart:isMobile?'auto':undefined}}>✦ תובנות AI</a>
-            <a href="/profile" style={{width:32,height:32,borderRadius:8,background:'#eef1f4',color:DARK,display:'inline-flex',alignItems:'center',justifyContent:'center',fontWeight:700,fontSize:13,textDecoration:'none',flex:'0 0 auto'}}>א</a>
+            ))}
+            {sample.length === 0 && <span style={{ color: "#7b91a8", fontSize: 13.5 }}>טוען מכרזים עדכניים…</span>}
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- הבעיה ---------- */}
+      <section style={{ background: PAPER, padding: "76px 0", borderBottom: `1px solid ${LINE}` }}>
+        <div className="wrap" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 34, alignItems: "start" }}>
+          <div>
+            <h2 className="h" style={{ fontSize: "clamp(25px,3.4vw,38px)", margin: "0 0 18px" }}>
+              הבעיה איננה שאין מכרזים.<br />הבעיה היא למצוא אותם.
+            </h2>
+            <p style={{ fontSize: 16.5, lineHeight: 1.72, color: MUTED, margin: 0 }}>
+              משרדי ממשלה, עיריות, אוניברסיטאות, קופות חולים ותאגידים ציבוריים — כל אחד מפרסם באתר משלו,
+              בפורמט משלו, לעיתים בלי מועד הגשה מסודר. עסק קטן שרוצה כיסוי אמיתי צריך לעקוב ידנית אחרי
+              עשרות אתרים, כל יום.
+            </p>
+          </div>
+          <div style={{ display: "grid", gap: 12 }}>
+            {[
+              ["מפוזר", "מכרזים מתפרסמים בעשרות פורטלים נפרדים ללא תקן אחיד"],
+              ["לא מסונן", "רוב המכרזים אינם רלוונטיים לתחום או לגודל של העסק"],
+              ["נעלם מהר", "מועד ההגשה חולף לפני שהמכרז בכלל הגיע לידיעתך"],
+            ].map(([t, d]) => (
+              <div key={t} style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 12, padding: "16px 18px" }}>
+                <div style={{ fontWeight: 800, marginBottom: 4 }}>{t}</div>
+                <div style={{ fontSize: 14.5, color: MUTED, lineHeight: 1.6 }}>{d}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- יכולות ---------- */}
+      <section style={{ padding: "80px 0" }}>
+        <div className="wrap">
+          <h2 className="h" style={{ fontSize: "clamp(25px,3.4vw,38px)", margin: "0 0 12px" }}>מה המערכת עושה בשבילך</h2>
+          <p style={{ color: MUTED, fontSize: 16.5, margin: "0 0 40px", maxWidth: 620 }}>
+            איסוף, סיווג ודירוג — אוטומטית, כל יום, בלי שתצטרך לפתוח אתר אחד.
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(268px,1fr))", gap: 18 }}>
+            {[
+              { i: "⛁", t: "איסוף מ-12 מקורות", d: "מינהל הרכש הממשלתי, רמ\"י, רשות שדות התעופה, מכבי, ביטוח לאומי, משרד הביטחון, דקל מכרז ועוד — נסרקים ומתעדכנים מדי בוקר." },
+              { i: "◈", t: "סוכן שמדרג לפי הפרופיל", d: "מגדירים תחום, אזור וסוג גופים — והמערכת נותנת ציון התאמה לכל מכרז, כך שהרלוונטיים עולים לראש הרשימה." },
+              { i: "⌕", t: "סיווג ל-13 תחומים", d: "בינוי, טכנולוגיה, ייעוץ, ניקיון, הסעות, בריאות, נדל\"ן ועוד. מנוע התאמה אחד — החיפוש והסינון תמיד מחזירים אותה תוצאה." },
+              { i: "✉", t: "דוח יומי למייל", d: "רשימת המכרזים החדשים שתואמים לפרופיל שלך, ישירות לתיבה, עם קישור להגשה." },
+              { i: "⊘", t: "הודעות פטור וספק יחיד", d: "מסך ייעודי להתקשרויות בפטור ממכרז — מודיעין עסקי על מי זכה, באיזה משרד ובאיזה תחום." },
+              { i: "▤", t: "ערבויות וליווי", d: "הכוונה בשלב ההגשה, כולל ערבויות מכרז — דרך מערך השירות של שווה קולקטיב." },
+            ].map((f) => (
+              <div className="card" key={f.t}>
+                <div style={{ fontSize: 21, color: BLUE, marginBottom: 12 }}>{f.i}</div>
+                <div className="h" style={{ fontSize: 18.5, marginBottom: 9 }}>{f.t}</div>
+                <div style={{ fontSize: 14.8, lineHeight: 1.68, color: MUTED }}>{f.d}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- חותמת: העדפה לעסקים קטנים (אלמנט החתימה) ---------- */}
+      <section style={{ background: INK, color: "#fff", padding: "84px 0" }}>
+        <div className="wrap" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(290px,1fr))", gap: 46, alignItems: "center" }}>
+          <div>
+            <div style={{ color: GOLD, fontSize: 13, fontWeight: 700, letterSpacing: ".04em", marginBottom: 14 }}>היכולת שאין בשום מקום אחר</div>
+            <h2 className="h" style={{ fontSize: "clamp(26px,3.6vw,40px)", margin: "0 0 18px" }}>
+              מזהים את סעיף ההעדפה — <br />גם כשהוא קבור בעמוד 40
+            </h2>
+            <p style={{ fontSize: 16.5, lineHeight: 1.72, color: "#c6d4e4", margin: "0 0 22px" }}>
+              תקנות חובת המכרזים מאפשרות לגופים ציבוריים לתת עדיפות לעסקים קטנים ובינוניים.
+              הסעיף הזה כמעט אף פעם לא מופיע בכותרת — הוא נמצא בתוך חוברת המכרז.
+              המערכת קוראת את החוברות, מאתרת את הסעיף ומסמנת את המכרזים שבהם יש לך יתרון מובנה.
+            </p>
+            <a className="btn btn-p" href="/dashboard?view=smallbiz">{`לצפייה ב-${n(counts.smallbiz)} מכרזים עם העדפה ←`}</a>
           </div>
 
-          <div style={{padding:isMobile?'16px':'22px 26px 30px'}}>
-            {/* KPI strip */}
-            <div style={{display:'grid',gridTemplateColumns:isMobile?'repeat(2,1fr)':'repeat(4,1fr)',gap:1,background:BORDER,border:`1px solid ${BORDER}`,borderRadius:10,overflow:'hidden',marginBottom:22}}>
-              {kpis.map(k=>(
-                <div key={k.label} style={{background:'#fff',padding:'16px 18px'}}>
-                  <div style={{display:'flex',alignItems:'center',gap:8}}><span style={{width:8,height:8,borderRadius:999,background:k.dot}}></span><span style={{fontSize:28,fontWeight:700,color:DARK,lineHeight:1}}>{loading?'…':k.value.toLocaleString()}</span></div>
-                  <div style={{fontSize:12.5,color:MUTED,marginTop:8}}>{k.label}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* toolbar */}
-            <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:14,flexWrap:'wrap'}}>
-              {[{k:'all',label:`כל המכרזים · ${base.length.toLocaleString()}`},{k:'closing',label:`נסגרים בשבוע · ${closing.length}`},{k:'new',label:`חדשים · ${newT.length}`}].map(tb=>{
-                const active=tab===tb.k;
-                return(
-                  <button key={tb.k} onClick={()=>{setTab(tb.k as any);setPg(1);}} style={{...chip,background:active?DARK:'#fff',color:active?'#fff':'#5b6b7a',border:active?'none':'1px solid #e2e7ec'}}>{tb.label}</button>
-                );
-              })}
-              <div style={{...selWrap,marginInlineStart:isMobile?0:'auto'}}>
-                <select value={biz} onChange={e=>{setBiz(e.target.value);setPg(1);}} style={selStyle}>{BIZ.map(b=><option key={b.id} value={b.id}>{b.label}</option>)}</select>
-                <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',fontSize:10,color:'#9aa6b2',pointerEvents:'none'}}>▾</span>
-              </div>
-              <div style={selWrap}>
-                <select value={pub} onChange={e=>{setPub(e.target.value);setPg(1);}} style={selStyle}>{PUBS.map(pp=><option key={pp.id} value={pp.id}>{pp.label}</option>)}</select>
-                <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',fontSize:10,color:'#9aa6b2',pointerEvents:'none'}}>▾</span>
-              </div>
-              <button onClick={()=>setShowFilters(v=>!v)} style={{...chip,padding:'8px 12px',background:showFilters?'#e8f1fb':'#fff',color:showFilters?'#1e5aa8':'#5b6b7a',borderColor:showFilters?'#cfe0f4':'#e2e7ec'}}>⇅ סינון</button>
-            </div>
-
-            {/* advanced filters */}
-            {showFilters&&(
-              <div style={{background:'#fff',border:`1px solid ${BORDER}`,borderRadius:10,padding:'16px 18px',marginBottom:14,display:'flex',alignItems:'center',gap:24,flexWrap:'wrap'}}>
-                <div style={{display:'flex',flexDirection:'column',gap:6,minWidth:220}}>
-                  <span style={{fontSize:12.5,fontWeight:700,color:MUTED}}>נסגר בתוך {maxD} ימים</span>
-                  <input type="range" min={7} max={365} value={maxD} onChange={e=>{setMaxD(Number(e.target.value));setPg(1);}} style={{accentColor:BLUE}}/>
-                </div>
-                <label style={{display:'flex',alignItems:'center',gap:8,fontSize:13.5,color:'#33475b',cursor:'pointer'}}><input type="checkbox" checked={showClosed} onChange={e=>setShowClosed(e.target.checked)} style={{accentColor:BLUE,width:16,height:16}}/>הצג גם שנסגרו</label>
-                <label style={{display:'flex',alignItems:'center',gap:8,fontSize:13.5,color:'#33475b',cursor:'pointer'}}><input type="checkbox" checked={showNoDate} onChange={e=>setShowNoDate(e.target.checked)} style={{accentColor:BLUE,width:16,height:16}}/>הצג גם ללא מועד</label>
-                <button onClick={()=>{setBiz('');setPub('');setMaxD(365);setShowClosed(false);setShowNoDate(true);setQ('');setPg(1);}} style={{...chip,marginInlineStart:'auto'}}>איפוס ✕</button>
-              </div>
-            )}
-
-            {/* ===== list: table (desktop) / cards (mobile) ===== */}
-            <div style={{background:'#fff',border:`1px solid ${BORDER}`,borderRadius:10,overflow:'hidden'}}>
-              {isMobile?(
-                loading?(
-                  <div style={{padding:50,textAlign:'center',color:MUTED,fontSize:14}}>טוען מכרזים מ-10 מקורות…</div>
-                ):rows.length===0?(
-                  <div style={{padding:50,textAlign:'center',color:MUTED,fontSize:14}}>לא נמצאו מכרזים התואמים לסינון</div>
-                ):rows.map((t,i)=>renderCard(t,i))
-              ):(
-                <div style={{overflowX:'auto'}}>
-                  <div style={{minWidth:760}}>
-                    <div style={{display:'grid',gridTemplateColumns:GRID,padding:'12px 18px',background:'#f7f9fb',borderBottom:`1px solid ${BORDER}`,fontSize:12,fontWeight:700,color:'#8a97a3'}}>
-                      <span>ציון</span><span>נושא המכרז</span><span>סטטוס</span><span>מועד הגשה</span><span></span>
-                    </div>
-                    {loading?(
-                      <div style={{padding:50,textAlign:'center',color:MUTED,fontSize:14}}>טוען מכרזים מ-10 מקורות…</div>
-                    ):rows.length===0?(
-                      <div style={{padding:50,textAlign:'center',color:MUTED,fontSize:14}}>לא נמצאו מכרזים התואמים לסינון</div>
-                    ):rows.map((t,i)=>{
-                      const d=dl(t.deadline);
-                      const score=matchSc(biz,t);
-                      const tags=statusTags(t,d);
-                      const isMarked=marked.includes(t.id);
-                      return(
-                        <div key={t.id||i} style={{display:'grid',gridTemplateColumns:GRID,padding:'16px 18px',borderBottom:'1px solid #eef1f4',alignItems:'center'}}>
-                          <div style={{display:'flex',flexDirection:'column',alignItems:'flex-start',gap:5}}>
-                            <span style={{fontSize:21,fontWeight:700,color:DARK,lineHeight:1}}>{score}</span>
-                            <span style={{width:30,height:3,borderRadius:2,background:bandColor(score)}}></span>
-                          </div>
-                          <div style={{minWidth:0,paddingInlineEnd:16}}>
-                            {t.url||t.id
-                              ?<a href={`/tender/${t.id}`} style={{fontSize:15,fontWeight:600,color:DARK,lineHeight:1.4,textDecoration:'none',display:'block'}}>{t.title||'ללא כותרת'}</a>
-                              :<div style={{fontSize:15,fontWeight:600,color:DARK,lineHeight:1.4}}>{t.title||'ללא כותרת'}</div>}
-                            <div style={{fontSize:12.5,color:'#7a8794',marginTop:5}}>{t.publisher||'לא ידוע'} · פורסם {fd(t.publishDate)}</div>
-                          </div>
-                          <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
-                            {tags.map((g,gi)=>(<span key={gi} style={{fontSize:11.5,fontWeight:600,padding:'3px 10px',borderRadius:6,background:g.bg,color:g.fg,border:`1px solid ${g.bd}`}}>{g.label}</span>))}
-                          </div>
-                          <div style={{fontSize:13}}>
-                            <div style={{color:DARK,fontWeight:600}}>{fd(t.deadline)}</div>
-                            {d!==null&&d>=0&&<div style={{color:d<=7?'#b04a34':'#7a8794',fontSize:12,marginTop:3}}>נותרו {d} ימים</div>}
-                          </div>
-                          <div style={{display:'flex',justifyContent:'flex-end'}}>
-                            <button onClick={(e)=>toggleMark(t.id,e)} title={isMarked?'הסר סימון':'סמן מכרז'} style={{fontSize:16,lineHeight:1,color:isMarked?'#d9a520':'#c2ccd6',background:'transparent',border:'none',cursor:'pointer',padding:6}}>{isMarked?'★':'☆'}</button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* pagination */}
-            {!loading&&tp>1&&(
-              <div style={{display:'flex',gap:6,justifyContent:'center',marginTop:20,flexWrap:'wrap'}}>
-                <button onClick={()=>setPg(1)} disabled={pg===1} style={{...chip,opacity:pg===1?.5:1}}>ראשון</button>
-                <button onClick={()=>setPg(x=>Math.max(1,x-1))} disabled={pg===1} style={{...chip,opacity:pg===1?.5:1}}>◀</button>
-                {(()=>{const win=Math.min(7,tp);let start=Math.max(1,pg-3);if(start+win-1>tp)start=Math.max(1,tp-win+1);return Array.from({length:win},(_,i)=>start+i).filter(x=>x>=1&&x<=tp).map(x=>(<button key={x} onClick={()=>setPg(x)} style={{...chip,background:x===pg?DARK:'#fff',color:x===pg?'#fff':'#5b6b7a',border:x===pg?'none':'1px solid #e2e7ec',fontWeight:700}}>{x}</button>));})()}
-                <button onClick={()=>setPg(x=>Math.min(tp,x+1))} disabled={pg===tp} style={{...chip,opacity:pg===tp?.5:1}}>▶</button>
-                <button onClick={()=>setPg(tp)} disabled={pg===tp} style={{...chip,opacity:pg===tp?.5:1}}>אחרון</button>
-              </div>
-            )}
-            <div style={{textAlign:'center',padding:'16px 0',color:'#9aa6b2',fontSize:12}}>
-              נתונים: <a href="https://next.obudget.org" target="_blank" rel="noopener noreferrer" style={{color:BLUE}}>BudgetKey</a> · מינהל הרכש הממשלתי · עדכון יומי ב-06:00
+          {/* החותמת */}
+          <div style={{ display: "grid", placeItems: "center", padding: 12 }}>
+            <div style={{
+              transform: "rotate(-7deg)", border: `3px solid ${GOLD}`, borderRadius: 14,
+              padding: "26px 30px", textAlign: "center", color: GOLD, maxWidth: 320,
+              boxShadow: "0 0 0 5px rgba(184,148,95,.13)",
+            }}>
+              <div style={{ fontSize: 12, letterSpacing: ".22em", marginBottom: 8 }}>נבדק ואומת</div>
+              <div className="h" style={{ fontSize: 27, color: GOLD, lineHeight: 1.2 }}>העדפה<br />לעסקים קטנים</div>
+              <div style={{ height: 1, background: GOLD, opacity: .5, margin: "14px 0" }} />
+              <div className="mono" style={{ fontSize: 12.5 }}>תקנה 34 · חובת המכרזים</div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* ---------- איך זה עובד ---------- */}
+      <section style={{ padding: "80px 0", background: PAPER }}>
+        <div className="wrap">
+          <h2 className="h" style={{ fontSize: "clamp(25px,3.4vw,38px)", margin: "0 0 40px" }}>שלושה צעדים להתחלה</h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(258px,1fr))", gap: 20 }}>
+            {[
+              ["01", "פותחים חשבון", "הרשמה קצרה עם מייל. אין צורך בכרטיס אשראי."],
+              ["02", "מגדירים פרופיל עסקי", "תחומי פעילות, אזור גיאוגרפי וסוגי גופים שמעניינים אתכם."],
+              ["03", "מקבלים מכרזים מדורגים", "הדשבורד ממוין לפי התאמה, והדוח היומי מגיע למייל."],
+            ].map(([num, t, d]) => (
+              <div key={num} style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: 26 }}>
+                <div className="mono h" style={{ fontSize: 30, color: GOLD, marginBottom: 12 }}>{num}</div>
+                <div className="h" style={{ fontSize: 19, marginBottom: 8 }}>{t}</div>
+                <div style={{ fontSize: 14.8, lineHeight: 1.68, color: MUTED }}>{d}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- מקורות ---------- */}
+      <section style={{ padding: "72px 0" }}>
+        <div className="wrap">
+          <h2 className="h" style={{ fontSize: "clamp(23px,3vw,32px)", margin: "0 0 10px" }}>מאיפה מגיעים המכרזים</h2>
+          <p style={{ color: MUTED, fontSize: 16, margin: "0 0 26px" }}>מקורות רשמיים בלבד — ישירות מהגוף המפרסם, ללא מתווכים.</p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+            {["מינהל הרכש הממשלתי", "רשות מקרקעי ישראל", "רשות שדות התעופה", "משרד הביטחון", "מכבי שירותי בריאות",
+              "המוסד לביטוח לאומי", "דקל מכרז", "אוניברסיטת תל אביב", "הרשות לפיתוח ירושלים", "עיריות ורשויות מקומיות",
+              "התקציב הפתוח"].map((sName) => (
+              <span key={sName} style={{ border: `1px solid ${LINE}`, borderRadius: 999, padding: "9px 16px", fontSize: 14.2, background: "#fff", fontWeight: 600 }}>{sName}</span>
+            ))}
+          </div>
+          <div style={{ marginTop: 22 }}>
+            <a href="/sources" style={{ color: BLUE, fontWeight: 700, textDecoration: "none", fontSize: 15 }}>לרשימת המקורות המלאה ←</a>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- למי מתאים ---------- */}
+      <section style={{ padding: "20px 0 76px" }}>
+        <div className="wrap">
+          <h2 className="h" style={{ fontSize: "clamp(23px,3vw,32px)", margin: "0 0 22px" }}>למי זה מתאים</h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(210px,1fr))", gap: 14 }}>
+            {[
+              ["קבלנים ובעלי מקצוע", "בינוי, שיפוצים, חשמל, אינסטלציה, גינון"],
+              ["נותני שירותים", "ניקיון, אבטחה, הסעות, קייטרינג"],
+              ["יועצים ובעלי מקצוע חופשי", "ייעוץ ארגוני, כלכלי, משפטי וראיית חשבון"],
+              ["חברות טכנולוגיה", "פיתוח תוכנה, מערכות מידע, סייבר ודיגיטל"],
+            ].map(([t, d]) => (
+              <div key={t} style={{ borderTop: `3px solid ${GOLD}`, paddingTop: 14 }}>
+                <div className="h" style={{ fontSize: 17, marginBottom: 6 }}>{t}</div>
+                <div style={{ fontSize: 14.2, color: MUTED, lineHeight: 1.6 }}>{d}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- שאלות נפוצות ---------- */}
+      <section style={{ padding: "76px 0", background: PAPER, borderTop: `1px solid ${LINE}` }}>
+        <div className="wrap" style={{ maxWidth: 820 }}>
+          <h2 className="h" style={{ fontSize: "clamp(23px,3vw,32px)", margin: "0 0 26px" }}>שאלות נפוצות</h2>
+          {[
+            ["באיזו תדירות מתעדכנים המכרזים?", "המערכת סורקת את כל המקורות מדי בוקר. מכרז שפורסם היום יופיע בדשבורד למחרת, ובדוח היומי אם הוא תואם לפרופיל שלך."],
+            ["איך נקבע ציון ההתאמה?", "לפי התאמת התחום לפרופיל העסקי שהגדרת, סוג הגוף המפרסם, האזור, וכן דחיפות (מרחק ממועד ההגשה) וטריות הפרסום."],
+            ["מה זו העדפה לעסקים קטנים?", "תקנות חובת המכרזים מאפשרות לגוף ציבורי להעדיף הצעות של עסקים קטנים ובינוניים בתנאים מסוימים. המערכת קוראת את חוברת המכרז ומסמנת מכרזים שכוללים סעיף כזה."],
+            ["האם המערכת מגישה את המכרז עבורי?", "לא. המערכת מאתרת, מסננת ומתריעה — ההגשה עצמה מתבצעת מולך אל מול הגוף המפרסם, עם קישור ישיר למכרז במקור."],
+            ["האם כל המכרזים בישראל נמצאים כאן?", "אנחנו מכסים את המקורות הציבוריים המרכזיים ומרחיבים באופן שוטף. מקורות שאינם מאפשרים סריקה אוטומטית מסומנים בעמוד המקורות."],
+          ].map(([q, a]) => (
+            <details key={q} style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 12, padding: "16px 18px", marginBottom: 11 }}>
+              <summary style={{ cursor: "pointer", fontWeight: 700, fontSize: 16 }}>{q}</summary>
+              <div style={{ marginTop: 10, color: MUTED, fontSize: 15, lineHeight: 1.7 }}>{a}</div>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      {/* ---------- CTA סוגר ---------- */}
+      <section style={{ padding: "76px 0", textAlign: "center" }}>
+        <div className="wrap">
+          <h2 className="h" style={{ fontSize: "clamp(26px,3.8vw,42px)", margin: "0 0 16px" }}>
+            {`${n(counts.active)} מכרזים פעילים מחכים לכם`}
+          </h2>
+          <p style={{ color: MUTED, fontSize: 17, margin: "0 auto 30px", maxWidth: 540, lineHeight: 1.65 }}>
+            פתיחת חשבון לוקחת דקה. הגדרת הפרופיל העסקי — עוד שתיים.
+          </p>
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+            <a className="btn btn-p" href={primaryHref}>{primaryLabel} ←</a>
+            <a className="btn btn-d" href="/dashboard">לצפייה במכרזים</a>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- פוטר ---------- */}
+      <footer style={{ background: INK, color: "#93a9c1", padding: "40px 0" }}>
+        <div className="wrap" style={{ display: "flex", flexWrap: "wrap", gap: 18, alignItems: "center" }}>
+          <div style={{ flex: 1, minWidth: 220 }}>
+            <div style={{ color: "#fff", fontWeight: 800, marginBottom: 5 }}>שווה מכרזים · מועדון עסקים 360</div>
+            <div style={{ fontSize: 13.5 }}>שירות של שווה קולקטיב לעסקים קטנים ובינוניים</div>
+          </div>
+          <div style={{ display: "flex", gap: 20, flexWrap: "wrap", fontSize: 14 }}>
+            <a href="/dashboard" style={{ color: "#93a9c1", textDecoration: "none" }}>המכרזים</a>
+            <a href="/sources" style={{ color: "#93a9c1", textDecoration: "none" }}>מקורות</a>
+            <a href="/terms" style={{ color: "#93a9c1", textDecoration: "none" }}>תנאי שימוש</a>
+            <a href="/privacy" style={{ color: "#93a9c1", textDecoration: "none" }}>פרטיות</a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

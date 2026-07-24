@@ -11,8 +11,10 @@ export async function GET(req: Request) {
           const offset = parseInt(searchParams.get("offset") || "0");
           // ברירת מחדל: פעילים בלבד. ?all=1 מחזיר גם את שפג מועדם (להיסטוריה).
           const activeOnly = searchParams.get("all") !== "1";
+          // ?sample=1 — מדגם קצר לדף הבית, בלי לשלוף 1,000 רשומות
+          const sample = searchParams.get("sample") === "1";
 
-      const rows = await getTenders({ search: search || undefined, offset, limit: 1000, activeOnly });
+      const rows = await getTenders({ search: search || undefined, offset, limit: sample ? 14 : 1000, activeOnly });
 
       const tenders = rows.map((row, i) => ({
               id: String(row.id ?? `${offset}_${i}`),
