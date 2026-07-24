@@ -17,9 +17,11 @@ const ACTIVE_BG = '#e8f1fb';
 const ACTIVE_FG = '#1e5aa8';
 
 const NAV = [
-  { icon: '◧', label: 'גילוי מכרזים', href: '/dashboard' },
+  { icon: '◧', label: 'גילוי מכרזים', href: '/dashboard', countKey: 'active' as const },
+  { icon: '⊘', label: 'מכרזים פטורים', href: '/dashboard?view=exempt', countKey: 'exempt' as const },
+  { icon: '⭐', label: 'העדפה לעסקים קטנים', href: '/dashboard?view=smallbiz', countKey: 'smallbiz' as const },
   { icon: '★', label: 'מכרזים מסומנים', href: '/marked' },
-  { icon: '◈', label: 'סוכן חכם', href: '/agent' },
+  { icon: '◈', label: 'מכרזי הסוכן החכם', href: '/agent' },
   { icon: '▤', label: 'ערבויות וליווי', href: '/guarantee' },
   { icon: '⛁', label: 'מקורות', href: '/sources' },
   { icon: '⚙', label: 'פרופיל עסקי', href: '/profile' },
@@ -27,6 +29,8 @@ const NAV = [
 
 export default function MobileMenu() {
   const [open, setOpen] = useState(false);
+  const [counts, setCounts] = useState<{ active?: number; exempt?: number; smallbiz?: number }>({});
+  useEffect(() => { fetch('/api/nav-counts').then(r => r.ok ? r.json() : {}).then(setCounts).catch(() => {}); }, []);
   const [session, setSession] = useState<AuthSession | null>(null);
   const path = usePathname();
 
@@ -111,7 +115,7 @@ export default function MobileMenu() {
             </div>
 
             {NAV.map((item) => {
-              const active = path === item.href || (path != null && path.startsWith(item.href + '/'));
+              const active = (path === item.href.split('?')[0] && !item.href.includes('?')) || (path != null && item.href.indexOf('?') < 0 && path.startsWith(item.href + '/'));
               return (
                 <a
                   key={item.href}
