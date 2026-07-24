@@ -103,6 +103,23 @@ export async function GET(req: Request) {
     return NextResponse.json({ sweep: true, marked_uncheckable: toSweep, patch_ok: patchRes.ok });
   }
 
+  // ?requeue_sources=1 — משחרר מכרזים ממקורות שנתמכים כעת ע"י מנוע
+  // השליפה הגנרי (רש"ת, מכבי) שסומנו קודם ב-sweep כ"לא ברי-בדיקה",
+  // כי אז עדיין נדרש publication_id של mr.gov.il.
+  if (new URL(req.url).searchParams.get('requeue_sources') === '1') {
+    const today = new Date().toISOString().split('T')[0];
+    const filter = `source=in.(iaa,maccabi)&small_biz_checked_at=not.is.null&small_biz=is.null&or=(deadline.gte.${today},deadline.is.null)`;
+    const cnt = await fetch(`${restUrl('/tenders')}?${filter}&select=id&limit=1`, {
+      headers: authHeaders({ Prefer: 'count=exact' }), cache: 'no-store',
+    });
+    const affected = parseInt((cnt.headers.get('content-range') || '/0').split('/')[1] || '0', 10);
+    const patch = await fetch(`${restUrl('/tenders')}?${filter}`, {
+      method: 'PATCH', headers: authHeaders({ Prefer: 'return=minimal' }),
+      body: JSON.stringify({ small_biz_checked_at: null, small_biz_summary: null }),
+    });
+    return NextResponse.json({ requeue_sources: true, requeued: affected, patch_ok: patch.ok });
+  }
+
   // ?retry_errors=1 — מחזיר לתור רק מכרזים שנכשלו בשליפת החוברת
   // (small_biz null ללא סיכום מסביר) — לא הודעות ולא סומני sweep.
   if (new URL(req.url).searchParams.get('retry_errors') === '1') {
