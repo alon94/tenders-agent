@@ -39,6 +39,13 @@ export async function GET(req: Request) {
       countExact(`small_biz_checked_at=is.null&publication_id=not.is.null&or=(deadline.lt.${today},deadline.is.null)`),
     ]);
 
+  const p2 = encodeURIComponent;
+  const [sweepMarked, noticeMarked, realErrors] = await Promise.all([
+    countExact(`small_biz=is.null&small_biz_checked_at=not.is.null&small_biz_summary=like.${p2("לא ניתן לבדיקה%")}`),
+    countExact(`small_biz=is.null&small_biz_checked_at=not.is.null&small_biz_summary=like.${p2("הודעת התקשרות%")}`),
+    countExact(`small_biz=is.null&small_biz_checked_at=not.is.null&small_biz_summary=is.null`),
+  ]);
+
   return NextResponse.json({
     "סה\"כ מכרזים במאגר": total,
     "פעילים (מועד עתידי או ללא מועד)": activeCnt,
@@ -51,6 +58,12 @@ export async function GET(req: Request) {
     "טרם נבדקו — זכאים (יש חוברת + מועד עתידי)": uncheckedEligible,
     "טרם נבדקו — אין חוברת מכרז": uncheckedNoBooklet,
     "טרם נבדקו — יש חוברת אך פג המועד או ללא מועד (בעיקר פטורים)": uncheckedPastDeadline,
-    "אחוז העדפה מבין הנבדקים": checked > 0 ? `${Math.round((foundTrue / checked) * 100)}%` : "—",
-  });
+    "— פירוק 'ללא הכרעה' —": "",
+    "סומנו ב-sweep (לא ברי-בדיקה)": sweepMarked,
+    "הודעות פטור/התקשרות (דילוג מכוון)": noticeMarked,
+    "כשל בשליפת חוברת (ניתן לנסות שוב)": realErrors,
+    "— שיעורים —": "",
+    "הכרעות אמיתיות (העדפה + ללא העדפה)": foundTrue + foundFalse,
+    "אחוז העדפה מבין ההכרעות": foundTrue + foundFalse > 0 ? `${Math.round((foundTrue / (foundTrue + foundFalse)) * 100)}%` : "—",
+  }, { headers: { "content-type": "application/json; charset=utf-8" } });
 }

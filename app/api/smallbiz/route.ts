@@ -103,6 +103,21 @@ export async function GET(req: Request) {
     return NextResponse.json({ sweep: true, marked_uncheckable: toSweep, patch_ok: patchRes.ok });
   }
 
+  // ?retry_errors=1 — מחזיר לתור רק מכרזים שנכשלו בשליפת החוברת
+  // (small_biz null ללא סיכום מסביר) — לא הודעות ולא סומני sweep.
+  if (new URL(req.url).searchParams.get('retry_errors') === '1') {
+    const filter = `small_biz=is.null&small_biz_checked_at=not.is.null&small_biz_summary=is.null&publication_id=not.is.null`;
+    const cnt = await fetch(`${restUrl('/tenders')}?${filter}&select=id&limit=1`, {
+      headers: authHeaders({ Prefer: 'count=exact' }), cache: 'no-store',
+    });
+    const affected = parseInt((cnt.headers.get('content-range') || '/0').split('/')[1] || '0', 10);
+    const patch = await fetch(`${restUrl('/tenders')}?${filter}`, {
+      method: 'PATCH', headers: authHeaders({ Prefer: 'return=minimal' }),
+      body: JSON.stringify({ small_biz_checked_at: null }),
+    });
+    return NextResponse.json({ retry_errors: true, requeued: affected, patch_ok: patch.ok });
+  }
+
   // ?requeue=1 — מחזיר לתור מכרזים שה-sweep סימן בטעות: יש חוברת,
   // ללא מועד, פורסמו בחצי השנה האחרונה ואינם פטור ממכרז.
   if (new URL(req.url).searchParams.get('requeue') === '1') {
