@@ -298,11 +298,14 @@ export const NEW_SOURCES: NewSource[] = [
   ], { match: /קול קורא|מסלול|פנייה לציבור|הליך תחרותי/, hrefMatch: /kol[_-]kore/i,
        note: "WAF מחזיר 403 לשרתי חו\"ל — נדרש IL_PROXY_URL" }),
   genericSource("iec", "חברת החשמל", "חברת החשמל לישראל", [
-    "https://www.iec.co.il/content/suppliers/content-pages/tendersinfo",
+    proxied("https://www.iec.co.il/content/suppliers/content-pages/tendersinfo"),
   ], {
-    enabled: false,
-    note: "אתר חח\"י חסום לגלישה מחוץ לישראל — שרתי Vercel ייחסמו. להפעלה נדרש proxy ישראלי (משתנה סביבה IL_PROXY_URL).",
+    note: "חסום גיאוגרפית — דרך IL_PROXY_URL",
   }),
+  // מקורות — חברת המים הלאומית. חוסמת בוטים ישירות, נדרש פרוקסי.
+  genericSource("mekorot", "מקורות — חברת המים", "מקורות חברת מים בע\"מ", [
+    proxied("https://www.mekorot.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/"),
+  ], { hrefMatch: /tender|מכרז/i, note: "חוסמת בוטים — דרך IL_PROXY_URL" }),
 ];
 
 export interface SourceRunReport {

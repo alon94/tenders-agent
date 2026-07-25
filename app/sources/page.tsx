@@ -64,7 +64,7 @@ const SOURCES: { name: string; desc: string; host: string; url: string; icon: st
     host: 'pais.co.il',
     url: 'https://www.pais.co.il/Tenders/',
     icon: '🎯',
-    status: 'pilot',
+    status: 'active',
   },
   {
     name: "קופת חולים מאוחדת",
@@ -160,7 +160,7 @@ const SOURCES: { name: string; desc: string; host: string; url: string; icon: st
     host: 'innovationisrael.org.il',
     url: 'https://innovationisrael.org.il/kol_kore/',
     icon: '💡',
-    status: 'pilot',
+    status: 'active',
   },
   {
     name: "חברת החשמל",
