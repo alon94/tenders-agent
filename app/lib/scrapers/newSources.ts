@@ -250,7 +250,7 @@ export const NEW_SOURCES: NewSource[] = [
   genericSource("mashcal", 'משכ"ל', "החברה למשק וכלכלה של השלטון המקומי", [
     proxied("https://www.mashcal.co.il/our-tenders/"),
     proxied("https://www.mashcal.co.il/published-tenders/"),
-  ], { hrefMatch: /tender/i, note: "הגנת בוטים ברמת רשת — ללא IL_PROXY_URL הבקשה צפויה להיכשל" }),
+  ], { enabled: false, hrefMatch: /tender/i, note: "הגנת בוטים ברמת רשת — ללא IL_PROXY_URL הבקשה צפויה להיכשל" }),
   genericSource("pais", "מפעל הפיס", "מפעל הפיס", [
     proxied("https://www.pais.co.il/tenders/"),
   ], { hrefMatch: /tender/i, note: "מוגן Imperva/Incapsula — ללא IL_PROXY_URL הבקשה צפויה להיכשל" }),
@@ -269,18 +269,18 @@ export const NEW_SOURCES: NewSource[] = [
   ]),
   genericSource("iroads", "נתיבי ישראל", "נתיבי ישראל", [
     proxied("https://www.iroads.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/"),
-  ], { note: "WAF מחזיר 403 גם עם כותרות דפדפן — נדרש IL_PROXY_URL" }),
+  ], { enabled: false, note: "WAF מחזיר 403 גם עם כותרות דפדפן — נדרש IL_PROXY_URL" }),
   genericSource("ayalon", "נתיבי איילון", "נתיבי איילון", [
     proxied("https://www.ayalonhw.co.il/tenders/tenders-lobby/"),
-  ], { hrefMatch: /tender/i, note: "WAF מחזיר 403 גם עם כותרות דפדפן — נדרש IL_PROXY_URL" }),
+  ], { enabled: false, hrefMatch: /tender/i, note: "WAF מחזיר 403 גם עם כותרות דפדפן — נדרש IL_PROXY_URL" }),
   // ---------- גל שני: תחבורה, תעופה, אקדמיה, פיתוח עירוני ----------
   genericSource("rail", "רכבת ישראל", "רכבת ישראל", [
     proxied("https://www.rail.co.il/?page=GeneralAuctions&lan=he"),
     proxied("https://www.rail.co.il/cargotenders/pages/cargotender.aspx"),
-  ], { note: "WAF מחזיר 403 לשרתי חו\"ל — נדרש IL_PROXY_URL" }),
+  ], { enabled: false, note: "WAF מחזיר 403 לשרתי חו\"ל — נדרש IL_PROXY_URL" }),
   genericSource("nta", 'נת"ע — מטרו וקווי רכבת קלה', 'נת"ע נתיבי תחבורה עירוניים', [
     proxied("https://www.nta.co.il/tenders/"),
-  ], { hrefMatch: /tender/i, note: "WAF מחזיר 403 לשרתי חו\"ל — נדרש IL_PROXY_URL" }),
+  ], { enabled: false, hrefMatch: /tender/i, note: "WAF מחזיר 403 לשרתי חו\"ל — נדרש IL_PROXY_URL" }),
   genericSource("iaa", "רשות שדות התעופה", "רשות שדות התעופה", [
     // מבנה האתר החדש: הגרסה העברית ללא קידומת /he
     "https://www.iaa.gov.il/tenders-and-contracts/active-tenders/",
@@ -305,7 +305,7 @@ export const NEW_SOURCES: NewSource[] = [
   // מקורות — חברת המים הלאומית. חוסמת בוטים ישירות, נדרש פרוקסי.
   genericSource("mekorot", "מקורות — חברת המים", "מקורות חברת מים בע\"מ", [
     proxied("https://www.mekorot.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/"),
-  ], { hrefMatch: /tender|מכרז/i, note: "חוסמת בוטים — דרך IL_PROXY_URL" }),
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "חוסמת בוטים — דרך IL_PROXY_URL" }),
 ];
 
 export interface SourceRunReport {
