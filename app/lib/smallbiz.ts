@@ -230,10 +230,18 @@ export async function fetchDocsTextFromPage(pageUrl: string): Promise<string> {
 }
 
 /** ניתוב לפי מקור: mr.gov.il דרך publication_id, השאר דרך דף המכרז. */
-export async function fetchTenderDocsText(t: { publication_id?: string | null; url?: string | null }): Promise<string> {
+export async function fetchTenderDocsText(t: { publication_id?: string | null; url?: string | null; tender_id?: string | null; source?: string | null }): Promise<string> {
   if (t.publication_id) {
     const viaMr = await fetchTenderPdfText(t.publication_id).catch(() => '');
     if (viaMr) return viaMr;
+  }
+  // דקל: דף הפריט מוגן CAPTCHA, אך קובץ החוברת עצמו נגיש לעיתים
+  // ישירות דרך ה-handler. מנסים את זה לפני דף המכרז.
+  if (t.source === 'dekel' && t.tender_id) {
+    try {
+      const direct = await fetchDocsTextFromPage(`https://bids.dekel.co.il/Handlers/GetFile.ashx?ID=${t.tender_id}`);
+      if (direct) return direct;
+    } catch { /* נופל חזרה לדף */ }
   }
   return t.url ? fetchDocsTextFromPage(t.url) : '';
 }

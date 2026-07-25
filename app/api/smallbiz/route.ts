@@ -175,7 +175,7 @@ async function runSmallBizBatch(chainDepth: number, origin: string, runTrigger: 
 
     // אצווה: טרם נבדקו, דדליין עתידי, מקור ממשלתי (למוניציפליים אין חוברות ב-mr.gov.il)
     const params = new URLSearchParams();
-    params.set('select', 'id,title,type,publication_id,url,source,deadline');
+    params.set('select', 'id,title,type,publication_id,url,source,tender_id,deadline');
     params.set('small_biz_checked_at', 'is.null');
     // זכאות: יש חוברת, וגם — מועד עתידי, או ללא מועד אך פורסם בחצי
     // השנה האחרונה ואינו פטור ממכרז (ל-obudget יש אלפי מכרזים אמיתיים
@@ -215,7 +215,7 @@ async function runSmallBizBatch(chainDepth: number, origin: string, runTrigger: 
       throw new Error(`Supabase query failed (${res.status}): ${text}`);
     }
 
-    type Row = { id: string; title: string; type?: string | null; publication_id?: string | null; url?: string | null; source?: string };
+    type Row = { id: string; title: string; type?: string | null; publication_id?: string | null; url?: string | null; source?: string; tender_id?: string | null };
     const rowsA: Row[] = resA.ok ? await resA.json().catch(() => []) : [];
     const rowsB: Row[] = resB.ok ? await resB.json().catch(() => []) : [];
     // מקורות המסמכים תחילה — הם החדשים והמעניינים, ואינם רבים
@@ -239,7 +239,7 @@ async function runSmallBizBatch(chainDepth: number, origin: string, runTrigger: 
     const startedAt = Date.now();
 
     // עיבוד מכרז בודד + עדכון נקודתי של שדות ההעדפה בלבד
-    async function processOne(t: { id: string; title: string; publication_id?: string | null; url?: string | null }) {
+    async function processOne(t: { id: string; title: string; publication_id?: string | null; url?: string | null; source?: string; tender_id?: string | null }) {
       let update: Record<string, unknown>;
       try {
         const text = await fetchTenderDocsText(t);
