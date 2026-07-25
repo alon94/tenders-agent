@@ -28,7 +28,7 @@ export function proxied(url: string): string {
   return p ? p + encodeURIComponent(url) : url;
 }
 
-export async function fetchText(url: string, timeoutMs = 12000): Promise<string> {
+export async function fetchText(url: string, timeoutMs = 20000): Promise<string> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
