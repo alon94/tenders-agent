@@ -51,6 +51,7 @@ export default function SignupPage() {
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPw, setShowPw] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -200,13 +201,14 @@ export default function SignupPage() {
           <div style={{ marginBottom: 16 }}>
             <label style={labelStyle}>סיסמה</label>
             <input
-              type="password"
+              type={showPw ? "text" : "password"}
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="8 תווים לפחות"
               style={inputStyle}
             />
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: MUTED, marginBottom: 16, cursor: 'pointer' }}><input type="checkbox" checked={showPw} onChange={(e) => setShowPw(e.target.checked)} />👁 הצג סיסמה</label>
           </div>
 
           <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 18, cursor: 'pointer' }}>
