@@ -42,6 +42,7 @@ export default function SigninPage() {
   const [info, setInfo] = useState('');
   const [loading, setLoading] = useState(false);
   const [recovering, setRecovering] = useState(false);
+  const [showPw, setShowPw] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -192,13 +193,14 @@ export default function SigninPage() {
               </button>
             </div>
             <input
-              type="password"
+              type={showPw ? "text" : "password"}
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="הסיסמה שלכם"
               style={inputStyle}
             />
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: MUTED, marginBottom: 16, cursor: 'pointer' }}><input type="checkbox" checked={showPw} onChange={(e) => setShowPw(e.target.checked)} />👁 הצג סיסמה</label>
           </div>
 
           {error && <div style={{ color: ERROR, fontSize: 12.5, marginBottom: 14 }}>{error}</div>}
