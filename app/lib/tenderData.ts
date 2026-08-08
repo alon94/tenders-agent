@@ -14,7 +14,7 @@ export async function fetchDedupedTenders() {
           const r = await fetch('/api/tenders?offset=' + offset)
                 .then((res) => res.json())
                 .catch(() => ({ tenders: [] }));
-          if (r.fetchedAt) fetchedAt = r.fetchedAt;
+                if (r.fetchedAt && (!fetchedAt || new Date(r.fetchedAt) > new Date(fetchedAt))) fetchedAt = r.fetchedAt;
           const batch = r.tenders || [];
 
           let added = 0;
