@@ -304,6 +304,7 @@ export interface RegisteredUser {
 
 /** רשימת המשתמשים הרשומים דרך Supabase Auth Admin API (service key). */
 export async function listRegisteredUsers(): Promise<RegisteredUser[]> {
+  try { const viaSql = await authUsersViaSql(); if (viaSql.length) return viaSql; } catch (e) { console.error('ops.listRegisteredUsers via postgres failed:', e); }
   if (!SUPABASE_URL || !SERVICE_KEY) return [];
   const out: RegisteredUser[] = [];
   for (let page = 1; page <= 20; page++) {
@@ -311,7 +312,7 @@ export async function listRegisteredUsers(): Promise<RegisteredUser[]> {
       headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
       cache: 'no-store',
     });
-    if (!res.ok) break;
+    if (!res.ok) { console.error('ops.listRegisteredUsers admin API failed:', res.status); break; }
     const data = await res.json().catch(() => null);
     const users = (data?.users || data || []) as Record<string, unknown>[];
     if (!Array.isArray(users) || users.length === 0) break;
@@ -327,6 +328,21 @@ export async function listRegisteredUsers(): Promise<RegisteredUser[]> {
     if (users.length < 100) break;
   }
   return out;
+}
+
+// שליפה ישירה של auth.users דרך Postgres - אותו חיבור שמשמש את המיגרציה העצמית.
+async function authUsersViaSql(): Promise<RegisteredUser[]> {
+  const conn = process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL;
+  if (!conn) return [];
+  const cleaned = conn.replace(/([?&])sslmode=[^&]+&?/, '$1').replace(/[?&]$/, '');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { Client } = require('pg');
+  const client = new Client({ connectionString: cleaned, ssl: { rejectUnauthorized: false } });
+  await client.connect();
+  const sql = 'select id, email, created_at, last_sign_in_at, email_confirmed_at from auth.users order by created_at desc limit 500';
+  const q = await client.query(sql).finally(() => client.end().catch(() => {}));
+  const iso = (v: unknown) => (v ? new Date(v as string).toISOString() : null);
+  return ((q.rows || []) as Record<string, unknown>[]).map((u) => ({ id: String(u.id || ''), email: String(u.email || ''), created_at: iso(u.created_at) || '', last_sign_in_at: iso(u.last_sign_in_at), email_confirmed_at: iso(u.email_confirmed_at) }));
 }
 
 export type Granularity = 'day' | 'month' | 'year';
