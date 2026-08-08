@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getTenders } from "@/app/lib/db";
+import { getTenders, getLastSyncAt } from "@/app/lib/db";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -33,8 +33,8 @@ export async function GET(req: Request) {
 
       // fetchedAt: reflects when this row was last synced into the database by
       // the daily cron job, not the time of this read request.
-      const fetchedAt = rows.length > 0 && rows[0].fetched_at ? rows[0].fetched_at : new Date().toISOString();
-
+      const lastSync = await getLastSyncAt();
+        const fetchedAt = lastSync || (rows.length > 0 && rows[0].fetched_at ? rows[0].fetched_at : new Date().toISOString());
       return NextResponse.json({
               tenders,
               count: tenders.length,
