@@ -41,6 +41,21 @@ function authHeaders(extra: Record<string, string> = {}): Record<string, string>
     };
 }
 
+// Returns the timestamp of the most recent successful sync run from the
+// `sync_runs` ops table, or null if none is available. This reflects when
+// the scan pipeline actually last ran, independent of per-row fetched_at.
+export async function getLastSyncAt(): Promise<string | null> {
+    try {
+        const path = "/sync_runs?select=started_at&error=is.null&order=started_at.desc&limit=1";
+        const res = await fetch(restUrl(path), { headers: authHeaders(), cache: "no-store" });
+        if (!res.ok) return null;
+        const rows = (await res.json()) as { started_at?: string }[];
+        return rows.length > 0 && rows[0].started_at ? rows[0].started_at : null;
+    } catch {
+        return null;
+    }
+}
+
 export interface TenderRecord {
     id: string;
     tender_id?: string | null;
