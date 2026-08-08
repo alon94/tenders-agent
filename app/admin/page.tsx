@@ -61,6 +61,7 @@ export default function AdminPage() {
   const [slideBusy, setSlideBusy] = useState(false);
   const [pwErr, setPwErr] = useState('');
   const [pwBusy, setPwBusy] = useState(false);
+  const [showPw, setShowPw] = useState(false);
 
   // טוקן אדמין-סיסמה נשמר בין רענונים; נשלח כ-Bearer בדיוק כמו טוקן Supabase
   const adminToken = useCallback((): string | null => {
@@ -233,9 +234,10 @@ export default function AdminPage() {
       <div style={{ color: MUTED, fontSize: 14, marginBottom: 20 }}>{sub}</div>
       <div style={{ maxWidth: 320, margin: '0 auto', background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20 }}>
         <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10, color: DARK }}>כניסת מנהל בסיסמה</div>
-        <input type="password" value={pw} onChange={e => setPw(e.target.value)}
+        <input type={showPw ? "text" : "password"} value={pw} onChange={e => setPw(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && pwLogin()} placeholder="סיסמת ניהול"
           style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: 14, fontFamily: 'inherit', marginBottom: 10, direction: 'rtl' }} />
+        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: MUTED, marginBottom: 10, cursor: 'pointer' }}><input type="checkbox" checked={showPw} onChange={e => setShowPw(e.target.checked)} />👁 הצג סיסמה</label>
         <button onClick={pwLogin} disabled={pwBusy || !pw}
           style={{ width: '100%', background: pwBusy ? '#9db8d8' : BLUE, color: '#fff', border: 'none', borderRadius: 8, padding: '9px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
           {pwBusy ? 'מתחבר…' : 'כניסה'}
