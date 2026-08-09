@@ -66,13 +66,13 @@ export default function AdminPage() {
   // טוקן אדמין-סיסמה נשמר בין רענונים; נשלח כ-Bearer בדיוק כמו טוקן Supabase
   const adminToken = useCallback((): string | null => {
     if (typeof window === 'undefined') return null;
-    return session?.access_token || localStorage.getItem('pwadm_token');
+    return localStorage.getItem('pwadm_token') || session?.access_token || null;
   }, [session]);
 
   const loadWith = useCallback(async (bearer: string) => {
     try {
       const r = await fetch('/api/admin/overview', { headers: { Authorization: `Bearer ${bearer}` } });
-      if (r.status === 403) { localStorage.removeItem('pwadm_token'); setState('forbidden'); return; }
+      if (r.status === 403) { if (bearer?.startsWith('pwadm.')) localStorage.removeItem('pwadm_token'); setState('forbidden'); return; }
       if (!r.ok) { setState('error'); return; }
       setData(await r.json());
       setState('ready');
