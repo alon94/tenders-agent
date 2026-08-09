@@ -445,3 +445,32 @@ export async function listMailRecipients(): Promise<MailRecipient[]> {
   }
   return out;
 }
+
+// ============================================================
+// מחיקת משתמש רשום — auth.users + הפרופיל העסקי שלו
+// ============================================================
+export async function deleteRegisteredUser(userId: string): Promise<{ ok: boolean; error?: string }> {
+  if (!userId) return { ok: false, error: 'missing user id' };
+  if (!SUPABASE_URL || !SERVICE_KEY) return { ok: false, error: 'missing service key' };
+
+  const users = await listRegisteredUsers();
+  const target = users.find((u) => u.id === userId);
+  if (!target) return { ok: false, error: 'user not found' };
+  if (target.email.toLowerCase() === SEED_SUPER_ADMIN.toLowerCase()) {
+    return { ok: false, error: 'cannot delete super admin' };
+  }
+
+  try {
+    await fetch(restUrl(`/business_profiles?user_id=eq.${userId}`), { method: 'DELETE', headers: svcHeaders() });
+  } catch (e) { console.error('ops.deleteRegisteredUser profile failed:', e); }
+
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${userId}`, {
+    method: 'DELETE',
+    headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+  });
+  if (!res.ok) {
+    console.error('ops.deleteRegisteredUser auth failed:', res.status);
+    return { ok: false, error: `auth delete failed (${res.status})` };
+  }
+  return { ok: true };
+}
