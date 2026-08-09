@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 import { syncTendersFromSources } from "@/app/lib/db";
 import { scoreTender } from "@/app/lib/scoring";
-import { recordSyncRun, recordEmail, detectTrigger } from "@/app/lib/ops";
+import { recordSyncRun, recordEmail, detectTrigger, listMailRecipients } from "@/app/lib/ops";
 
 const API = 'https://next.obudget.org/api/query'
 const STATUSES = `('פורסם','עתידי','פורסם ולא התקבלו השגות','פורסם והתקבלו השגות','בעדכון')`
@@ -270,6 +270,46 @@ export async function GET(req: Request) {
 
     console.log('Cron: email sent, messageId =', mailInfo.messageId, 'response =', mailInfo.response)
     await recordEmail({ recipient: TO_EMAIL, type: 'daily', tender_count: tenders.length, status: 'sent', message_id: String(mailInfo.messageId || '') })
+    // --- דיוור יומי לשאר המשתמשים הרשומים, לפי הפרופיל העסקי שלהם ---
+    let extraSent = 0
+    try {
+      const recipients = await listMailRecipients()
+      for (const rcp of recipients) {
+        if (!rcp.email || rcp.email.toLowerCase() === TO_EMAIL.toLowerCase()) continue
+        const userProfile: Profile = {
+          businessName: rcp.email.split('@')[0], categories: rcp.categories,
+          regions: [rcp.region], publishers: [rcp.publisherType], keywords: rcp.keywords,
+        }
+        const seenU = new Set<string>()
+        const userTenders: Tender[] = batches.flat()
+          .filter(r => r.description && r.description !== 'מכרז ללא כותרת')
+          .map((r, i) => {
+            const pd = r.publication_date ? r.publication_date.split('T')[0] : ''
+            const dl = r.claim_date ? r.claim_date.split('T')[0] : ''
+            const pub = r.publisher || r.publisher_unit || ''
+            const { display, matched } = scoreMatch(r.description || '', pub, userProfile, pd, dl)
+            return { id: String(r.tender_id || i), title: r.description || '', publisher: pub, publishDate: pd, deadline: dl, status: r.status || '', url: r.page_url || '', score: display, matched }
+          })
+          .filter(t => { if (!t.title || seenU.has(t.id)) return false; seenU.add(t.id); return t.matched })
+          .sort((a, b) => b.score - a.score)
+        if (userTenders.length === 0) continue
+        try {
+          const info = await transporter.sendMail({
+            from: `"שווה מכרזים 📋" <${process.env.GMAIL_USER}>`,
+            to: rcp.email,
+            subject: `📋 ${userTenders.length} מכרזים מותאמים לפרופיל שלך · ${new Date().toLocaleDateString('he-IL')}`,
+            html: buildEmailHTML(userTenders, userProfile, dateStr),
+          })
+          extraSent++
+          await recordEmail({ recipient: rcp.email, type: 'daily', tender_count: userTenders.length, status: 'sent', message_id: String(info.messageId || '') })
+        } catch (mailErr) {
+          console.error('Cron: user mail failed for', rcp.email, mailErr)
+          await recordEmail({ recipient: rcp.email, type: 'daily', tender_count: userTenders.length, status: 'failed' })
+        }
+      }
+    } catch (e) {
+      console.error('Cron: multi-recipient stage failed:', e)
+    }
 
     // --- התראה חכמה: מכרזים חדשים (פורסמו ביומיים האחרונים) בהתאמה גבוהה (80+) ---
     const cutoff = new Date(Date.now() - 2 * 86400000).toISOString().split('T')[0]
@@ -311,7 +351,7 @@ export async function GET(req: Request) {
 
     await recordSyncRun({
       type: 'sync', started_at: runStartedAt, duration_ms: Date.now() - runT0, trigger: runTrigger,
-      counts: { ...dbSync, matched: tenders.length, alert: alertSent },
+      counts: { ...dbSync, matched: tenders.length, alert: alertSent, extra_sent: extraSent },
       error: (dbSync as any).error || (dbSync as any).muniError || (dbSync as any).mrGovError || null,
     })
 
