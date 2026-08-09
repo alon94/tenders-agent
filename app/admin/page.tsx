@@ -134,6 +134,16 @@ export default function AdminPage() {
       loadSlides();
     } catch { setToast('שגיאת תקשורת'); }
   }
+  async function removeUser(id: string, email: string) {
+    const b = adminToken(); if (!b || !id) return;
+    if (!confirm(`למחוק לצמיתות את ${email}? כולל הפרופיל העסקי. אין דרך חזרה.`)) return;
+    try {
+      const r = await fetch(`/api/admin/users?id=${encodeURIComponent(id)}`, { method: 'DELETE', headers: { Authorization: `Bearer ${b}` } });
+      const d = await r.json().catch(() => ({}));
+      setToast(r.ok && d.ok ? '✓ המשתמש נמחק' : `מחיקה נכשלה: ${d.error || r.status}`);
+      loadUsers();
+    } catch { setToast('שגיאת תקשורת'); }
+  }
 
   async function pwLogin() {
     if (pwBusy || !pw) return;
@@ -423,6 +433,7 @@ export default function AdminPage() {
             <th style={{ padding: '10px 14px', fontWeight: 600 }}>נרשם</th>
             <th style={{ padding: '10px 14px', fontWeight: 600 }}>כניסה אחרונה</th>
             <th style={{ padding: '10px 14px', fontWeight: 600 }}>מאומת</th>
+            <th style={{ padding: '10px 14px', fontWeight: 600 }}>פעולות</th>
           </tr></thead>
           <tbody>
             {(users || []).map(u => (
@@ -431,9 +442,10 @@ export default function AdminPage() {
                 <td style={{ padding: '9px 14px' }}>{fmtTime(u.created_at)}</td>
                 <td style={{ padding: '9px 14px' }}>{u.last_sign_in_at ? fmtTime(u.last_sign_in_at) : '—'}</td>
                 <td style={{ padding: '9px 14px' }}>{u.email_confirmed_at ? '✓' : '—'}</td>
+                <td style={{ padding: '9px 14px' }}><button onClick={() => removeUser(u.id, u.email)} style={{ background: '#fff', border: '1px solid #f0c6c6', color: '#c0392b', borderRadius: 7, padding: '4px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>מחיקה</button></td>
               </tr>
             ))}
-            {users && users.length === 0 && <tr><td colSpan={4} style={{ padding: 20, textAlign: 'center', color: MUTED }}>אין משתמשים</td></tr>}
+            {users && users.length === 0 && <tr><td colSpan={5} style={{ padding: 20, textAlign: 'center', color: MUTED }}>אין משתמשים</td></tr>}
           </tbody>
         </table>
       </div>
