@@ -413,3 +413,35 @@ export async function deleteSlide(id: number): Promise<boolean> {
   });
   return res.ok;
 }
+
+// ============================================================
+// נמעני הדיוור היומי — הצלבת auth.users עם business_profiles
+// ============================================================
+export interface MailRecipient {
+  userId: string; email: string; categories: string[];
+  region: string; publisherType: string; keywords: string;
+}
+
+/** כל המשתמשים שיש להם שורת פרופיל עסקי, עם הפרופיל שלהם. */
+export async function listMailRecipients(): Promise<MailRecipient[]> {
+  const users = await listRegisteredUsers();
+  if (!users.length) return [];
+  const res = await fetch(restUrl('/business_profiles?select=user_id,categories,category_other,region,publisher_type'), { headers: svcHeaders(), cache: 'no-store' });
+  if (!res.ok) { console.error('ops.listMailRecipients profiles failed:', res.status); return []; }
+  const rows = (await res.json().catch(() => [])) as Record<string, unknown>[];
+  const byUser = new Map<string, Record<string, unknown>>();
+  for (const r of rows) byUser.set(String(r.user_id || ''), r);
+  const out: MailRecipient[] = [];
+  for (const u of users) {
+    const p = byUser.get(u.id);
+    if (!p || !u.email) continue;
+    out.push({
+      userId: u.id, email: u.email,
+      categories: Array.isArray(p.categories) ? (p.categories as string[]) : [],
+      region: String(p.region || 'all'),
+      publisherType: String(p.publisher_type || 'all'),
+      keywords: String(p.category_other || ''),
+    });
+  }
+  return out;
+}
