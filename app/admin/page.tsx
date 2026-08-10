@@ -24,6 +24,21 @@ interface EmailRow {
   id: number; sent_at: string; recipient: string; type: string;
   tender_count: number | null; status: string;
 }
+interface MailBatch { key: string; at: string; type: string; recipients: number; sent: number; failed: number; tenders: number; list: string }
+function groupEmails(rows: EmailRow[]): MailBatch[] {
+  const map = new Map<string, MailBatch>();
+  for (const e of rows) {
+    const key = `${(e.sent_at || '').slice(0, 10)}|${e.type}`;
+    let b = map.get(key);
+    if (!b) { b = { key, at: e.sent_at, type: e.type, recipients: 0, sent: 0, failed: 0, tenders: 0, list: '' }; map.set(key, b); }
+    if (e.sent_at < b.at) b.at = e.sent_at;
+    b.recipients++;
+    if (e.status === 'sent') b.sent++; else b.failed++;
+    b.tenders = Math.max(b.tenders, e.tender_count || 0);
+    b.list += (b.list ? ', ' : '') + e.recipient;
+  }
+  return Array.from(map.values()).sort((a, b) => b.at.localeCompare(a.at));
+}
 interface Overview {
   admin: { email: string; role: string };
   counts: { total: number; active: number; addedToday: number; users: number; emailsToday: number; sbChecked: number; sbFound: number };
@@ -355,16 +370,17 @@ export default function AdminPage() {
       <div style={{ fontSize: 15.5, fontWeight: 700, margin: '22px 0 10px' }}>מיילים אחרונים</div>
       <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, overflow: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 560 }}>
-          <thead><tr><th style={th}>זמן</th><th style={th}>נמען</th><th style={th}>סוג</th><th style={th}>מכרזים</th><th style={th}>סטטוס</th></tr></thead>
+          <thead><tr><th style={th}>זמן</th><th style={th}>סוג</th><th style={th}>נמענים</th><th style={th}>נשלחו</th><th style={th}>מכרזים</th><th style={th}>סטטוס</th></tr></thead>
           <tbody>
-            {data.emails.length === 0 && <tr><td style={td} colSpan={5}><span style={{ color: MUTED }}>אין משלוחים מתועדים עדיין.</span></td></tr>}
-            {data.emails.map((e) => (
-              <tr key={e.id}>
-                <td style={td}>{fmtTime(e.sent_at)}</td>
-                <td style={td}>{e.recipient}</td>
-                <td style={td}>{e.type === 'daily' ? 'דוח יומי' : e.type === 'alert' ? 'התראה חמה' : e.type}</td>
-                <td style={td}>{e.tender_count ?? '—'}</td>
-                <td style={td}>{e.status}</td>
+            {data.emails.length === 0 && <tr><td style={td} colSpan={6}><span style={{ color: MUTED }}>אין משלוחים מתועדים עדיין.</span></td></tr>}
+            {groupEmails(data.emails).map((b) => (
+              <tr key={b.key}>
+                <td style={td}>{fmtTime(b.at)}</td>
+                <td style={td}>{b.type === 'daily' ? 'דוח יומי' : b.type === 'alert' ? 'התראה חמה' : b.type}</td>
+                <td style={td} title={b.list}>{b.recipients}</td>
+                <td style={td}>{b.sent}</td>
+                <td style={td}>{b.tenders || '—'}</td>
+                <td style={{ ...td, fontWeight: 600, color: b.failed === 0 ? '#1e9e5a' : b.sent === 0 ? '#c0392b' : '#c98a12' }}>{b.failed === 0 ? '✓ נשלח' : b.sent === 0 ? '✕ נכשל' : `חלקי — ${b.failed} נכשלו`}</td>
               </tr>
             ))}
           </tbody>
