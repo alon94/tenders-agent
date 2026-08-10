@@ -12,7 +12,7 @@ export async function GET(req: Request) {
     const [counts, runs, emails] = await Promise.all([
       overviewCounts(),
       recentRuns(30),
-      recentEmails(30),
+      recentEmails(200),
     ]);
 
     // סטטוס אחרון לכל צינור
