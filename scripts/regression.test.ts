@@ -201,5 +201,59 @@ console.log("\nQA/B-3 + B-4 — חתימה ואימות של טוקן האדמי
   check("מחרוזת ריקה נדחית", ops.verifyAdminToken("") === null);
 }
 
-console.log(failures === 0 ? "\n✅ כל הבדיקות עברו" : `\n❌ ${failures} בדיקות נכשלו`);
-process.exit(failures === 0 ? 0 : 1);
+// ---------- QA/H-2 + B-1: בניית השאילתה ב-getTenders ----------
+// db.ts קורא את משתני הסביבה בזמן טעינת המודול, ולכן ייבוא דינמי אחרי
+// הגדרתם. global.fetch מוחלף כדי ללכוד את ה-URL בלי לפנות לרשת.
+async function dbQueryTests() {
+  console.log("\nQA/H-2 + B-1 — בניית השאילתה של getTenders");
+  process.env.SUPABASE_URL = "https://example.supabase.co";
+  process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-key";
+
+  const calls: string[] = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    calls.push(String(input));
+    return new Response("[]", { status: 200, headers: { "content-type": "application/json" } });
+  }) as typeof fetch;
+
+  try {
+    const { getTenders } = await import("../app/lib/db");
+
+    // H-2: שובר שוויון ייחודי במיון
+    await getTenders({ offset: 1000 });
+    const ordered = decodeURIComponent(calls[0]);
+    check("H-2: המיון כולל שובר שוויון id.asc", ordered.includes("id.asc"), ordered.slice(0, 160));
+    check("H-2: סדר המיון נשמר (publish_date → deadline → id)",
+      /order=publish_date\.desc\.nullslast,deadline\.desc\.nullslast,id\.asc/.test(ordered));
+
+    // B-1: שליפה לפי מזהים
+    calls.length = 0;
+    await getTenders({ ids: ["4000620563", "muni-77"], activeOnly: false });
+    const byIds = decodeURIComponent(calls[0]);
+    check("B-1: נבנה מסנן id=in.(...)", /id=in\.\("4000620563","muni-77"\)/.test(byIds), byIds.slice(0, 200));
+
+    // B-1: מזהים + activeOnly=false → בלי מסנן מועד הגשה
+    check("B-1: שליפה לפי מזהים לא מסננת מכרזים שמועדם חלף", !byIds.includes("deadline.gte"));
+
+    // B-1: מרכאות במזהה עוברות escaping ולא שוברות את המסנן
+    calls.length = 0;
+    await getTenders({ ids: ['a"b'] });
+    check("B-1: מרכאות במזהה עוברות escaping", decodeURIComponent(calls[0]).includes('"a""b"'));
+
+    // רגרסיה: בלי ids אין מסנן id
+    calls.length = 0;
+    await getTenders({ activeOnly: true });
+    const plain = decodeURIComponent(calls[0]);
+    check("ללא ids — אין מסנן id בשאילתה", !/[?&]id=in\./.test(plain));
+    check("activeOnly עדיין מסנן לפי מועד הגשה", plain.includes("deadline.gte"));
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+}
+
+dbQueryTests()
+  .catch((e) => { failures++; console.error("  ✗ dbQueryTests זרק שגיאה — " + e); })
+  .then(() => {
+    console.log(failures === 0 ? "\n✅ כל הבדיקות עברו" : `\n❌ ${failures} בדיקות נכשלו`);
+    process.exit(failures === 0 ? 0 : 1);
+  });

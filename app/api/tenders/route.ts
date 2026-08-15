@@ -7,14 +7,30 @@ export const revalidate = 0;
 export async function GET(req: Request) {
     try {
           const { searchParams } = new URL(req.url);
-          const search = searchParams.get("q");
-          const offset = parseInt(searchParams.get("offset") || "0");
+          const search = (searchParams.get("q") || "").slice(0, 200) || null; // QA/M-2: קלט חסום באורך
+          // QA/M-2: offset לא היה מאומת — ?offset=abc נתן NaN ו-?offset=-500
+          // התקבל. עכשיו מוצמד לטווח שפוי.
+          const rawOffset = parseInt(searchParams.get("offset") || "0", 10);
+          const offset = Number.isFinite(rawOffset) ? Math.min(Math.max(rawOffset, 0), 100000) : 0;
           // ברירת מחדל: פעילים בלבד. ?all=1 מחזיר גם את שפג מועדם (להיסטוריה).
           const activeOnly = searchParams.get("all") !== "1";
           // ?sample=1 — מדגם קצר לדף הבית, בלי לשלוף 1,000 רשומות
           const sample = searchParams.get("sample") === "1";
+          // QA/B-1: ?ids=a,b,c — שליפה ממוקדת לפי מזהים (עמוד המסומנים).
+          // כשמבקשים מזהים מפורשות מוחזרים גם מכרזים שמועדם חלף, אחרת
+          // ארכיון הסימונים נשבר בכל פעם שמועד הגשה עובר.
+          const idsParam = (searchParams.get("ids") || "").trim();
+          const ids = idsParam
+            ? Array.from(new Set(idsParam.split(",").map((s) => s.trim()).filter(Boolean))).slice(0, 300)
+            : undefined;
 
-      const rows = await getTenders({ search: search || undefined, offset, limit: sample ? 14 : 1000, activeOnly });
+      const rows = await getTenders({
+        search: search || undefined,
+        offset: ids ? 0 : offset,
+        limit: ids ? ids.length : sample ? 14 : 1000,
+        activeOnly: ids ? false : activeOnly,
+        ids,
+      });
 
       const tenders = rows.map((row, i) => ({
               id: String(row.id ?? `${offset}_${i}`),
@@ -41,6 +57,9 @@ export async function GET(req: Request) {
               fetchedAt,
       });
     } catch (err) {
-          return NextResponse.json({ error: String(err) }, { status: 500 });
+          // QA/M-2: קודם הוחזר String(err) ללקוח — כלומר גוף השגיאה הגולמי
+          // של Supabase, כולל מבנה השאילתה. עכשיו הפירוט נרשם בלוג בלבד.
+          console.error('GET /api/tenders failed:', err);
+          return NextResponse.json({ error: 'failed_to_load_tenders' }, { status: 500 });
     }
 }

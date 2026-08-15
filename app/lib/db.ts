@@ -117,12 +117,22 @@ export async function upsertTenders(tenders: TenderRecord[]): Promise<{ count: n
 }
 
 // Reads tenders from the DB with optional search + pagination.
-export async function getTenders(opts: { search?: string; offset?: number; limit?: number; activeOnly?: boolean } = {}): Promise<TenderRecord[]> {
-    const { search, offset = 0, limit = 1000, activeOnly = false } = opts;
+export async function getTenders(opts: { search?: string; offset?: number; limit?: number; activeOnly?: boolean; ids?: string[] } = {}): Promise<TenderRecord[]> {
+    const { search, offset = 0, limit = 1000, activeOnly = false, ids } = opts;
 
   const params = new URLSearchParams();
     params.set("select", "*");
-    params.set("order", "publish_date.desc.nullslast,deadline.desc.nullslast");
+    // QA/H-2: `publish_date, deadline` אינו מפתח מיון ייחודי — אלפי רשומות
+    // חולקות את אותו זוג ערכים. בעימוד לפי Range, שורות שנופלות על גבול
+    // עמוד הוחזרו פעמיים ואחרות דולגו לגמרי: סריקה מלאה החזירה 9,485
+    // מזהים ייחודיים מתוך 9,503 קיימים. `id.asc` הוא שובר השוויון שהופך
+    // את סדר המיון לדטרמיניסטי ומחזיר את הרשומות האבודות.
+    params.set("order", "publish_date.desc.nullslast,deadline.desc.nullslast,id.asc");
+    // QA/B-1: שליפה לפי רשימת מזהים — עמוד המכרזים המסומנים היה שולף את
+    // 1,000 הראשונים בלבד ומסנן מקומית, כך ש-89% מהסימונים נעלמו.
+    if (ids && ids.length) {
+      params.set("id", `in.(${ids.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")})`);
+    }
     if (activeOnly) {
       // חגורת ביטחון שרת-צד: מכרזים שמועד הגשתם עבר לא נשלחים ללקוח
       // כלל — מחסן גם דפדפנים שמריצים bundle ישן מהמטמון. עטוף ב-and
