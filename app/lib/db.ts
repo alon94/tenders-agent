@@ -131,7 +131,9 @@ export async function getTenders(opts: { search?: string; offset?: number; limit
     // QA/B-1: שליפה לפי רשימת מזהים — עמוד המכרזים המסומנים היה שולף את
     // 1,000 הראשונים בלבד ומסנן מקומית, כך ש-89% מהסימונים נעלמו.
     if (ids && ids.length) {
-      params.set("id", `in.(${ids.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")})`);
+      // PostgREST מבריח מרכאה בתוך in.() עם לוכסן אחורי (\") ולא בהכפלה
+      // בסגנון SQL. הכפלה גררה שגיאת פרסור 400 והפילה את כל הבקשה.
+      params.set("id", `in.(${ids.map((v) => `"${String(v).replace(/([\\"])/g, "\\$1")}"`).join(",")})`);
     }
     if (activeOnly) {
       // חגורת ביטחון שרת-צד: מכרזים שמועד הגשתם עבר לא נשלחים ללקוח

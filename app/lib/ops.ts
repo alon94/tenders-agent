@@ -192,23 +192,25 @@ export async function requireAdmin(req: Request): Promise<AdminIdentity | null> 
   // QA/B-2: בעבר השורה הזו השתמשה ב-`ilike` והזריקה את המייל מהטוקן
   // כ*תבנית*. התווים `_`, `%` ו-`*` שורדים את encodeURIComponent
   // ומתפקדים כתווים כלליים, כך שכתובת כמו alonkatabi1_@gmail.com הייתה
-  // תואמת את שורת הסופר-אדמין. עכשיו מתבצעות שתי השוואות מדויקות
-  // (`eq`) — מנורמלת ואז גולמית — כדי לשמר את חוסר-התלות ברישיות
-  // בלי סמנטיקת תבנית כלשהי.
+  // תואמת את שורת הסופר-אדמין.
+  //
+  // הניסיון הראשון לתקן זאת (שתי השוואות `eq`) איבד את חוסר-התלות
+  // ברישיות: כשהמייל בטוקן כבר קטן, ההשוואה השנייה נדלגת, ואדמין
+  // ששורתו נשמרה עם אות גדולה היה ננעל בחוץ ללא דרך שחזור.
+  // הפתרון: להביא את הטבלה כולה (טבלה זעירה) ולהשוות בזיכרון —
+  // התאמה מדויקת, חסרת-רישיות, בלי שום סמנטיקת תבנית.
   await ensureOpsTables();
-  const lookup = async (value: string) => {
-    const r = await fetch(restUrl(`/admins?email=eq.${encodeURIComponent(value)}&select=email,role`), {
-      headers: svcHeaders(),
-      cache: 'no-store',
-    });
-    if (!r.ok) return null;
-    const rows = await r.json().catch(() => []);
-    return rows?.[0] ? { email: rows[0].email as string, role: rows[0].role as string } : null;
-  };
-
   const normalized = email.toLowerCase().trim();
-  const hit = (await lookup(normalized)) || (normalized === email ? null : await lookup(email));
-  if (hit) return hit;
+  const res = await fetch(restUrl('/admins?select=email,role'), {
+    headers: svcHeaders(),
+    cache: 'no-store',
+  });
+  if (!res.ok) return null;
+  const rows = (await res.json().catch(() => [])) as { email?: string; role?: string }[];
+  const hit = Array.isArray(rows)
+    ? rows.find((r) => String(r?.email ?? '').toLowerCase().trim() === normalized)
+    : undefined;
+  if (hit?.email && hit?.role) return { email: hit.email, role: hit.role };
 
   // תיקון עצמי: אם זה ה-super admin המוגדר אך השורה חסרה (המיגרציה
   // רצה לפני שהערך נקבע, או נמחקה) — משלימים אותה כאן.

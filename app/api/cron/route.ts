@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 import { syncTendersFromSources } from "@/app/lib/db";
 import { scoreTender } from "@/app/lib/scoring";
-import { recordSyncRun, recordEmail, detectTrigger, listMailRecipients } from "@/app/lib/ops";
+import { isOpsAuthorized, recordSyncRun, recordEmail, detectTrigger, listMailRecipients } from "@/app/lib/ops";
 
 const API = 'https://next.obudget.org/api/query'
 const STATUSES = `('פורסם','עתידי','פורסם ולא התקבלו השגות','פורסם והתקבלו השגות','בעדכון')`
@@ -173,12 +173,9 @@ export const maxDuration = 60
 
 export async function GET(req: Request) {
   // Auth check
-  const secret =
-    req.headers.get('authorization')?.replace('Bearer ', '')
-    || req.headers.get('x-cron-secret')
-  // QA/B-3: קבלת הסוד דרך ?secret= הוסרה — הוא נשמר בלוגי Vercel,
-  // בהיסטוריית הדפדפן ובכותרות Referer. כותרות בלבד.
-  if (secret !== process.env.CRON_SECRET) {
+  // QA/B-3: ?secret= הוסר (נשמר בלוגי Vercel, בהיסטוריה וב-Referer).
+  // isOpsAuthorized משווה בזמן קבוע ונכשל-סגור כש-CRON_SECRET לא מוגדר.
+  if (!(await isOpsAuthorized(req))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

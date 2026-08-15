@@ -19,9 +19,14 @@ export async function GET(req: Request) {
           // QA/B-1: ?ids=a,b,c — שליפה ממוקדת לפי מזהים (עמוד המסומנים).
           // כשמבקשים מזהים מפורשות מוחזרים גם מכרזים שמועדם חלף, אחרת
           // ארכיון הסימונים נשבר בכל פעם שמועד הגשה עובר.
-          const idsParam = (searchParams.get("ids") || "").trim();
-          const ids = idsParam
-            ? Array.from(new Set(idsParam.split(",").map((s) => s.trim()).filter(Boolean))).slice(0, 300)
+          // פרמטרים חוזרים (?id=a&id=b) הם הצורה המועדפת — חלק מהמזהים
+          // נגזרים מטקסט חופשי ועלולים להכיל פסיק. ?ids=a,b נתמך לתאימות.
+          const repeated = searchParams.getAll("id").map((s) => s.trim()).filter(Boolean);
+          const legacy = (searchParams.get("ids") || "")
+            .split(",").map((s) => s.trim()).filter(Boolean);
+          const merged = [...repeated, ...legacy];
+          const ids = merged.length
+            ? Array.from(new Set(merged)).slice(0, 300)
             : undefined;
 
       const rows = await getTenders({

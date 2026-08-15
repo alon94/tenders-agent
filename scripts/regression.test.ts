@@ -165,6 +165,12 @@ console.log("\nQA/B-3 + B-4 — חתימה ואימות של טוקן האדמי
     return `${PREFIX}${b64}.${sign(b64)}`;
   };
 
+  // בקרה חיובית: מוודאת ש-mk() חותם במפתח שהמימוש באמת קורא. בלעדיה,
+  // בדיקות הזהות/התפקיד למטה היו עוברות מהסיבה הלא-נכונה (דחייה על
+  // חתימה) גם מול קוד פגיע, ולא היו מוכיחות דבר.
+  check("בקרה חיובית: mk() מייצר חתימה שהמימוש מקבל",
+    ops.verifyAdminToken(mk(`${SEED}|super|${Date.now() + 60000}`))?.role === "super");
+
   const good = ops.issueAdminToken("correct-horse");
   check("סיסמה נכונה מנפיקה טוקן", typeof good === "string" && good!.startsWith(PREFIX));
   check("סיסמה שגויה לא מנפיקה טוקן", ops.issueAdminToken("wrong") === null);
@@ -235,10 +241,25 @@ async function dbQueryTests() {
     // B-1: מזהים + activeOnly=false → בלי מסנן מועד הגשה
     check("B-1: שליפה לפי מזהים לא מסננת מכרזים שמועדם חלף", !byIds.includes("deadline.gte"));
 
-    // B-1: מרכאות במזהה עוברות escaping ולא שוברות את המסנן
+    // B-1: escaping לפי כללי PostgREST — לוכסן אחורי, לא הכפלת מרכאה.
+    // הכפלה בסגנון SQL גררה 400 PGRST100 והפילה את כל בקשת המסומנים.
     calls.length = 0;
     await getTenders({ ids: ['a"b'] });
-    check("B-1: מרכאות במזהה עוברות escaping", decodeURIComponent(calls[0]).includes('"a""b"'));
+    check("B-1: מרכאה במזהה מוברחת בלוכסן אחורי", decodeURIComponent(calls[0]).includes('"a\\"b"'),
+      decodeURIComponent(calls[0]).slice(0, 120));
+    calls.length = 0;
+    await getTenders({ ids: ['a\\b'] });
+    check("B-1: לוכסן אחורי במזהה מוכפל", decodeURIComponent(calls[0]).includes('"a\\\\b"'),
+      decodeURIComponent(calls[0]).slice(0, 120));
+    // פסיק ועברית בתוך מרכאות — תקינים ללא escaping נוסף
+    calls.length = 0;
+    await getTenders({ ids: ['מכרז, ניקיון-עיריית חיפה'] });
+    // URLSearchParams מקודד רווח כ-'+' (form-encoding), ו-PostgREST מפענח
+    // אותו חזרה לרווח — ולכן הפענוח בבדיקה חייב לעשות את אותו הדבר.
+    const urlDecode = (s: string) => decodeURIComponent(s.replace(/\+/g, " "));
+    check("B-1: פסיק ועברית בתוך מרכאות נשמרים",
+      urlDecode(calls[0]).includes('"מכרז, ניקיון-עיריית חיפה"'),
+      urlDecode(calls[0]).slice(0, 140));
 
     // רגרסיה: בלי ids אין מסנן id
     calls.length = 0;
@@ -251,8 +272,56 @@ async function dbQueryTests() {
   }
 }
 
+// ---------- QA: מטפלי המסלולים נכשלים-סגור ----------
+// מפעיל את ה-handlers ישירות עם Request אמיתי (בלי שרת מאזין), בשני
+// תרחישי סביבה. שתי הרגרסיות שנתפסו כאן בפועל:
+//   • domains-debug אישר בקשה ללא שום אישור כש-CRON_SECRET לא הוגדר
+//     (undefined !== undefined הוא false).
+//   • /api/admin/login זרק על סיסמה *נכונה* כשאין מפתח חתימה, בעוד
+//     סיסמה שגויה החזירה 401 — אורקל שמאפשר לפצח את הסיסמה לפי הסטטוס.
+async function routeAuthTests() {
+  console.log("\nQA — מטפלי מסלולים נכשלים-סגור");
+  const status = async (p: Promise<Response>) => {
+    try { return (await p).status; } catch { return 500; }
+  };
+
+  for (const [label, env] of [
+    ["בלי CRON_SECRET ובלי ADMIN_TOKEN_SECRET", {}],
+    ["עם CRON_SECRET", { CRON_SECRET: "s3cr3t" }],
+  ] as [string, Record<string, string>][]) {
+    for (const k of ["CRON_SECRET", "ADMIN_TOKEN_SECRET"]) delete process.env[k];
+    Object.assign(process.env, env);
+    process.env.ADMIN_PASSWORD = "correct-horse";
+
+    const bust = "?v=" + label.length + Object.keys(env).length;
+    const dd = await import("../app/api/domains-debug/route" + bust);
+    const login = await import("../app/api/admin/login/route" + bust);
+    const mkLogin = (pw: string) => new Request("http://x/api/admin/login", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ password: pw }),
+    });
+
+    check(`[${label}] domains-debug ללא אישור → 401`,
+      (await status(dd.GET(new Request("http://x/api/domains-debug")))) === 401);
+    check(`[${label}] domains-debug עם "Bearer undefined" → 401`,
+      (await status(dd.GET(new Request("http://x/api/domains-debug", {
+        headers: { authorization: "Bearer undefined" } })))) === 401);
+
+    const okPw = await status(login.POST(mkLogin("correct-horse")));
+    const badPw = await status(login.POST(mkLogin("nope")));
+    if (Object.keys(env).length === 0) {
+      check(`[${label}] סיסמה נכונה ושגויה מחזירות אותו סטטוס (בלי אורקל)`,
+        okPw === badPw && okPw === 501, `ok=${okPw} bad=${badPw}`);
+    } else {
+      check(`[${label}] סיסמה נכונה → 200, שגויה → 401`,
+        okPw === 200 && badPw === 401, `ok=${okPw} bad=${badPw}`);
+    }
+  }
+}
+
 dbQueryTests()
-  .catch((e) => { failures++; console.error("  ✗ dbQueryTests זרק שגיאה — " + e); })
+  .then(routeAuthTests)
+  .catch((e) => { failures++; console.error("  ✗ בדיקה אסינכרונית זרקה שגיאה — " + e); })
   .then(() => {
     console.log(failures === 0 ? "\n✅ כל הבדיקות עברו" : `\n❌ ${failures} בדיקות נכשלו`);
     process.exit(failures === 0 ? 0 : 1);

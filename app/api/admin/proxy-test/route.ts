@@ -6,7 +6,7 @@ export const maxDuration = 30;
 
 // GET /api/admin/proxy-test — בדיקת בריאות הפרוקסי (Authorization: Bearer <admin/CRON_SECRET>)
 export async function GET(req: Request) {
-  // QA/B-3: ?secret= הוסר. כותרת בלבד, או אדמין מחובר.
+  // QA/B-3: ?secret= הוסר. כותרת CRON_SECRET בלבד.
   if (!(await isOpsAuthorized(req))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }

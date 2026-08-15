@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getTenders } from "@/app/lib/db";
 import { DOMAINS } from "@/app/lib/domains";
+import { isOpsAuthorized } from "@/app/lib/ops";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -9,10 +10,12 @@ export const maxDuration = 60;
 // אבחון סיווג: כמה מכרזים כל מילת מפתח תופסת בפועל, עם דוגמאות
 // כותרות למילים החשודות — כדי לאתר מילים שמסווגות-יתר.
 export async function GET(req: Request) {
-  const secret =
-    req.headers.get("authorization")?.replace("Bearer ", "");
   // QA/B-3: ?secret= הוסר — כותרות בלבד.
-  if (secret !== process.env.CRON_SECRET) {
+  // הניסוח הקודם (`secret !== process.env.CRON_SECRET`) נכשל-פתוח: אחרי
+  // הסרת הנפילה-לאחור ל-searchParams, `headers.get()?.replace()` מחזיר
+  // undefined כשאין כותרת, ו-CRON_SECRET לא-מוגדר הוא גם undefined —
+  // כלומר בקשה ללא שום אישור הייתה עוברת. isOpsAuthorized נכשל-סגור.
+  if (!(await isOpsAuthorized(req))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 

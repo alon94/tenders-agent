@@ -20,7 +20,7 @@ async function countExact(filter: string): Promise<number> {
 // עם פילוח פעילים/לא-פעילים ודוגמאות.
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  // QA/B-3: ?secret= הוסר (נשמר בלוגים ובהיסטוריה). כותרת בלבד, או אדמין מחובר.
+  // QA/B-3: ?secret= הוסר (נשמר בלוגים ובהיסטוריה). כותרת CRON_SECRET בלבד.
   if (!(await isOpsAuthorized(req))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }

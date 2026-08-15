@@ -34,15 +34,27 @@ export default function MarkedPage() {
     const chunks: string[][] = [];
     for (let i = 0; i < ids.length; i += 100) chunks.push(ids.slice(i, i + 100));
 
-    Promise.all(
-      chunks.map((chunk) =>
-        fetch('/api/tenders?ids=' + encodeURIComponent(chunk.join(',')))
+    // מזהים נשלחים כפרמטרים חוזרים (?id=a&id=b) ולא כרשימה מופרדת
+    // בפסיקים — חלק מהמזהים נגזרים מטקסט חופשי ועשויים להכיל פסיק,
+    // שהיה מפצל אותם לשני מזהי זבל.
+    // allSettled ולא all: מנה אחת שנכשלת לא מוחקת את המנות שהצליחו.
+    Promise.allSettled(
+      chunks.map((chunk) => {
+        const qs = new URLSearchParams();
+        for (const id of chunk) qs.append('id', id);
+        return fetch('/api/tenders?' + qs.toString())
           .then((r) => { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
-          .then((d) => (Array.isArray(d) ? d : d.tenders || []) as Tender[])
-      )
+          .then((d) => (Array.isArray(d) ? d : d.tenders || []) as Tender[]);
+      })
     )
-      .then((pages) => { if (!cancelled) setAll(pages.flat()); })
-      .catch(() => { if (!cancelled) setError(true); })
+      .then((results) => {
+        if (cancelled) return;
+        const ok = results.filter((r) => r.status === 'fulfilled') as PromiseFulfilledResult<Tender[]>[];
+        setAll(ok.flatMap((r) => r.value));
+        // שגיאה מוצגת רק אם משהו באמת נכשל — ואם חלק הצליח, היא באנר
+        // ולא מסך ריק.
+        setError(ok.length < results.length);
+      })
       .finally(() => { if (!cancelled) setLoading(false); });
 
     return () => { cancelled = true; };
@@ -57,7 +69,14 @@ export default function MarkedPage() {
   // QA/M-11: הכפתור "ייצוא ל-Excel" רונדר בלי onClick ולא עשה דבר.
   // ייצוא CSV עם BOM כדי ש-Excel יזהה עברית ב-UTF-8.
   function exportCsv(list: Tender[]) {
-    const esc = (v: string) => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+    // כותרות המכרזים נגרפות מאתרים חיצוניים, ולכן הן תוכן לא-אמין.
+    // Excel מסיר את המרכאות ומריץ תא שמתחיל ב-= + - @ טאב או CR
+    // (formula injection), ולכן מוסיפים גרש מוביל שמנטרל את ההרצה.
+    const esc = (v: string) => {
+      const s = String(v ?? '');
+      const safe = /^[=+\-@\t\r]/.test(s) ? "'" + s : s;
+      return '"' + safe.replace(/"/g, '""') + '"';
+    };
     const header = ['ציון', 'נושא', 'גוף מפרסם', 'סטטוס', 'תאריך פרסום', 'מועד הגשה', 'קישור'];
     const lines = list.map((t) => [
       String(scoreFor(t.title || '', t.publisher || '')),
@@ -66,11 +85,15 @@ export default function MarkedPage() {
     ].map(esc).join(','));
     const blob = new Blob(['﻿' + [header.map(esc).join(','), ...lines].join('\r\n')],
       { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `מכרזים-מסומנים-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.href = url;
+    a.download = `marked-tenders-${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(a); a.click();
-    document.body.removeChild(a); URL.revokeObjectURL(a.href);
+    document.body.removeChild(a);
+    // שחרור ב-tick נפרד — שחרור באותו tick של ה-click גורם להורדות
+    // קטומות בחלק מהדפדפנים.
+    setTimeout(() => URL.revokeObjectURL(url), 0);
   }
 
   const rows = all.filter((t) => marked.includes(t.id));
@@ -81,7 +104,9 @@ export default function MarkedPage() {
     <InternalShell
       title="מכרזים מסומנים"
       subtitle={rows.length + ' מכרזים שמורים למעקב'}
-      action={<button onClick={() => exportCsv(shown)} disabled={shown.length === 0} style={{ background: '#fff', color: shown.length ? '#1e5aa8' : '#9aa6b2', border: '1px solid ' + BORDER, borderRadius: 10, padding: '9px 14px', fontSize: 13, fontWeight: 600, cursor: shown.length ? 'pointer' : 'not-allowed' }}>ייצוא ל-Excel ↓</button>}
+      // מייצא את כל המסומנים (rows) ולא רק את הטאב הפעיל — הכפתור יושב
+      // בכותרת ליד "N מכרזים שמורים למעקב", ולכן זו הציפייה הסבירה.
+      action={<button onClick={() => exportCsv(rows)} disabled={rows.length === 0} style={{ background: '#fff', color: rows.length ? '#1e5aa8' : '#9aa6b2', border: '1px solid ' + BORDER, borderRadius: 10, padding: '9px 14px', fontSize: 13, fontWeight: 600, cursor: rows.length ? 'pointer' : 'not-allowed' }}>ייצוא ל-Excel ↓</button>}
     >
       <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
                 <button onClick={() => setTab('all')} style={{ border: '1px solid ' + (tab === 'all' ? DARK : BORDER), background: tab === 'all' ? DARK : '#fff', color: tab === 'all' ? '#fff' : '#5b6b7a', borderRadius: 999, padding: '7px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>הכל · {rows.length}</button>
@@ -92,9 +117,15 @@ export default function MarkedPage() {
         <div style={{ display: 'grid', gridTemplateColumns: '70px 1fr 232px 150px 120px', padding: '12px 16px', fontSize: 12, fontWeight: 600, color: '#7a8794', borderBottom: '1px solid ' + BORDER, background: '#f6f8fa' }}>
           <span>ציון</span><span>נושא</span><span>סטטוס</span><span>מועד</span><span>פעולות</span>
         </div>
+        {error && !loading && shown.length > 0 && (
+          // כשל חלקי: חלק מהמנות נטענו — באנר, לא מסך ריק.
+          <div style={{ padding: '10px 16px', background: '#fdf1e5', borderBottom: '1px solid ' + BORDER, color: '#a8500f', fontSize: 13, fontWeight: 600 }}>
+            חלק מהמכרזים המסומנים לא נטענו. הרשימה חלקית — נסו לרענן.
+          </div>
+        )}
         {loading ? (
                     <div style={{ padding: 20, color: '#7a8794' }}>טוען…</div>
-        ) : error ? (
+        ) : error && shown.length === 0 ? (
                     // QA/H-3: כשל טעינה חייב להיראות אחרת מ"אין סימונים".
                     <div style={{ padding: 24, textAlign: 'center' }}>
                       <div style={{ color: '#b04a34', fontWeight: 600, marginBottom: 8 }}>לא הצלחנו לטעון את המכרזים המסומנים</div>
