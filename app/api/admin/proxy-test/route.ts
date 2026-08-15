@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
+import { isOpsAuthorized } from "@/app/lib/ops";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
-// GET /api/admin/proxy-test?secret=... — בדיקת בריאות הפרוקסי מול כמה יעדים
+// GET /api/admin/proxy-test — בדיקת בריאות הפרוקסי (Authorization: Bearer <admin/CRON_SECRET>)
 export async function GET(req: Request) {
-  const url = new URL(req.url);
-  if (url.searchParams.get("secret") !== process.env.CRON_SECRET || !process.env.CRON_SECRET) {
+  // QA/B-3: ?secret= הוסר. כותרת בלבד, או אדמין מחובר.
+  if (!(await isOpsAuthorized(req))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   const proxy = process.env.IL_PROXY_URL;

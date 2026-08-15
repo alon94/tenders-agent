@@ -5,14 +5,13 @@ import { DOMAINS } from "@/app/lib/domains";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-// GET /api/domains-debug?secret=...
+// GET /api/domains-debug   (Authorization: Bearer <CRON_SECRET>)
 // אבחון סיווג: כמה מכרזים כל מילת מפתח תופסת בפועל, עם דוגמאות
 // כותרות למילים החשודות — כדי לאתר מילים שמסווגות-יתר.
 export async function GET(req: Request) {
-  const url = new URL(req.url);
   const secret =
-    req.headers.get("authorization")?.replace("Bearer ", "") ||
-    url.searchParams.get("secret");
+    req.headers.get("authorization")?.replace("Bearer ", "");
+  // QA/B-3: ?secret= הוסר — כותרות בלבד.
   if (secret !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }

@@ -64,10 +64,13 @@ function authHeaders(extra: Record<string, string> = {}): Record<string, string>
 export async function GET(req: Request) {
   // אימות — זהה ל-cron הראשי
   const authHeader = req.headers.get('authorization');
-  const secret = req.headers.get('x-cron-secret') || new URL(req.url).searchParams.get('secret');
+  // QA/B-3: ?secret= הוסר — כותרות בלבד.
+  const secret = req.headers.get('x-cron-secret');
+  // QA/M-7: התנאי הראשון חסר את בדיקת ה-!! שיש לשני, ולכן כש-CRON_SECRET
+  // לא היה מוגדר הכותרת 'Bearer undefined' אושרה. עכשיו נכשל-סגור.
+  const cronSecret = process.env.CRON_SECRET;
   const isAuthorized =
-    authHeader === `Bearer ${process.env.CRON_SECRET}` ||
-    (!!process.env.CRON_SECRET && secret === process.env.CRON_SECRET);
+    !!cronSecret && (authHeader === `Bearer ${cronSecret}` || secret === cronSecret);
   if (!isAuthorized) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }

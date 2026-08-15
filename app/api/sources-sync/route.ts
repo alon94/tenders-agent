@@ -5,15 +5,15 @@ import { recordSyncRun, detectTrigger } from "@/app/lib/ops";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60; // תקרת Hobby בפועל
 
-// GET /api/sources-sync?secret=...            ← מריץ את כל המקורות הפעילים
-// GET /api/sources-sync?secret=...&source=rmi ← מקור בודד (גם אם מושבת)
-// GET /api/sources-sync?secret=...&dry=1      ← הרצת בדיקה בלי כתיבה ל-DB
+// GET /api/sources-sync                    ← מריץ את כל המקורות הפעילים
+// GET /api/sources-sync?source=rmi         ← מקור בודד (גם אם מושבת)
+// GET /api/sources-sync?dry=1   (Authorization: Bearer <CRON_SECRET>)  ← הרצת בדיקה בלי כתיבה
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const secret =
     req.headers.get("authorization")?.replace("Bearer ", "") ||
-    req.headers.get("x-cron-secret") ||
-    url.searchParams.get("secret");
+    req.headers.get("x-cron-secret");
+  // QA/B-3: ?secret= הוסר — כותרות בלבד.
   if (secret !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }

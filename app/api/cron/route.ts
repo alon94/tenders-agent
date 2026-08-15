@@ -176,7 +176,8 @@ export async function GET(req: Request) {
   const secret =
     req.headers.get('authorization')?.replace('Bearer ', '')
     || req.headers.get('x-cron-secret')
-    || new URL(req.url).searchParams.get('secret')
+  // QA/B-3: קבלת הסוד דרך ?secret= הוסרה — הוא נשמר בלוגי Vercel,
+  // בהיסטוריית הדפדפן ובכותרות Referer. כותרות בלבד.
   if (secret !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }

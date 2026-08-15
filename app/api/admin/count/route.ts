@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isOpsAuthorized } from "@/app/lib/ops";
 
 export const dynamic = "force-dynamic";
 
@@ -14,12 +15,13 @@ async function countExact(filter: string): Promise<number> {
   return parseInt((res.headers.get("content-range") || "/0").split("/")[1] || "0", 10);
 }
 
-// GET /api/admin/count?secret=...&contains=קול קורא
+// GET /api/admin/count?contains=קול קורא   (Authorization: Bearer <admin/CRON_SECRET>)
 // כלי QA: ספירת מכרזים שהביטוי מופיע בכותרת או בשדה הסוג,
 // עם פילוח פעילים/לא-פעילים ודוגמאות.
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  if (url.searchParams.get("secret") !== process.env.CRON_SECRET || !process.env.CRON_SECRET) {
+  // QA/B-3: ?secret= הוסר (נשמר בלוגים ובהיסטוריה). כותרת בלבד, או אדמין מחובר.
+  if (!(await isOpsAuthorized(req))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   const contains = (url.searchParams.get("contains") || "").trim();

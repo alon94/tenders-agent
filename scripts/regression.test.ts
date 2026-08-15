@@ -5,6 +5,10 @@
 import { parseHeDate, fmtDate, daysLeft } from "../app/lib/tenderMeta";
 import { harvestTenderLinks, rowsToRecords, heDateToIso as scraperHeDateToIso } from "../app/lib/scrapers/core";
 import { DOMAINS, classifyTender, matchDomain, matchPublisher, matchQuery, domainCounts, UNCATEGORIZED_ID } from "../app/lib/domains";
+import nodeCrypto from "crypto";
+// ops קורא את משתני הסביבה בזמן ריצה (לא בזמן טעינת המודול), ולכן
+// ייבוא רגיל בראש הקובץ תקין — הסביבה נקבעת לפני הקריאה לפונקציות.
+import { issueAdminToken, verifyAdminToken } from "../app/lib/ops";
 
 let failures = 0;
 function check(name: string, cond: boolean, detail = "") {
@@ -141,6 +145,60 @@ console.log("\nסקרייפרים — harvestTenderLinks על HTML לדוגמה"
   check("source ו-publisher מאוכלסים", recs.every((r) => r.source === "test" && r.publisher === "גוף בדיקה"));
   check("heDateToIso דוחה חודש לא חוקי", scraperHeDateToIso("13/13/2026") === null);
   check("heDateToIso: 12/08/2026 → אוגוסט", scraperHeDateToIso("12/08/2026") === "2026-08-12");
+}
+
+// ---------- QA/B-3 + B-4: טוקן האדמין ----------
+// בדיקות שמגנות על תיקוני סבב ה-QA. סביבה מקומית בלבד, בלי גישה לרשת.
+console.log("\nQA/B-3 + B-4 — חתימה ואימות של טוקן האדמין");
+{
+  process.env.ADMIN_TOKEN_SECRET = "test-signing-secret";
+  process.env.ADMIN_PASSWORD = "correct-horse";
+  const SEED = "alonkatabi17@gmail.com";
+  const PREFIX = "pwadm.";
+
+  // require אחרי הגדרת הסביבה — המפתח נקרא בזמן ריצה.
+  const ops = { issueAdminToken, verifyAdminToken };
+  const sign = (b64: string) =>
+    nodeCrypto.createHmac("sha256", process.env.ADMIN_TOKEN_SECRET!).update(b64).digest("base64url");
+  const mk = (payload: string) => {
+    const b64 = Buffer.from(payload).toString("base64url");
+    return `${PREFIX}${b64}.${sign(b64)}`;
+  };
+
+  const good = ops.issueAdminToken("correct-horse");
+  check("סיסמה נכונה מנפיקה טוקן", typeof good === "string" && good!.startsWith(PREFIX));
+  check("סיסמה שגויה לא מנפיקה טוקן", ops.issueAdminToken("wrong") === null);
+  check("סיסמה ריקה לא מנפיקה טוקן", ops.issueAdminToken("") === null);
+  check("סיסמה באורך שונה לא מפילה את safeEqual", ops.issueAdminToken("x") === null);
+
+  const id = ops.verifyAdminToken(good!);
+  check("טוקן תקין מאומת ומחזיר super", id?.role === "super" && id?.email === SEED);
+
+  // B-3: מטען מזויף בלי חתימה תקפה
+  const forged = Buffer.from(`attacker@evil.com|super|${Date.now() + 60000}`).toString("base64url");
+  check("מטען מזויף בלי חתימה תקפה נדחה", ops.verifyAdminToken(`${PREFIX}${forged}.deadbeef`) === null);
+
+  // B-3: חתימה תקפה אך זהות אחרת — הזהות מאומתת, לא רק החתימה
+  check("חתימה תקפה + מייל זר → נדחה",
+    ops.verifyAdminToken(mk(`someone@else.com|super|${Date.now() + 60000}`)) === null);
+
+  // B-3: תפקיד מחוץ לרשימת ההיתר
+  check("תפקיד לא מוכר (root) → נדחה",
+    ops.verifyAdminToken(mk(`${SEED}|root|${Date.now() + 60000}`)) === null);
+
+  // תוקף
+  check("טוקן שפג תוקפו נדחה", ops.verifyAdminToken(mk(`${SEED}|super|${Date.now() - 1000}`)) === null);
+  check("תוקף לא מספרי נדחה", ops.verifyAdminToken(mk(`${SEED}|super|not-a-number`)) === null);
+
+  // B-4: תוקף 12 שעות ולא שבוע
+  const expMs = Number(
+    Buffer.from(good!.slice(PREFIX.length).split(".")[0], "base64url").toString().split("|")[2]
+  ) - Date.now();
+  check("תוקף הטוקן ≤ 12 שעות", expMs > 0 && expMs <= 12 * 3600 * 1000 + 5000,
+    `${(expMs / 3600000).toFixed(1)}h`);
+
+  check("טוקן בלי הקידומת נדחה", ops.verifyAdminToken("Bearer abc") === null);
+  check("מחרוזת ריקה נדחית", ops.verifyAdminToken("") === null);
 }
 
 console.log(failures === 0 ? "\n✅ כל הבדיקות עברו" : `\n❌ ${failures} בדיקות נכשלו`);
