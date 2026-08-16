@@ -498,7 +498,7 @@ export interface MailRecipient {
 export async function listMailRecipients(): Promise<MailRecipient[]> {
   const users = await listRegisteredUsers();
   if (!users.length) return [];
-  const res = await fetch(restUrl('/business_profiles?select=user_id,categories,category_other,region,publisher_type'), { headers: svcHeaders(), cache: 'no-store' });
+  const res = await fetch(restUrl('/business_profiles?select=user_id,categories,category_other,region,publisher_type,keywords'), { headers: svcHeaders(), cache: 'no-store' });
   if (!res.ok) { console.error('ops.listMailRecipients profiles failed:', res.status); return []; }
   const rows = (await res.json().catch(() => [])) as Record<string, unknown>[];
   const byUser = new Map<string, Record<string, unknown>>();
@@ -512,7 +512,10 @@ export async function listMailRecipients(): Promise<MailRecipient[]> {
       categories: Array.isArray(p.categories) ? (p.categories as string[]) : [],
       region: String(p.region || 'all'),
       publisherType: String(p.publisher_type || 'all'),
-      keywords: String(p.category_other || ''),
+      // QA/M-20: קודם נלקח כאן category_other — שדה "תחום עיסוק אחר" החופשי
+      // שימש בטעות כמילות מפתח לדיוור. עכשיו נקרא השדה הייעודי, עם
+      // נפילה-לאחור ל-category_other עבור פרופילים ישנים.
+      keywords: String(p.keywords || p.category_other || ''),
     });
   }
   return out;

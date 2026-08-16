@@ -3,6 +3,7 @@
 //  הרצה: npm test   (npx tsx scripts/regression.test.ts)
 // ============================================================
 import { parseHeDate, fmtDate, daysLeft } from "../app/lib/tenderMeta";
+import { scoreTender } from "../app/lib/scoring";
 import { harvestTenderLinks, rowsToRecords, heDateToIso as scraperHeDateToIso } from "../app/lib/scrapers/core";
 import { DOMAINS, classifyTender, matchDomain, matchPublisher, matchQuery, domainCounts, UNCATEGORIZED_ID } from "../app/lib/domains";
 import nodeCrypto from "crypto";
@@ -205,6 +206,37 @@ console.log("\nQA/B-3 + B-4 — חתימה ואימות של טוקן האדמי
 
   check("טוקן בלי הקידומת נדחה", ops.verifyAdminToken("Bearer abc") === null);
   check("מחרוזת ריקה נדחית", ops.verifyAdminToken("") === null);
+}
+
+// ---------- QA/M-20: מילות מפתח הן הגורם המכריע בדירוג ----------
+// עד לתיקון הזה, השדה keywords נקרא על ידי scoring.ts אך לא נאסף באף
+// מסך — ולכן היה ריק אצל כל המשתמשים. התוצאה: אף מכרז לא חצה את סף
+// "התאמה גבוהה" (80), כי קטגוריות לבדן לא מספיקות.
+console.log("\nQA/M-20 — מילות מפתח בפרופיל");
+{
+  const now = Date.now();
+  const iso = (d: number) => new Date(now + d * 86400000).toISOString().slice(0, 10);
+  const tender = {
+    title: "מכרז לאספקת שירותי פיתוח תוכנה ואפיון מערכות מידע",
+    publisher: "משרד האוצר",
+    publishDate: iso(-2),
+    deadline: iso(7),
+  };
+  const base = { categories: ["tech"], region: "national", publisher_type: "all" };
+
+  const without = scoreTender(tender, { ...base, keywords: "" } as never, now);
+  const with1 = scoreTender(tender, { ...base, keywords: "פיתוח תוכנה" } as never, now);
+  const withMany = scoreTender(tender, { ...base, keywords: "פיתוח תוכנה, אפיון, מערכות מידע" } as never, now);
+
+  check("בלי מילות מפתח — הרלוונטיות נמוכה", without.relevance < with1.relevance,
+    `${without.relevance} vs ${with1.relevance}`);
+  check("מילת מפתח אחת מעלה את הציון", with1.display > without.display,
+    `${without.display} → ${with1.display}`);
+  check("עוד מילות מפתח מעלות עוד", withMany.display >= with1.display,
+    `${with1.display} → ${withMany.display}`);
+  check("עם מילות מפתח מגיעים ל'התאמה גבוהה' (80+)", withMany.display >= 80,
+    `display=${withMany.display}`);
+  check("בלי מילות מפתח לא מגיעים ל-80", without.display < 80, `display=${without.display}`);
 }
 
 // ---------- QA/H-2 + B-1: בניית השאילתה ב-getTenders ----------
