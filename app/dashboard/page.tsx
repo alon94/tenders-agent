@@ -210,7 +210,10 @@ export default function Dashboard(){
           <div style={{marginTop:'auto',border:`1px solid ${BORDER}`,borderRadius:12,padding:16}}>
             <div style={{fontWeight:700,fontSize:14,color:DARK}}>◈ הסוכן החכם</div>
             <div style={{fontSize:12,color:MUTED,margin:'7px 0 12px',lineHeight:1.5}}>קבלו מכרזים מותאמים לפי הפרופיל העסקי שלכם</div>
-            <a href="/agent" style={{display:'block',background:DARK,color:'#fff',fontWeight:600,fontSize:13,textAlign:'center',padding:9,borderRadius:8,textDecoration:'none'}}>הפעלה</a>
+            {/* QA/M-19: הכיתוב היה "הפעלה", אבל אין בפרויקט שום state של
+                מופעל/כבוי — הסוכן תמיד רץ, ו-/api/agent מחשב התאמות מהפרופיל
+                בכל טעינה. כפתור שמבטיח הפעלה ולא משנה דבר נראה כתקלה. */}
+            <a href="/agent" style={{display:'block',background:DARK,color:'#fff',fontWeight:600,fontSize:13,textAlign:'center',padding:9,borderRadius:8,textDecoration:'none'}}>לסוכן החכם ←</a>
           </div>
           <div style={{marginTop:14,paddingTop:14,borderTop:`1px solid ${BORDER}`}}>
             {session ? (
