@@ -37,11 +37,16 @@ const DARK='#1a2330', BLUE='#2b6fc4', MUTED='#667380', BORDER='#e6eaee';
 export default function Dashboard(){
   const [session, setSession] = useState<AuthSession | null>(null);
   const [bizProfile, setBizProfile] = useState<BusinessProfile | null>(null);
+  // QA/H-1: בדיקת הסשן קובעת את showClosed, שהוא תלות של בקשת החיפוש.
+  // בלי דגל מוכנות נורות *שתי* בקשות בכל טעינה למשתמש לא מחובר —
+  // אחת לפני שהערך נקבע ואחת אחריו. אומת במדידה: 3.8 ש' פעמיים.
+  const[ready,setReady]=useState(false);
   useEffect(() => {
     const s = getSession();
     setSession(s);
     // אורח: ברירת מחדל — הצג הכל, כולל מכרזים שמועד הגשתם עבר
     if (!s) setShowClosed(true);
+    setReady(true);
     const onChange = () => setSession(getSession());
     window.addEventListener(AUTH_EVENT, onChange);
     window.addEventListener('storage', onChange);
@@ -98,6 +103,7 @@ export default function Dashboard(){
   const view=exemptView?'exempt':sbView?'smallbiz':null;
   const reqRef=useRef(0);
   useEffect(()=>{
+    if(!ready)return;
     const seq=++reqRef.current;
     const handle=setTimeout(async()=>{
       setLoading(true);setErr(false);
@@ -119,7 +125,7 @@ export default function Dashboard(){
     // השהיה קצרה רק להקלדה בחיפוש, כדי לא לירות בקשה לכל תו
     },q?250:0);
     return()=>clearTimeout(handle);
-  },[pg,view,biz,pub,maxD,showClosed,showNoDate,sbOnly,q,tab,bizProfile]);
+  },[ready,pg,view,biz,pub,maxD,showClosed,showNoDate,sbOnly,q,tab,bizProfile]);
 
   const rows=srv?.tenders??[];
   const counts=srv?.counts??{base:0,closing:0,new:0,smallBiz:0,active:0,exempt:0};
