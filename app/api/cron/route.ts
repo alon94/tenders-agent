@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 import { syncTendersFromSources } from "@/app/lib/db";
 import { scoreTender } from "@/app/lib/scoring";
-import { isOpsAuthorized, recordSyncRun, recordEmail, detectTrigger, listMailRecipients } from "@/app/lib/ops";
+import { isOpsAuthorized, startSyncRun, finishSyncRun, recordEmail, detectTrigger, listMailRecipients } from "@/app/lib/ops";
 
 const API = 'https://next.obudget.org/api/query'
 const STATUSES = `('פורסם','עתידי','פורסם ולא התקבלו השגות','פורסם והתקבלו השגות','בעדכון')`
@@ -183,6 +183,12 @@ export async function GET(req: Request) {
   const runT0 = Date.now()
   const runTrigger = detectTrigger(req)
 
+  // QA/H-6: פותחים שורת ריצה מיד. ב-timeout ה-isolate נהרג לפני שורת
+  // הסיום, ולכן בלי זה כשל בטיים-אאוט לא הותיר שום עדות ב-sync_runs.
+  // השורה נפתחת כ-incomplete ומוחלפת בסיום — ולכן ריצה מוצלחת אינה
+  // מייצרת שורת שגיאה מיותרת.
+  const runId = await startSyncRun({ type: 'sync', started_at: runStartedAt, trigger: runTrigger })
+
   try {
           // Sync the full tender list into the DB (best-effort; must not block
           // the email-matching flow below if it fails).
@@ -240,7 +246,7 @@ export async function GET(req: Request) {
     console.log('Cron: matched tenders =', tenders.length, 'dbSync =', JSON.stringify(dbSync))
 
     if (tenders.length === 0) {
-      await recordSyncRun({ type: 'sync', started_at: runStartedAt, duration_ms: Date.now() - runT0, trigger: runTrigger, counts: { ...dbSync, matched: 0 }, error: 'no matching tenders' })
+      await finishSyncRun(runId, { type: 'sync', started_at: runStartedAt, duration_ms: Date.now() - runT0, trigger: runTrigger, counts: { ...dbSync, matched: 0 }, error: 'no matching tenders' })
       return NextResponse.json({ message: 'No matching tenders found, email not sent', dbSync })
     }
 
@@ -347,7 +353,7 @@ export async function GET(req: Request) {
       await recordEmail({ recipient: TO_EMAIL, type: 'alert', tender_count: hotNew.length, status: 'sent' })
     }
 
-    await recordSyncRun({
+    await finishSyncRun(runId, {
       type: 'sync', started_at: runStartedAt, duration_ms: Date.now() - runT0, trigger: runTrigger,
       counts: { ...dbSync, matched: tenders.length, alert: alertSent, extra_sent: extraSent },
       error: (dbSync as any).error || (dbSync as any).muniError || (dbSync as any).mrGovError || null,
@@ -363,7 +369,7 @@ export async function GET(req: Request) {
     })
   } catch (err) {
     console.error('Cron error:', err)
-    await recordSyncRun({ type: 'sync', started_at: runStartedAt, duration_ms: Date.now() - runT0, trigger: runTrigger, counts: {}, error: String(err) })
+    await finishSyncRun(runId, { type: 'sync', started_at: runStartedAt, duration_ms: Date.now() - runT0, trigger: runTrigger, counts: {}, error: String(err) })
     return NextResponse.json({ error: String(err) }, { status: 500 })
   }
 }

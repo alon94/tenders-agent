@@ -91,6 +91,62 @@ export async function ensureOpsTables(): Promise<void> {
 }
 
 // --- רישום תפעולי (best-effort) ---
+/**
+ * QA/H-6: פותח שורת ריצה מיד בכניסה ומחזיר את ה-id שלה.
+ * recordSyncRun נקרא רק בסוף, אחרי כל העבודה — וב-timeout של הפלטפורמה
+ * ה-isolate נהרג קודם, כך שריצה שנפלה בטיים-אאוט לא הותירה שום עדות.
+ * השורה נפתחת עם error='incomplete', ולכן היא *לא* נספרת כריצה מוצלחת
+ * ב-getLastSyncAt (שמסנן error=is.null) — ורק אם הריצה תסתיים כרגיל
+ * finishSyncRun ינקה את השדה.
+ */
+export async function startSyncRun(run: {
+  type: 'sync' | 'smallbiz' | 'sources';
+  started_at: string;
+  trigger: string;
+}): Promise<number | null> {
+  try {
+    await ensureOpsTables();
+    const res = await fetch(restUrl('/sync_runs'), {
+      method: 'POST',
+      headers: svcHeaders({ Prefer: 'return=representation' }),
+      body: JSON.stringify({
+        type: run.type, started_at: run.started_at, trigger: run.trigger,
+        duration_ms: null, counts_json: { phase: 'started' },
+        error: 'incomplete: run did not finish',
+      }),
+    });
+    if (!res.ok) return null;
+    const rows = await res.json().catch(() => []);
+    return rows?.[0]?.id ?? null;
+  } catch (e) {
+    console.error('ops.startSyncRun failed:', e);
+    return null;
+  }
+}
+
+/** משלים שורה שנפתחה ב-startSyncRun. נופל-לאחור ל-recordSyncRun אם אין id. */
+export async function finishSyncRun(id: number | null, run: {
+  type: 'sync' | 'smallbiz' | 'sources';
+  started_at: string;
+  duration_ms: number;
+  trigger: string;
+  counts: Record<string, unknown>;
+  error?: string | null;
+}): Promise<void> {
+  if (id == null) return recordSyncRun(run);
+  try {
+    await fetch(restUrl(`/sync_runs?id=eq.${id}`), {
+      method: 'PATCH',
+      headers: svcHeaders({ Prefer: 'return=minimal' }),
+      body: JSON.stringify({
+        duration_ms: run.duration_ms, counts_json: run.counts, error: run.error || null,
+      }),
+    });
+  } catch (e) {
+    console.error('ops.finishSyncRun failed:', e);
+  }
+}
+
 export async function recordSyncRun(run: {
   type: 'sync' | 'smallbiz' | 'sources';
   started_at: string;

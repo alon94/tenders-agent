@@ -46,7 +46,10 @@ function authHeaders(extra: Record<string, string> = {}): Record<string, string>
 // the scan pipeline actually last ran, independent of per-row fetched_at.
 export async function getLastSyncAt(): Promise<string | null> {
     try {
-        const path = "/sync_runs?select=started_at&error=is.null&order=started_at.desc&limit=1";
+        // QA/H-6: קודם לא היה סינון לפי type, ולכן ריצת smallbiz או
+        // sources מוצלחת "כיסתה" על כשל בסנכרון המכרזים והממשק הציג
+        // זמן טרי גם כשהסנכרון נפל. עכשיו נספרת רק ריצת sync.
+        const path = "/sync_runs?select=started_at&type=eq.sync&error=is.null&order=started_at.desc&limit=1";
         const res = await fetch(restUrl(path), { headers: authHeaders(), cache: "no-store" });
         if (!res.ok) return null;
         const rows = (await res.json()) as { started_at?: string }[];
