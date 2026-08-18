@@ -3,7 +3,6 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useIsMobile } from "../hooks/useIsMobile";
 import MobileTabBar from "../components/MobileTabBar";
 import MobileMenu from "../components/MobileMenu";
-import { fetchDedupedTenders } from '../lib/tenderData';
 import { getSession, signOut, AUTH_EVENT, type AuthSession } from '../lib/authClient';
 import { parseHeDate, isExempt } from '../lib/tenderMeta';
 import { fetchMyProfile, type BusinessProfile } from '../lib/profileApi';
@@ -64,7 +63,6 @@ export default function Dashboard(){
   // מצבי תצוגה מהסרגל: ?view=exempt / ?view=smallbiz, וחיפוש התחלתי ?q=
   const[exemptView]=useState<boolean>(()=>typeof window!=='undefined'&&new URLSearchParams(window.location.search).get('view')==='exempt');
   const[sbView]=useState<boolean>(()=>typeof window!=='undefined'&&new URLSearchParams(window.location.search).get('view')==='smallbiz');
-  const[all,setAll]=useState<T[]>([]);
   const[loading,setLoading]=useState(true);
   const[fetchedAt,setFetchedAt]=useState('');
   const[marked,setMarked]=useState<string[]>([]);
@@ -87,79 +85,60 @@ export default function Dashboard(){
   },[]);
   const toggleMark=useCallback((id:string,e?:any)=>{if(e){e.preventDefault();e.stopPropagation();}setMarked(prev=>{const has=prev.includes(id);const next=has?prev.filter(x=>x!==id):[...prev,id];try{localStorage.setItem('markedTenders',JSON.stringify(next));}catch(err){}return next;});},[]);
 
-  // מונע טעינות כפולות: ריצה אחת בו-זמנית (didLoad חוסם קריאה שנייה
-  // בזמן שהראשונה עוד רצה, כולל double-mount של StrictMode).
-  const loadingRef=useRef(false);
-  const load=useCallback(async(force=false)=>{
-        if(loadingRef.current&&!force)return;
-        loadingRef.current=true;
-        setLoading(true);
-        try{
-                const res:any=await fetchDedupedTenders();
-                setAll(res.tenders);
-                setFetchedAt(res.fetchedAt);
-        }finally{setLoading(false);loadingRef.current=false;}
-  },[]);
-  useEffect(()=>{load();},[load]);
+  // QA/H-1: fetchDedupedTenders הוסר — הוא היה מושך את כל המאגר.
 
-  const base=useMemo(()=>{
-    let r=all;
-    if(exemptView)r=r.filter(t=>isExempt(t.type,t.title));
-    if(sbView)r=r.filter(t=>t.smallBiz&&(t.smallBizConfidence==='high'||t.smallBizConfidence==='medium'));
-    if(biz)r=r.filter(t=>matchDomain(t,biz));
-    if(pub)r=r.filter(t=>matchPublisher(t,pub));
-    if(!showClosed)r=r.filter(t=>{const d=dl(t.deadline);return d===null||d>=0;});
-    if(!showNoDate)r=r.filter(t=>!!t.deadline);
-    r=r.filter(t=>{
-      const d=dl(t.deadline);
-      if(d!==null&&d<0)return showClosed; // פג מועד — רק בבקשה מפורשת
-      if(d===null){
-        // ללא מועד הגשה: מוצג רק אם פורסם בשנה האחרונה (חוסם רשומות
-        // מוניציפליות עתיקות עם סטטוס "פתוח" שמעולם לא עודכן)
-        if(!showNoDate)return false;
-        const p=parseHeDate(t.publishDate);
-        return p===null||p.getTime()>Date.now()-365*86400000;
+  // QA/H-1: כל הסינון, הדירוג, העימוד והספירות עברו לצד שרת.
+  // קודם הדשבורד משך את כל 9,471 המכרזים (3.4MB, 10 בקשות טוריות,
+  // ~5 שניות) רק כדי להציג 25 שורות. עכשיו נשלח עמוד אחד.
+  // הלוגיקה עצמה חיה ב-app/lib/tenderQuery.ts — מקור אמת יחיד שנבדק
+  // מול הגרסה המקורית על 432 צירופי מסננים.
+  const[srv,setSrv]=useState<{tenders:T[];total:number;counts:{base:number;closing:number;new:number;smallBiz:number;active:number;exempt:number};domains:{id:string;label:string;count:number}[];uncategorized:number;corpus:number}|null>(null);
+  const[err,setErr]=useState(false);
+
+  const view=exemptView?'exempt':sbView?'smallbiz':null;
+  const reqRef=useRef(0);
+  useEffect(()=>{
+    const seq=++reqRef.current;
+    const handle=setTimeout(async()=>{
+      setLoading(true);setErr(false);
+      try{
+        const r=await fetch('/api/tenders/search',{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({page:pg,perPage:PER,
+            filters:{view,biz,pub,maxD,showClosed,showNoDate,sbOnly,q,tab},
+            profile:bizProfile?{categories:bizProfile.categories,region:bizProfile.region,publisher_type:bizProfile.publisher_type,keywords:bizProfile.keywords||''}:null})});
+        if(!r.ok)throw new Error('http '+r.status);
+        const j=await r.json();
+        // מתעלמים מתשובה של בקשה שכבר אינה העדכנית ביותר
+        if(seq!==reqRef.current)return;
+        setSrv(j);setFetchedAt(j.fetchedAt||'');
+      }catch{
+        if(seq===reqRef.current)setErr(true);
+      }finally{
+        if(seq===reqRef.current)setLoading(false);
       }
-      return d<=maxD;
-    });
-    if(sbOnly)r=r.filter(t=>t.smallBiz&&(t.smallBizConfidence==='high'||t.smallBizConfidence==='medium'));
-    if(q.trim())r=r.filter(t=>matchQuery(t,q));
-    return r;
-  },[all,biz,pub,maxD,showClosed,showNoDate,sbOnly,q]);
+    // השהיה קצרה רק להקלדה בחיפוש, כדי לא לירות בקשה לכל תו
+    },q?250:0);
+    return()=>clearTimeout(handle);
+  },[pg,view,biz,pub,maxD,showClosed,showNoDate,sbOnly,q,tab,bizProfile]);
 
-  const closing=useMemo(()=>base.filter(t=>{const d=dl(t.deadline);return d!==null&&d>=0&&d<=7;}),[base]);
-  // TICKET-11: פרסור תאריך הפרסום דרך ה-utility הריכוזי בלבד
-  const newT=useMemo(()=>base.filter(t=>{if(!t.publishDate)return false;const x=parseHeDate(t.publishDate);return x!==null&&x.getTime()>(now-7*86400000);}),[base,now]);
+  const rows=srv?.tenders??[];
+  const counts=srv?.counts??{base:0,closing:0,new:0,smallBiz:0,active:0,exempt:0};
+  const tp=Math.max(1,Math.ceil((srv?.total??0)/PER));
   const scoreOf=useCallback((t:T):number=>{
-    // QA/M-20: keywords לא הועבר כאן, ולכן מילות המפתח השפיעו על הסוכן
-    // אך *לא* על הציונים בדשבורד — בדיוק המסך שבו הם מוצגים.
     if(bizProfile)return scoreTender(t,{categories:bizProfile.categories,region:bizProfile.region,publisher_type:bizProfile.publisher_type,keywords:bizProfile.keywords||''},now).display;
     return matchSc(biz,t);
   },[bizProfile,biz,now]);
-  const shown=useMemo(()=>{
-    const r=tab==='closing'?closing:tab==='new'?newT:base;
-    if(bizProfile){
-      // מחובר עם פרופיל עסקי: מיון לפי ציון התאמה, שובר שוויון — הדדליין הקרוב
-      return [...r].sort((a,b)=>scoreOf(b)-scoreOf(a)||((dl(a.deadline)??9999)-(dl(b.deadline)??9999)));
-    }
-    return [...r].sort((a,b)=>(dl(a.deadline)??9999)-(dl(b.deadline)??9999));
-  },[base,closing,newT,tab,bizProfile,scoreOf]);
 
-  // QA/H-6: קודם היה `new Date(fetchedAt||Date.now())` — כלומר כשלא היה
-  // נתון סנכרון אמיתי הוצג *הזמן הנוכחי*, והממשק לעולם לא יכול היה
-  // לומר "לא ידוע". כשל בסנכרון נראה בדיוק כמו סנכרון מוצלח.
+  // QA/H-6: קודם היה `new Date(fetchedAt||Date.now())` — כשלא היה נתון
+  // סנכרון אמיתי הוצג *הזמן הנוכחי*, והממשק לא יכול היה לומר "לא ידוע".
   const scannedLabel=(()=>{
     if(!fetchedAt)return 'עדכון אחרון לא ידוע';
     const d=new Date(fetchedAt);
     if(isNaN(d.getTime()))return 'עדכון אחרון לא ידוע';
     return 'נסרק '+d.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
   })();
-  const tp=Math.ceil(shown.length/PER);
-  const rows=shown.slice((pg-1)*PER,pg*PER);
 
-  const activeCnt=useMemo(()=>all.filter(t=>{const d=dl(t.deadline);return d===null||d>=0;}).length,[all]);
-  const exemptCnt=useMemo(()=>all.filter(t=>isExempt(t.type,t.title)).length,[all]);
-  const sbCnt=useMemo(()=>all.filter(t=>t.smallBiz&&(t.smallBizConfidence==='high'||t.smallBizConfidence==='medium')).length,[all]);
+  const activeCnt=counts.active, exemptCnt=counts.exempt, sbCnt=counts.smallBiz;
   const sideNav=[
     {icon:'⌂',label:'דף הבית',href:'/'},
     {icon:'◧',label:'גילוי מכרזים',href:'/dashboard',active:!exemptView&&!sbView,count:activeCnt},
@@ -176,18 +155,18 @@ export default function Dashboard(){
   // נפח, ובסוף bucket "לא מסווג" מדיד למעקב אחר יעד הצמצום.
   const bizOptions=useMemo(()=>{
     const opts:{id:string,label:string}[]=[{id:'',label:'כל התחומים'}];
-    const {domains,uncategorized}=domainCounts(all);
+    const domains=srv?.domains??[], uncategorized=srv?.uncategorized??0;
     for(const c of domains)opts.push({id:c.id,label:`${c.label} (${c.count.toLocaleString('he-IL')})`});
     if(uncategorized>0)opts.push({id:UNCATEGORIZED_ID,label:`${UNCATEGORIZED_LABEL} (${uncategorized.toLocaleString('he-IL')})`});
     return opts;
-  },[all]);
-  const smallBizCount=useMemo(()=>all.filter(t=>t.smallBiz&&(t.smallBizConfidence==='high'||t.smallBizConfidence==='medium')).length,[all]);
+  },[srv]);
+  const smallBizCount=counts.smallBiz;
   const kpis=[
-    {value:all.length,label:'מכרזים פעילים במאגר',dot:BLUE},
-    {value:closing.length,label:'נסגרים בשבוע הקרוב',dot:'#b04a34'},
-    {value:newT.length,label:'חדשים ב-7 ימים',dot:'#1e9e5a'},
+    {value:srv?.corpus??0,label:'מכרזים פעילים במאגר',dot:BLUE},
+    {value:counts.closing,label:'נסגרים בשבוע הקרוב',dot:'#b04a34'},
+    {value:counts.new,label:'חדשים ב-7 ימים',dot:'#1e9e5a'},
     {value:smallBizCount,label:'⭐ העדפה לעסקים קטנים',dot:'#1e5aa8',onClick:()=>{setSbOnly(v=>!v);setPg(1);}},
-    {value:base.length,label:'מוצגים כעת',dot:'#d9a520'},
+    {value:counts.base,label:'מוצגים כעת',dot:'#d9a520'},
   ] as {value:number,label:string,dot:string,onClick?:()=>void}[];
   const chip:React.CSSProperties={background:'#fff',color:'#5b6b7a',fontWeight:600,fontSize:13,padding:'8px 15px',borderRadius:7,border:'1px solid #e2e7ec',cursor:'pointer'};
   const selWrap:React.CSSProperties={position:'relative'};
@@ -282,7 +261,7 @@ export default function Dashboard(){
 
             {/* toolbar */}
             <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:14,flexWrap:'wrap'}}>
-              {[{k:'all',label:`כל המכרזים · ${base.length.toLocaleString()}`},{k:'closing',label:`נסגרים בשבוע · ${closing.length}`},{k:'new',label:`חדשים · ${newT.length}`}].map(tb=>{
+              {[{k:'all',label:`כל המכרזים · ${counts.base.toLocaleString()}`},{k:'closing',label:`נסגרים בשבוע · ${counts.closing}`},{k:'new',label:`חדשים · ${counts.new}`}].map(tb=>{
                 const active=tab===tb.k;
                 return(
                   <button key={tb.k} onClick={()=>{setTab(tb.k as any);setPg(1);}} style={{...chip,background:active?DARK:'#fff',color:active?'#fff':'#5b6b7a',border:active?'none':'1px solid #e2e7ec'}}>{tb.label}</button>
@@ -341,7 +320,17 @@ export default function Dashboard(){
                   ))}
                 </div>
               ):rows.length===0?(
+                err?(
+                  /* QA/H-3: כשל טעינה נראה קודם בדיוק כמו "אין תוצאות" —
+                     האתר האשים את הסינון של המשתמש בזמן שהשרת נפל. */
+                  <div style={{padding:44,textAlign:'center'}}>
+                    <div style={{color:'#b04a34',fontWeight:700,fontSize:15,marginBottom:6}}>לא הצלחנו לטעון את המכרזים</div>
+                    <div style={{color:MUTED,fontSize:13.5,marginBottom:14}}>זו תקלה זמנית בשרת, לא בסינון שלכם.</div>
+                    <button onClick={()=>setPg(p=>p)} style={{background:DARK,color:'#fff',border:'none',borderRadius:8,padding:'9px 20px',fontSize:13.5,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>נסו שוב</button>
+                  </div>
+                ):(
                 <div style={{padding:50,textAlign:'center',color:MUTED,fontSize:14}}>לא נמצאו מכרזים התואמים לסינון</div>
+                )
               ):rows.map((t,i)=>{
                 const d=dl(t.deadline);
                 const score=scoreOf(t);

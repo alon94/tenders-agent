@@ -4,6 +4,8 @@
 // ============================================================
 import { parseHeDate, fmtDate, daysLeft } from "../app/lib/tenderMeta";
 import { scoreTender } from "../app/lib/scoring";
+import { applyBaseFilters, queryTenders } from "../app/lib/tenderQuery";
+import { isExempt } from "../app/lib/tenderMeta";
 import { harvestTenderLinks, rowsToRecords, heDateToIso as scraperHeDateToIso } from "../app/lib/scrapers/core";
 import { DOMAINS, classifyTender, matchDomain, matchPublisher, matchQuery, domainCounts, UNCATEGORIZED_ID } from "../app/lib/domains";
 import nodeCrypto from "crypto";
@@ -206,6 +208,85 @@ console.log("\nQA/B-3 + B-4 — חתימה ואימות של טוקן האדמי
 
   check("טוקן בלי הקידומת נדחה", ops.verifyAdminToken("Bearer abc") === null);
   check("מחרוזת ריקה נדחית", ops.verifyAdminToken("") === null);
+}
+
+// ---------- QA/H-1: הסינון בצד שרת זהה לסינון שרץ בדפדפן ----------
+// הסיכון היחיד בהעברת הסינון לשרת הוא סטייה התנהגותית. הבדיקה הזו
+// מריצה את הלוגיקה *המקורית* מ-dashboard/page.tsx מול המודול המשותף,
+// על 240 צירופי מסננים, ומוודאת שהתוצאה זהה לחלוטין.
+console.log("\nQA/H-1 — סינון בצד שרת ≡ הסינון המקורי בדפדפן");
+{
+  const now = Date.parse("2026-08-17T09:00:00Z");
+  const iso = (d: number) => new Date(now + d * 86400000).toISOString().slice(0, 10);
+  const fx: any[] = [
+    { id: "1", title: "פיתוח מערכת תוכנה", publisher: "משרד האוצר", type: "מכרז פומבי", publishDate: iso(-3), deadline: iso(5) },
+    { id: "2", title: "שירותי ניקיון", publisher: "עיריית חיפה", type: "מכרז", publishDate: iso(-40), deadline: iso(60) },
+    { id: "3", title: "פטור ממכרז — ספק יחיד", publisher: "משרד הבריאות", type: "פטור ממכרז", publishDate: iso(-10) },
+    { id: "4", title: "הסעות תלמידים", publisher: "מועצה אזורית", type: "מכרז", publishDate: iso(-500) },
+    { id: "5", title: "ייעוץ ארגוני", publisher: "רשות המסים", type: "מכרז", publishDate: iso(-1), deadline: iso(-2) },
+    { id: "6", title: "אספקת ריהוט", publisher: "מינהל הרכש", type: "מכרז", publishDate: iso(-6), deadline: iso(400) },
+    { id: "7", title: "קמפיין פרסום", publisher: "משרד התיירות", type: "מכרז", publishDate: iso(-2), deadline: iso(3), smallBiz: true, smallBizConfidence: "high" },
+    { id: "8", title: "בינוי ותשתיות", publisher: "תאגיד מים", type: "מכרז", publishDate: iso(-90), smallBiz: true, smallBizConfidence: "low" },
+  ];
+
+  // --- הלוגיקה המקורית, כפי שהייתה ב-dashboard/page.tsx ---
+  const dl = (d: string) => { const x = parseHeDate(d); return x === null ? null : Math.ceil((x.getTime() - now) / 86400000); };
+  const original = (all: any[], o: any) => {
+    let r = all;
+    if (o.exemptView) r = r.filter((t) => isExempt(t.type, t.title));
+    if (o.sbView) r = r.filter((t) => t.smallBiz && (t.smallBizConfidence === "high" || t.smallBizConfidence === "medium"));
+    if (o.biz) r = r.filter((t) => matchDomain(t, o.biz));
+    if (o.pub) r = r.filter((t) => matchPublisher(t, o.pub));
+    if (!o.showClosed) r = r.filter((t) => { const d = dl(t.deadline); return d === null || d >= 0; });
+    if (!o.showNoDate) r = r.filter((t) => !!t.deadline);
+    r = r.filter((t) => {
+      const d = dl(t.deadline);
+      if (d !== null && d < 0) return o.showClosed;
+      if (d === null) {
+        if (!o.showNoDate) return false;
+        const pd = parseHeDate(t.publishDate);
+        return pd === null || pd.getTime() > now - 365 * 86400000;
+      }
+      return d <= o.maxD;
+    });
+    if (o.sbOnly) r = r.filter((t) => t.smallBiz && (t.smallBizConfidence === "high" || t.smallBizConfidence === "medium"));
+    if (o.q && o.q.trim()) r = r.filter((t) => matchQuery(t, o.q));
+    return r;
+  };
+
+  let combos = 0, mismatches = 0;
+  // exemptView ו-sbView נגזרים שניהם מאותו פרמטר ?view= בדשבורד
+  // (page.tsx:65-66), ולכן הם מוציאים זה את זה. איטרציה על שלושת
+  // המצבים האפשריים בפועל, ולא על שני בוליאנים בלתי תלויים.
+  for (const view of [null, "exempt", "smallbiz"] as const)
+  for (const showClosed of [false, true])
+  for (const showNoDate of [false, true])
+  for (const sbOnly of [false, true])
+  for (const maxD of [7, 30, 365])
+  for (const q of ["", "תוכנה", "ניקיון"])
+  for (const biz of ["", "tech"]) {
+    combos++;
+    const o = { exemptView: view === "exempt", sbView: view === "smallbiz", showClosed, showNoDate, sbOnly, maxD, q, biz, pub: "" };
+    const a = original(fx, o).map((t) => t.id).join(",");
+    const b = applyBaseFilters(fx, {
+      view,
+      biz, pub: "", maxD, showClosed, showNoDate, sbOnly, q,
+    }, now).map((t) => t.id).join(",");
+    if (a !== b) { mismatches++; if (mismatches <= 2) console.error(`    צירוף חורג: ${JSON.stringify(o)} → [${a}] vs [${b}]`); }
+  }
+  check(`${combos} צירופי מסננים — השרת מחזיר בדיוק כמו הדפדפן`, mismatches === 0, `${mismatches} חריגות`);
+
+  // עימוד: העמודים לא חופפים ומכסים את הכל
+  const r1 = queryTenders(fx, { showClosed: true, maxD: 3650 }, null, 1, 3, now);
+  const r2 = queryTenders(fx, { showClosed: true, maxD: 3650 }, null, 2, 3, now);
+  const ids1 = r1.tenders.map((t) => t.id), ids2 = r2.tenders.map((t) => t.id);
+  check("עמוד 1 מחזיר בדיוק perPage", ids1.length === 3, String(ids1.length));
+  check("אין חפיפה בין עמודים", ids1.every((i) => !ids2.includes(i)));
+  check("total משקף את כל התוצאות ולא רק את העמוד", r1.total === applyBaseFilters(fx, { showClosed: true, maxD: 3650 }, now).length);
+
+  // מיון לפי ציון פועל רק כשיש פרופיל
+  const withProf = queryTenders(fx, { showClosed: true, maxD: 3650 }, { categories: ["tech"], region: "all", publisher_type: "all", keywords: "תוכנה" }, 1, 8, now);
+  check("עם פרופיל — המכרז התואם ביותר ראשון", withProf.tenders[0].id === "1", withProf.tenders[0].id);
 }
 
 // ---------- QA/H-5: שפיות על שנת התאריך ----------
