@@ -15,7 +15,7 @@ import { DOMAINS, PUBLISHERS, UNCATEGORIZED_ID, UNCATEGORIZED_LABEL, matchDomain
 /* ============ עיצוב 2a — אנטרפרייז, טבלת נתונים נקייה ============ */
 
 const PUBS=[{id:'',label:'כל הגופים'},...PUBLISHERS.map(p=>({id:p.id,label:p.label}))];
-interface T{id:string;title:string;publisher:string;publishDate:string;deadline:string;status:string;url:string;type:string;smallBiz?:boolean;smallBizConfidence?:string|null;smallBizQuote?:string|null;smallBizSummary?:string|null;}
+interface T{id:string;title:string;publisher:string;publishDate:string;deadline:string;status:string;url:string;type:string;smallBiz?:boolean;smallBizConfidence?:string|null;}
 function dl(d:string):number|null{const x=parseHeDate(d);return x===null?null:Math.ceil((x.getTime()-Date.now())/86400000);}
 function fd(d:string){const x=parseHeDate(d);return x===null?'—':x.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric'});}
 function matchSc(biz:string,t:{title:string,publisher:string}):number{if(!biz||biz===UNCATEGORIZED_ID)return 55+Math.floor((t.title.length%3)*10);const b=DOMAINS.find(b=>b.id===biz);if(!b)return 55;const h=(t.title+' '+t.publisher).toLowerCase();const hits=b.kw.filter((k:string)=>h.includes(k.toLowerCase())).length;return Math.min(95,50+hits*15);}
@@ -131,7 +131,9 @@ export default function Dashboard(){
   // TICKET-11: פרסור תאריך הפרסום דרך ה-utility הריכוזי בלבד
   const newT=useMemo(()=>base.filter(t=>{if(!t.publishDate)return false;const x=parseHeDate(t.publishDate);return x!==null&&x.getTime()>(now-7*86400000);}),[base,now]);
   const scoreOf=useCallback((t:T):number=>{
-    if(bizProfile)return scoreTender(t,{categories:bizProfile.categories,region:bizProfile.region,publisher_type:bizProfile.publisher_type},now).display;
+    // QA/M-20: keywords לא הועבר כאן, ולכן מילות המפתח השפיעו על הסוכן
+    // אך *לא* על הציונים בדשבורד — בדיוק המסך שבו הם מוצגים.
+    if(bizProfile)return scoreTender(t,{categories:bizProfile.categories,region:bizProfile.region,publisher_type:bizProfile.publisher_type,keywords:bizProfile.keywords||''},now).display;
     return matchSc(biz,t);
   },[bizProfile,biz,now]);
   const shown=useMemo(()=>{
@@ -143,6 +145,15 @@ export default function Dashboard(){
     return [...r].sort((a,b)=>(dl(a.deadline)??9999)-(dl(b.deadline)??9999));
   },[base,closing,newT,tab,bizProfile,scoreOf]);
 
+  // QA/H-6: קודם היה `new Date(fetchedAt||Date.now())` — כלומר כשלא היה
+  // נתון סנכרון אמיתי הוצג *הזמן הנוכחי*, והממשק לעולם לא יכול היה
+  // לומר "לא ידוע". כשל בסנכרון נראה בדיוק כמו סנכרון מוצלח.
+  const scannedLabel=(()=>{
+    if(!fetchedAt)return 'עדכון אחרון לא ידוע';
+    const d=new Date(fetchedAt);
+    if(isNaN(d.getTime()))return 'עדכון אחרון לא ידוע';
+    return 'נסרק '+d.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+  })();
   const tp=Math.ceil(shown.length/PER);
   const rows=shown.slice((pg-1)*PER,pg*PER);
 
@@ -244,7 +255,7 @@ export default function Dashboard(){
             {!isMobile && (<>
 <span style={{marginInlineStart:'auto',fontSize:12.5,color:'#7a8794',display:'inline-flex',alignItems:'center',gap:7,flex:'0 0 auto'}}>
               <span style={{width:7,height:7,borderRadius:999,background:BLUE}}></span>
-              {loading?(<><style>{`@keyframes dashSpin{to{transform:rotate(360deg);}}`}</style><span style={{display:'inline-flex',alignItems:'center',gap:6}}><span style={{width:9,height:9,border:'2px solid '+BORDER,borderTopColor:BLUE,borderRadius:'50%',display:'inline-block',animation:'dashSpin 0.7s linear infinite'}}/>טוען…</span></>):`נסרק ${new Date(fetchedAt||Date.now()).toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric'})} ${new Date(fetchedAt||Date.now()).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})} · `}
+              {loading?(<><style>{`@keyframes dashSpin{to{transform:rotate(360deg);}}`}</style><span style={{display:'inline-flex',alignItems:'center',gap:6}}><span style={{width:9,height:9,border:'2px solid '+BORDER,borderTopColor:BLUE,borderRadius:'50%',display:'inline-block',animation:'dashSpin 0.7s linear infinite'}}/>טוען…</span></>):`${scannedLabel} · `}
               <a href="https://data.gov.il" target="_blank" rel="noopener noreferrer" style={{color:'#7a8794'}}>data.gov.il</a>
             </span>
             <a href="/agent" style={{background:BLUE,color:'#fff',fontWeight:600,fontSize:13,padding:'9px 16px',borderRadius:8,textDecoration:'none',flex:'0 0 auto'}}>✦ תובנות AI</a>
@@ -254,7 +265,7 @@ export default function Dashboard(){
           {isMobile && !loading && (
             <div style={{background:'#fff',borderBottom:`1px solid ${BORDER}`,padding:'6px 14px',fontSize:11.5,color:'#7a8794',display:'flex',alignItems:'center',gap:6}}>
               <span style={{width:6,height:6,borderRadius:999,background:BLUE,display:'inline-block'}}></span>
-              נסרק לאחרונה: {new Date(fetchedAt||Date.now()).toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric'})} בשעה {new Date(fetchedAt||Date.now()).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})}
+              {scannedLabel}
             </div>
           )}
 

@@ -120,11 +120,13 @@ export async function upsertTenders(tenders: TenderRecord[]): Promise<{ count: n
 }
 
 // Reads tenders from the DB with optional search + pagination.
-export async function getTenders(opts: { search?: string; offset?: number; limit?: number; activeOnly?: boolean; ids?: string[] } = {}): Promise<TenderRecord[]> {
-    const { search, offset = 0, limit = 1000, activeOnly = false, ids } = opts;
+export async function getTenders(opts: { search?: string; offset?: number; limit?: number; activeOnly?: boolean; ids?: string[]; columns?: string } = {}): Promise<TenderRecord[]> {
+    const { search, offset = 0, limit = 1000, activeOnly = false, ids, columns } = opts;
 
   const params = new URLSearchParams();
-    params.set("select", "*");
+    // QA/H-1: `select=*` משך כל עמודה, כולל שני שדות טקסט כבדים שאינם
+    // מוצגים בשום מקום בלקוח. columns מאפשר לצמצם למה שבאמת נדרש.
+    params.set("select", columns || "*");
     // QA/H-2: `publish_date, deadline` אינו מפתח מיון ייחודי — אלפי רשומות
     // חולקות את אותו זוג ערכים. בעימוד לפי Range, שורות שנופלות על גבול
     // עמוד הוחזרו פעמיים ואחרות דולגו לגמרי: סריקה מלאה החזירה 9,485
