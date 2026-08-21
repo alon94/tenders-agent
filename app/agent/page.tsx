@@ -3,9 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import InternalShell from '../components/InternalShell';
 import { BORDER, DARK } from '../lib/tenderMeta';
 import { fetchMyProfile, type BusinessProfile } from '../lib/profileApi';
-import { fetchDedupedTenders } from '../lib/tenderData';
-import { scoreTender } from '../lib/scoring';
-import { parseHeDate } from '../lib/tenderMeta';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 type Step = { icon: string; title: string; sub: string; state: 'done' | 'active' | 'pending' };
 type TenderCard = {
@@ -16,7 +14,7 @@ type Msg = { role: 'agent' | 'user'; text: string; tenders?: TenderCard[] };
 const STEP_STYLE = {
   done:    { bg: '#e8f1fb', fg: '#1e5aa8', mark: '✓' },
   active:  { bg: '#fbf3d8', fg: '#8a6d1f', mark: '●' },
-  pending: { bg: '#eef1f4', fg: '#8a97a3', mark: '○' },
+  pending: { bg: '#eef1f4', fg: '#6b7785', mark: '○' },
 };
 
 function fmtDate(d: string): string {
@@ -30,6 +28,7 @@ function profileQuery(p: BusinessProfile | null): string {
   if (p.categories?.length) params.set('categories', p.categories.join(','));
   if (p.region) params.set('region', p.region);
   if (p.publisher_type) params.set('publisher_type', p.publisher_type);
+  if (p.keywords) params.set('keywords', p.keywords);
   const qs = params.toString();
   return qs ? '?' + qs : '';
 }
@@ -64,7 +63,7 @@ function TenderList({ tenders }: { tenders: TenderCard[] }) {
             }}>{t.score}</span>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.4 }}>{t.title}</div>
-              <div style={{ fontSize: 11.5, color: '#7a8794', marginTop: 4 }}>
+              <div style={{ fontSize: 11.5, color: '#62707e', marginTop: 4 }}>
                 {t.publisher || '—'}
                 {t.deadline ? ' · מועד אחרון: ' + fmtDate(t.deadline) : ''}
                 {t.score >= 80 ? ' · התאמה גבוהה' : t.score >= 65 ? ' · התאמה טובה' : ' · התאמה חלקית'}
@@ -95,43 +94,31 @@ export default function AgentPage() {
   const [input, setInput] = useState('');
   const profileRef = useRef<BusinessProfile | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
+  const [matched, setMatched] = useState<{ id: string; title: string; publisher: string; deadline: string; score: number }[]>([]);
+  const [matchedLoading, setMatchedLoading] = useState(true);
+  const [hasProfile, setHasProfile] = useState<boolean | null>(null);
 
   useEffect(() => {
     (async () => {
       try {
         profileRef.current = await fetchMyProfile().catch(() => null);
-        const r = await fetch('/api/agent' + profileQuery(profileRef.current));
+        const prof = profileRef.current;
+        setHasProfile(!!prof && Array.isArray(prof.categories) && prof.categories.length > 0);
+        const r = await fetch('/api/agent' + profileQuery(prof));
         const d = await r.json();
         setScanning(d.scanning || 0);
         setSteps(d.steps || []);
         setMessages(d.messages || []);
+        // QA #07: רשימת "המתאימים ביותר" מגיעה מאותו דירוג שרת כמו ההודעה והשלבים —
+        // קודם הלקוח משך את כל המאגר (fetchDedupedTenders) ודירג לבד, בציונים אחרים.
+        setMatched(Array.isArray(d.top) ? d.top : []);
       } catch {
         setMessages([{ role: 'agent', text: 'שגיאה בטעינת נתוני הסוכן. נסה לרענן את העמוד.' }]);
       } finally {
         setLoading(false);
+        setMatchedLoading(false);
       }
-    })();
-  }, []);
-
-  // מכרזים מותאמים לפרופיל — מדורגים ע"י מנוע הדירוג של הסוכן
-  const [matched, setMatched] = useState<{ id: string; title: string; publisher: string; deadline: string; score: number }[]>([]);
-  const [matchedLoading, setMatchedLoading] = useState(true);
-  const [hasProfile, setHasProfile] = useState<boolean | null>(null);
-  useEffect(() => {
-    (async () => {
-      try {
-        const prof = profileRef.current ?? (await fetchMyProfile().catch(() => null));
-        setHasProfile(!!prof && Array.isArray(prof.categories) && prof.categories.length > 0);
-        const res: any = await fetchDedupedTenders();
-        const ts: any[] = res.tenders || [];
-        const scored = ts
-          .filter((t) => { const d = parseHeDate(t.deadline); return d === null || d.getTime() >= Date.now(); })
-          .map((t) => ({ id: t.id, title: t.title, publisher: t.publisher || '', deadline: t.deadline || '', score: scoreTender(t, (prof || { categories: [], region: 'all', publisher_type: 'all' }) as any).display }))
-          .sort((a, b) => b.score - a.score)
-          .slice(0, 10);
-        setMatched(scored);
-      } catch { /* פאנל ההתאמות אינו קריטי */ }
-      setMatchedLoading(false);
     })();
   }, []);
 
@@ -152,7 +139,7 @@ export default function AgentPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           question: text,
-          profile: p ? { categories: p.categories, region: p.region, publisher_type: p.publisher_type } : undefined,
+          profile: p ? { categories: p.categories, region: p.region, publisher_type: p.publisher_type, keywords: p.keywords || '' } : undefined,
         }),
       });
       const d = await res.json();
@@ -181,27 +168,27 @@ export default function AgentPage() {
             <a href="/profile" style={{ fontSize: 12, color: '#2b6fc4', textDecoration: 'none' }}>עריכת פרופיל ←</a>
           </div>
           {hasProfile === false && (
-            <div style={{ fontSize: 13, color: '#7a8794', padding: '6px 0' }}>
+            <div style={{ fontSize: 13, color: '#62707e', padding: '6px 0' }}>
               טרם הוגדר פרופיל עסקי — ההתאמות כלליות. <a href="/profile" style={{ color: '#2b6fc4' }}>הגדר פרופיל</a> כדי שהסוכן ידרג לפי התחומים, האזור והגופים שלך.
             </div>
           )}
-          {matchedLoading && <div style={{ fontSize: 13, color: '#7a8794' }}>מדרג מכרזים לפי הפרופיל…</div>}
+          {matchedLoading && <div style={{ fontSize: 13, color: '#62707e' }}>מדרג מכרזים לפי הפרופיל…</div>}
           {!matchedLoading && matched.map((m, i) => (
             <a key={m.id} href={'/tender/' + m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '9px 0', borderTop: i ? '1px solid #eef1f4' : 'none', textDecoration: 'none' }}>
               <span style={{ width: 34, height: 34, borderRadius: 9, background: '#e8f1fb', color: '#1e5aa8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, flex: '0 0 auto' }}>{m.score}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13.5, fontWeight: 600, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.title}</div>
-                <div style={{ fontSize: 12, color: '#7a8794' }}>{m.publisher || '—'}{m.deadline ? ' · מועד: ' + m.deadline.split('T')[0].split('-').reverse().join('.') : ''}</div>
+                <div style={{ fontSize: 12, color: '#62707e' }}>{m.publisher || '—'}{m.deadline ? ' · מועד: ' + fmtDate(m.deadline) : ''}</div>
               </div>
-              <span style={{ color: '#9aa6b2', fontSize: 13 }}>‹</span>
+              <span aria-hidden="true" style={{ color: '#6b7785', fontSize: 13 }}>‹</span>
             </a>
           ))}
-          {!matchedLoading && matched.length === 0 && <div style={{ fontSize: 13, color: '#7a8794' }}>לא נמצאו מכרזים מתאימים כרגע.</div>}
+          {!matchedLoading && matched.length === 0 && <div style={{ fontSize: 13, color: '#62707e' }}>לא נמצאו מכרזים מתאימים כרגע.</div>}
         </div>
 
         <div style={{ background: '#fff', border: '1px solid ' + BORDER, borderRadius: 14, padding: 18, marginBottom: 18 }}>
           <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14, color: DARK }}>⚙ תהליך העבודה של הסוכן</div>
-          {loading && <div style={{ fontSize: 13, color: '#7a8794' }}>סורק מכרזים ומחשב התאמות…</div>}
+          {loading && <div style={{ fontSize: 13, color: '#62707e' }}>סורק מכרזים ומחשב התאמות…</div>}
           {steps.map((s, i) => {
             const st = STEP_STYLE[s.state];
             return (
@@ -209,7 +196,7 @@ export default function AgentPage() {
                 <span style={{ width: 26, height: 26, borderRadius: 999, background: st.bg, color: st.fg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, flex: '0 0 auto' }}>{st.mark}</span>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13.5, fontWeight: 600, color: DARK }}>{s.title}</div>
-                  <div style={{ fontSize: 12, color: '#7a8794' }}>{s.sub}</div>
+                  <div style={{ fontSize: 12, color: '#62707e' }}>{s.sub}</div>
                 </div>
               </div>
             );
@@ -232,7 +219,7 @@ export default function AgentPage() {
           ))}
           {thinking && (
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <div style={{ fontSize: 13.5, padding: '11px 14px', background: '#f4f6f8', color: '#7a8794', borderRadius: '12px 12px 12px 4px' }}>
+              <div style={{ fontSize: 13.5, padding: '11px 14px', background: '#f4f6f8', color: '#62707e', borderRadius: '12px 12px 12px 4px' }}>
                 מנתח את המכרזים…
               </div>
             </div>
@@ -240,8 +227,11 @@ export default function AgentPage() {
           <div ref={bottomRef} />
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, position: 'sticky', bottom: 0, background: '#eef1f4', paddingTop: 8 }}>
+        {/* QA #21: במובייל שדה הצ'אט נתקע מאחורי סרגל הטאבים הקבוע */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, position: 'sticky', bottom: isMobile ? 76 : 0, background: '#eef1f4', paddingTop: 8, paddingBottom: 6 }}>
           <input
+            aria-label="שאלה לסוכן"
+            className="search-input"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') send(); }}

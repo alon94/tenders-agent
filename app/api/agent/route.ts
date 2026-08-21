@@ -7,6 +7,7 @@ import {
   MATCH_THRESHOLD,
   HIGH_MATCH,
   DEFAULT_PROFILE,
+  isGenericProfile,
   type AgentProfile,
 } from "@/app/lib/agentEngine";
 
@@ -43,11 +44,14 @@ export async function GET(req: Request) {
     const steps = buildSteps(ranked.length, matched.length, high.length, profile);
     const top = matched.slice(0, 5);
 
+    const generic = isGenericProfile(profile);
     const messages = [
       {
         role: "agent" as const,
         text:
-          matched.length > 0
+          generic
+            ? `סרקתי ${ranked.length.toLocaleString("he-IL")} מכרזים פעילים. עדיין לא הוגדר פרופיל עסקי, לכן הדירוג כללי — לפי תחום, דחיפות וטריות. הגדרת פרופיל תשפר את ההתאמה. אפשר לשאול אותי כל שאלה:`
+            : matched.length > 0
             ? `סרקתי ${ranked.length.toLocaleString("he-IL")} מכרזים פעילים ומצאתי ${matched.length} שתואמים לפרופיל שלך (${high.length} בהתאמה גבוהה). אלה המובילים — ואפשר לשאול אותי כל שאלה:`
             : `סרקתי ${ranked.length.toLocaleString("he-IL")} מכרזים פעילים אך לא נמצאו התאמות לפרופיל. נסה לעדכן את הפרופיל העסקי או לשאול אותי בחיפוש חופשי.`,
         tenders: top,
@@ -60,6 +64,9 @@ export async function GET(req: Request) {
       matched: matched.length,
       steps,
       messages,
+      generic,
+      // QA #07: רשימת "המתאימים ביותר" מגיעה מאותו דירוג כמו ההודעה — מקור אחד.
+      top: ranked.slice(0, 10).map((t) => ({ id: t.id, title: t.title, publisher: t.publisher, deadline: t.deadline, score: t.score })),
     });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });

@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import InternalShell from '../components/InternalShell';
 import { DARK, BLUE, MUTED, BORDER } from '../lib/tenderMeta';
-import { fetchDedupedTenders } from '../lib/tenderData';
 
 type SourceStatus = 'active' | 'pilot' | 'candidate';
 
@@ -188,13 +187,15 @@ export default function SourcesPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-        fetchDedupedTenders().then((res: any) => {
-                setCount(res.tenders.length);
-                setUpdated(res.fetchedAt
+        // QA #18: קודם נמשך כל המאגר (10 בקשות) רק בשביל שני מספרים — וה-spinner נתקע לנצח.
+        // עכשיו אותו מקור כמו הסרגל: /api/nav-counts (מונה + זמן סנכרון).
+        fetch('/api/nav-counts').then(r => r.ok ? r.json() : null).then((res: any) => {
+                setCount(res && typeof res.active === 'number' ? res.active : 0);
+                setUpdated(res?.fetchedAt
                                    ? new Date(res.fetchedAt).toLocaleString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-                                   : new Date().toLocaleDateString('he-IL'));
+                                   : 'לא ידוע');
                 setLoading(false);
-        }).catch(() => { setCount(0); setLoading(false); });
+        }).catch(() => { setCount(0); setUpdated('לא ידוע'); setLoading(false); });
   }, []);
 
   const kpiCells = [

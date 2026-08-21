@@ -40,7 +40,7 @@ export default function GuaranteePage() {
   return (
     <InternalShell
       title="ערבויות וליווי"
-      subtitle="ניהול ערבויות ומעקב תוקף"
+      subtitle="ניהול ערבויות ומעקב תוקף · הנתונים להלן הם אומדן לצורך הדגמה עד לחיבור מקור ערבויות"
       action={<button style={{ background: '#2b6fc4', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 16px', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>+ בקשת ערבות חדשה</button>}
     >
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', background: '#fff', border: '1px solid ' + BORDER, borderRadius: 10, overflow: 'hidden', marginBottom: 20 }}>

@@ -145,3 +145,29 @@ export function bandColorFor(display: number): string {
   if (display >= 65) return '#d9a520';
   return '#2b6fc4';
 }
+
+// ============================================================
+//  QA #04: דירוג כללי אחיד — ללא פרופיל עסקי.
+//  קודם היו שלוש נוסחאות שונות (דשבורד: 55+(אורך כותרת%3)*10, דף פרט:
+//  scoreFor, סוכן: פרופיל ברירת מחדל של ייעוץ/טכנולוגיה/שיווק), ולכן אותו
+//  מכרז הוצג עם 55 / 80 / 62. עכשיו כולם עוברים דרך scoreTender עם
+//  פרופיל "כללי": כל התחומים, כל האזורים, כל המפרסמים — דטרמיניסטי
+//  ונגזר רק מהנתונים (סיווג, דחיפות, טריות).
+// ============================================================
+export const GENERIC_PROFILE: ScoringProfile = {
+  categories: DOMAINS.map(d => d.id),
+  region: 'all',
+  publisher_type: 'all',
+  keywords: '',
+};
+
+export function genericScore(t: ScorableTender, now = Date.now()): number {
+  return scoreTender(t, GENERIC_PROFILE, now).display;
+}
+
+/** ציון לפי פרופיל אם קיים, אחרת הציון הכללי — נקודת האמת היחידה לתצוגה. */
+export function displayScore(t: ScorableTender, profile: ScoringProfile | null | undefined, now = Date.now()): number {
+  if (profile && ((profile.categories && profile.categories.length > 0) || (profile.keywords && profile.keywords.trim())))
+    return scoreTender(t, profile, now).display;
+  return genericScore(t, now);
+}

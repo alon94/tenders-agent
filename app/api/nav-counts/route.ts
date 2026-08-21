@@ -1,32 +1,26 @@
 import { NextResponse } from "next/server";
+import { fetchActiveTenders } from "@/app/lib/agentEngine";
+import { getLastSyncAt } from "@/app/lib/db";
+import { isExempt } from "@/app/lib/tenderMeta";
 
 export const dynamic = "force-dynamic";
 
-const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-async function cnt(filter: string): Promise<number> {
-  if (!SUPABASE_URL || !SERVICE_KEY) return 0;
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/tenders?${filter}&select=id&limit=1`, {
-    headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, Prefer: "count=exact" },
-    cache: "no-store",
-  });
-  return parseInt((res.headers.get("content-range") || "/0").split("/")[1] || "0", 10);
-}
-
-// ספירות לסרגל הצד — ציבורי (המספרים ממילא מוצגים בדשבורד), cache 5 דק'.
+// QA #05: קודם הספירות כאן נעשו ישירות מול ה-DB (9,475) בעוד הדשבורד
+// ספר את המאגר הפעיל אחרי סינון כותרת/מועד (9,165) — ושני מספרים שונים
+// הופיעו באותו מסך. עכשיו כולם נגזרים מאותו corpus (fetchActiveTenders),
+// בדיוק כמו /api/tenders/search.
 export async function GET() {
-  const today = new Date().toISOString().split("T")[0];
-  const activeF = `or=(deadline.gte.${today},deadline.is.null)`;
-  const p = encodeURIComponent;
-  const exemptF = `or=(type.ilike.${p("*פטור*")},title.ilike.${p("*פטור ממכרז*")},title.ilike.${p("*ספק יחיד*")},title.ilike.${p("*מאשרים הארכה*")},title.ilike.${p("*הארכת התקשרות*")},title.ilike.${p("*מימוש אופציה*")})`;
-  const [active, exempt, smallbiz] = await Promise.all([
-    cnt(activeF),
-    cnt(exemptF),
-    cnt(`small_biz=is.true&small_biz_confidence=in.(high,medium)&${activeF}`),
-  ]);
-  return NextResponse.json(
-    { active, exempt, smallbiz },
-    { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600" } }
-  );
+  try {
+    const rows = await fetchActiveTenders();
+    const active = rows.length;
+    const exempt = rows.filter((r) => isExempt(r.type || "", r.title)).length;
+    const smallbiz = rows.filter((r) => r.small_biz === true && (r.small_biz_confidence === "high" || r.small_biz_confidence === "medium")).length;
+    const fetchedAt = await getLastSyncAt();
+    return NextResponse.json(
+      { active, exempt, smallbiz, fetchedAt },
+      { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600" } }
+    );
+  } catch {
+    return NextResponse.json({ active: 0, exempt: 0, smallbiz: 0, fetchedAt: null }, { status: 200 });
+  }
 }

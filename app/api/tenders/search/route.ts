@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { fetchActiveTenders } from "@/app/lib/agentEngine";
 import { getLastSyncAt } from "@/app/lib/db";
-import { queryTenders, type QueryFilters, type QueryProfile, type QueryTender } from "@/app/lib/tenderQuery";
+import { queryTenders, joinPublisher, type QueryFilters, type QueryProfile, type QueryTender } from "@/app/lib/tenderQuery";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +28,7 @@ export async function POST(req: Request) {
       sbOnly: !!f.sbOnly,
       q: typeof f.q === 'string' ? f.q.slice(0, 200) : '',
       tab: f.tab === 'closing' || f.tab === 'new' ? f.tab : 'all',
+      sort: f.sort === 'score' || f.sort === 'deadline' || f.sort === 'published' ? f.sort : undefined,
     };
 
     const p = body?.profile;
@@ -45,7 +46,7 @@ export async function POST(req: Request) {
     const all: QueryTender[] = rows.map((r, i) => ({
       id: String(r.id ?? i),
       title: String(r.title ?? ''),
-      publisher: [r.publisher, r.publisher_unit].filter(Boolean).join(' - '),
+      publisher: joinPublisher(r.publisher, r.publisher_unit),
       publishDate: r.publish_date ? String(r.publish_date).split('T')[0] : undefined,
       deadline: r.deadline ? String(r.deadline).split('T')[0] : undefined,
       status: String(r.status ?? ''),

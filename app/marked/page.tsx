@@ -79,7 +79,7 @@ export default function MarkedPage() {
     };
     const header = ['ציון', 'נושא', 'גוף מפרסם', 'סטטוס', 'תאריך פרסום', 'מועד הגשה', 'קישור'];
     const lines = list.map((t) => [
-      String(scoreFor(t.title || '', t.publisher || '')),
+      String(scoreFor(t.title || '', t.publisher || '', t.publishDate || '', t.deadline || '')),
       t.title || '', t.publisher || '', t.status || '',
       fmtDate(t.publishDate || ''), fmtDate(t.deadline || ''), t.url || '',
     ].map(esc).join(','));
@@ -137,7 +137,7 @@ export default function MarkedPage() {
         ) : (
           shown.map((t) => {
             const d = daysLeft(t.deadline || '');
-            const score = scoreFor(t.title || '', t.publisher || '');
+            const score = scoreFor(t.title || '', t.publisher || '', t.publishDate || '', t.deadline || '');
             const tags = statusTags(t.status || '', d, t.publisher);
             return (
               <div key={t.id} style={{ display: 'grid', gridTemplateColumns: '70px 1fr 232px 150px 120px', padding: '14px 16px', alignItems: 'center', borderBottom: '1px solid ' + BORDER }}>

@@ -18,8 +18,10 @@ export default function FloatingTenders() {
     return () => window.removeEventListener('resize', f);
   }, []);
 
-  if (path.startsWith('/dashboard') || path.startsWith('/admin')) return null;
-  const onAppPage = ['/marked', '/agent', '/guarantee', '/sources', '/profile', '/tender'].some(p => path.startsWith(p));
+  // QA #15: בדפי האפליקציה יש כבר "גילוי מכרזים" בסרגל הצד (דסקטופ) ובסרגל התחתון (מובייל) —
+  // הכפתור הצף חפף לכרטיס הסוכן, לכפתור ההתחברות ולכותרות תוכן. נשאר רק בדפי השיווק.
+  const onAppPage = ['/dashboard', '/admin', '/marked', '/agent', '/guarantee', '/sources', '/profile', '/tender', '/signin', '/signup', '/onboarding', '/auth'].some(p => path.startsWith(p));
+  if (onAppPage) return null;
 
   return (
     <a
@@ -27,7 +29,7 @@ export default function FloatingTenders() {
       aria-label="מעבר לכל המכרזים"
       style={{
         position: 'fixed', insetInlineStart: 20,
-        bottom: mobile && onAppPage ? 84 : 22,
+        bottom: 22,
         zIndex: 300,
         display: 'inline-flex', alignItems: 'center', gap: 9,
         background: '#2b6fc4', color: '#fff', textDecoration: 'none',

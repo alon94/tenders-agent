@@ -173,7 +173,7 @@ export default function Home() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 1, background: "rgba(255,255,255,.14)", border: "1px solid rgba(255,255,255,.14)", borderRadius: 14, overflow: "hidden" }}>
             {[
               { v: n(counts.active), l: "מכרזים פעילים" },
-              { v: "12", l: "מקורות נסרקים" },
+              { v: "13", l: "מקורות נסרקים" },
               { v: n(counts.smallbiz), l: "עם העדפה לעסקים קטנים" },
               { v: "יומי 06:00", l: "תדירות עדכון" },
             ].map((k) => (
@@ -191,7 +191,7 @@ export default function Home() {
             {[...sample, ...sample].map((t, i) => (
               <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 10, whiteSpace: "nowrap", fontSize: 13.5, color: "#9fb4cb", border: "1px solid rgba(255,255,255,.12)", borderRadius: 8, padding: "8px 14px" }}>
                 <span className="mono" style={{ color: GOLD, fontSize: 12 }}>{String(t.id).slice(0, 10)}</span>
-                {t.title.slice(0, 62)}
+                {t.title.length > 62 ? t.title.slice(0, 62).replace(/\s+\S*$/, '') + '…' : t.title}
               </span>
             ))}
             {sample.length === 0 && <span style={{ color: "#7b91a8", fontSize: 13.5 }}>טוען מכרזים עדכניים…</span>}
@@ -236,7 +236,7 @@ export default function Home() {
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(268px,1fr))", gap: 18 }}>
             {[
-              { i: "⛁", t: "איסוף מ-12 מקורות", d: "מינהל הרכש הממשלתי, רמ\"י, רשות שדות התעופה, מכבי, ביטוח לאומי, משרד הביטחון, דקל מכרז ועוד — נסרקים ומתעדכנים מדי בוקר." },
+              { i: "⛁", t: "איסוף מ-13 מקורות", d: "מינהל הרכש הממשלתי, רמ\"י, רשות שדות התעופה, מכבי, ביטוח לאומי, משרד הביטחון, דקל מכרז ועוד — נסרקים ומתעדכנים מדי בוקר." },
               { i: "◈", t: "סוכן שמדרג לפי הפרופיל", d: "מגדירים תחום, אזור וסוג גופים — והמערכת נותנת ציון התאמה לכל מכרז, כך שהרלוונטיים עולים לראש הרשימה." },
               { i: "⌕", t: "סיווג ל-13 תחומים", d: "בינוי, טכנולוגיה, ייעוץ, ניקיון, הסעות, בריאות, נדל\"ן ועוד. מנוע התאמה אחד — החיפוש והסינון תמיד מחזירים אותה תוצאה." },
               { i: "✉", t: "דוח יומי למייל", d: "רשימת המכרזים החדשים שתואמים לפרופיל שלך, ישירות לתיבה, עם קישור להגשה." },

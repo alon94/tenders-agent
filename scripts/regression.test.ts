@@ -3,8 +3,8 @@
 //  הרצה: npm test   (npx tsx scripts/regression.test.ts)
 // ============================================================
 import { parseHeDate, fmtDate, daysLeft } from "../app/lib/tenderMeta";
-import { scoreTender } from "../app/lib/scoring";
-import { applyBaseFilters, queryTenders } from "../app/lib/tenderQuery";
+import { scoreTender, genericScore, displayScore } from "../app/lib/scoring";
+import { applyBaseFilters, queryTenders, joinPublisher, sortTenders } from "../app/lib/tenderQuery";
 import { isExempt } from "../app/lib/tenderMeta";
 import { harvestTenderLinks, rowsToRecords, heDateToIso as scraperHeDateToIso } from "../app/lib/scrapers/core";
 import { DOMAINS, classifyTender, matchDomain, matchPublisher, matchQuery, domainCounts, UNCATEGORIZED_ID } from "../app/lib/domains";
@@ -454,3 +454,40 @@ dbQueryTests()
     console.log(failures === 0 ? "\n✅ כל הבדיקות עברו" : `\n❌ ${failures} בדיקות נכשלו`);
     process.exit(failures === 0 ? 0 : 1);
   });
+
+// ---------- QA 2026-08 — תיקוני דוח ה-QA ----------
+console.log("\nQA — סינון גוף מפרסם (#01)");
+{
+  const hosp = { id: "1", title: "ביצוע עבודות אחזקה", publisher: "משרד הבריאות - המרכז הרפואי ע\"ש ברזילי, אשקלון" };
+  const muni = { id: "muni-5", title: "רכז דיגיטל", publisher: "מעלה אדומים" };
+  const uni = { id: "2", title: "שירותי ניקיון", publisher: "אוניברסיטת תל אביב" };
+  const rail = { id: "3", title: "מכרז", publisher: "רכבת ישראל בע\"מ" };
+  check("בית חולים → מערכת הבריאות", matchPublisher(hosp, "health"));
+  check("רשות מקומית חשופה (מעלה אדומים) → רשויות מקומיות", matchPublisher(muni, "local"));
+  check("אוניברסיטת (סמיכות) → מוסדות חינוך", matchPublisher(uni, "edu"));
+  check("רכבת → חברות ממשלתיות", matchPublisher(rail, "infra"));
+}
+
+console.log("\nQA — ציון אחיד ודטרמיניסטי (#04)");
+{
+  const t = { title: "EASYMAILOOK תוסף לאימייל", publisher: "משרד הבריאות", publishDate: "2026-08-06", deadline: "2026-08-23" };
+  const now = new Date("2026-08-21").getTime();
+  check("אותו מכרז → אותו ציון בשתי קריאות", genericScore(t, now) === genericScore(t, now));
+  check("displayScore ללא פרופיל ≡ genericScore", displayScore(t, null, now) === genericScore(t, now));
+  check("displayScore עם פרופיל ריק ≡ genericScore", displayScore(t, { categories: [] }, now) === genericScore(t, now));
+  check("הציון אינו תלוי באורך הכותרת", genericScore({ ...t, title: t.title + " " }, now) === genericScore(t, now));
+}
+
+console.log("\nQA — שם מפרסם ללא כפילות (#17) ומיון (#16)");
+{
+  check("publisher כלול ב-unit → פעם אחת", joinPublisher("משרד הבריאות", "משרד הבריאות - איכילוב") === "משרד הבריאות - איכילוב");
+  check("unit ריק → publisher בלבד", joinPublisher("משרד החינוך", null) === "משרד החינוך");
+  check("שניים שונים → מחוברים", joinPublisher("א", "ב") === "א - ב");
+  const rows = [
+    { id: "a", title: "x", publisher: "", deadline: "2026-09-30", publishDate: "2026-08-01" },
+    { id: "b", title: "y", publisher: "", deadline: "2026-08-25", publishDate: "2026-08-20" },
+  ];
+  const now = new Date("2026-08-21").getTime();
+  check("מיון לפי מועד הגשה — הקרוב קודם", sortTenders(rows, null, now, "deadline")[0].id === "b");
+  check("מיון לפי פרסום — החדש קודם", sortTenders(rows, null, now, "published")[0].id === "b");
+}

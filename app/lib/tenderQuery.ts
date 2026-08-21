@@ -11,7 +11,7 @@
 
 import { parseHeDate, isExempt } from './tenderMeta';
 import { matchDomain, matchPublisher, matchQuery, domainCounts } from './domains';
-import { scoreTender } from './scoring';
+import { scoreTender, genericScore } from './scoring';
 
 export interface QueryTender {
   id: string; title: string; publisher: string;
@@ -32,6 +32,7 @@ export interface QueryFilters {
   sbOnly?: boolean;
   q?: string;
   tab?: 'all' | 'closing' | 'new';
+  sort?: 'score' | 'deadline' | 'published';
 }
 
 function daysTo(d: string | undefined, now: number): number | null {
@@ -89,7 +90,8 @@ export function selectTab(base: QueryTender[], tab: QueryFilters['tab'], now = D
 }
 
 export function scoreOf(t: QueryTender, profile: QueryProfile | null, now = Date.now()): number {
-  if (!profile) return 0;
+  // QA #04: ללא פרופיל — הציון הכללי (אותו ציון שמוצג בדשבורד, בדף הפרט ובסוכן)
+  if (!profile) return genericScore({ title: t.title, publisher: t.publisher, publishDate: t.publishDate, deadline: t.deadline }, now);
   return scoreTender(
     { title: t.title, publisher: t.publisher, publishDate: t.publishDate, deadline: t.deadline },
     { categories: profile.categories, region: profile.region, publisher_type: profile.publisher_type, keywords: profile.keywords || '' },
@@ -97,13 +99,28 @@ export function scoreOf(t: QueryTender, profile: QueryProfile | null, now = Date
   ).display;
 }
 
-export function sortTenders(rows: QueryTender[], profile: QueryProfile | null, now = Date.now()): QueryTender[] {
-  if (profile) {
-    return [...rows].sort((a, b) =>
-      scoreOf(b, profile, now) - scoreOf(a, profile, now) ||
-      ((daysTo(a.deadline, now) ?? 9999) - (daysTo(b.deadline, now) ?? 9999)));
-  }
-  return [...rows].sort((a, b) => (daysTo(a.deadline, now) ?? 9999) - (daysTo(b.deadline, now) ?? 9999));
+export function sortTenders(rows: QueryTender[], profile: QueryProfile | null, now = Date.now(), sort?: QueryFilters['sort']): QueryTender[] {
+  const byDeadline = (a: QueryTender, b: QueryTender) => (daysTo(a.deadline, now) ?? 9999) - (daysTo(b.deadline, now) ?? 9999);
+  const byScore = (a: QueryTender, b: QueryTender) => scoreOf(b, profile, now) - scoreOf(a, profile, now);
+  const byPublished = (a: QueryTender, b: QueryTender) =>
+    (parseHeDate(b.publishDate || '')?.getTime() ?? 0) - (parseHeDate(a.publishDate || '')?.getTime() ?? 0);
+  // QA #16: מיון מפורש. ברירת מחדל: לפי ציון למשתמש עם פרופיל, לפי מועד הגשה לאורח.
+  const mode = sort || (profile ? 'score' : 'deadline');
+  const cmp =
+    mode === 'score' ? (a: QueryTender, b: QueryTender) => byScore(a, b) || byDeadline(a, b) :
+    mode === 'published' ? (a: QueryTender, b: QueryTender) => byPublished(a, b) || byDeadline(a, b) :
+    (a: QueryTender, b: QueryTender) => byDeadline(a, b) || byScore(a, b);
+  return [...rows].sort(cmp);
+}
+
+/** QA #17: "משרד הבריאות - X - משרד הבריאות - X" → פעם אחת. */
+export function joinPublisher(publisher?: string | null, unit?: string | null): string {
+  const p = (publisher || '').trim(), u = (unit || '').trim();
+  if (!u) return p;
+  if (!p) return u;
+  if (u === p || u.includes(p) ) return u;
+  if (p.includes(u)) return p;
+  return p + ' - ' + u;
 }
 
 export interface QueryResult {
@@ -120,8 +137,10 @@ export function queryTenders(
   page = 1, perPage = 25, now = Date.now()
 ): QueryResult {
   const base = applyBaseFilters(all, filters, now);
-  const shown = sortTenders(selectTab(base, filters.tab, now), profile, now);
-  const { domains, uncategorized } = domainCounts(all);
+  const shown = sortTenders(selectTab(base, filters.tab, now), profile, now, filters.sort);
+  // QA #05: מספרי התחומים בתפריט נספרים על אותה קבוצה שמוצגת (ללא סינון התחום עצמו),
+  // כך שבחירת "ניקיון (191)" באמת מחזירה 191.
+  const { domains, uncategorized } = domainCounts(applyBaseFilters(all, { ...filters, biz: '' }, now));
   return {
     tenders: shown.slice((page - 1) * perPage, page * perPage),
     total: shown.length,
@@ -130,7 +149,7 @@ export function queryTenders(
       closing: selectTab(base, 'closing', now).length,
       new: selectTab(base, 'new', now).length,
       smallBiz: all.filter(isSmallBiz).length,
-      active: all.filter((t) => { const d = daysTo(t.deadline, now); return d === null || d >= 0; }).length,
+      active: all.length,
       exempt: all.filter((t) => isExempt(t.type || '', t.title)).length,
     },
     domains, uncategorized,

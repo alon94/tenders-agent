@@ -80,7 +80,7 @@ export default function InternalShell({
       }}
     >
       {!isMobile && (
-        <aside
+        <nav aria-label="ניווט ראשי"
           style={{
             flex: '0 0 238px',
             background: '#fff',
@@ -119,12 +119,12 @@ export default function InternalShell({
             </div>
             <div style={{ lineHeight: 1.2 }}>
               <div style={{ fontWeight: 800, fontSize: 14.5 }}>שווה מכרזים</div>
-              <div style={{ fontSize: 11, color: '#8a97a3' }}>מועדון עסקים 360</div>
+              <div style={{ fontSize: 11, color: '#6b7785' }}>מועדון עסקים 360</div>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f4f6f8', border: `1.5px solid ${BLUE}33`, borderRadius: 10, padding: '9px 12px', marginBottom: 14 }}>
             <span style={{ color: BLUE, fontSize: 15 }}>⌕</span>
-            <input value={navQ} onChange={e => setNavQ(e.target.value)} onKeyDown={e => e.key === 'Enter' && goSearch()}
+            <input type="search" aria-label="חיפוש מכרזים" className="search-input" value={navQ} onChange={e => setNavQ(e.target.value)} onKeyDown={e => e.key === 'Enter' && goSearch()}
               placeholder="חיפוש מכרזים…" style={{ flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'transparent', fontSize: 13, color: DARK, fontFamily: 'inherit' }} />
           </div>
           <div>
@@ -135,6 +135,7 @@ export default function InternalShell({
                 <a
                   key={item.href}
                   href={item.href}
+                  aria-current={active ? 'page' : undefined}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -152,7 +153,7 @@ export default function InternalShell({
                   <span style={{ fontSize: 15 }}>{item.icon}</span>
                   <span style={{ flex: 1 }}>{item.label}</span>
                   {item.countKey && counts[item.countKey] !== undefined && (
-                    <span style={{ fontSize: 11, fontWeight: 700, color: active ? ACTIVE_FG : '#8a97a3', background: active ? '#fff' : '#eef1f4', borderRadius: 999, padding: '1px 8px' }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: active ? ACTIVE_FG : '#6b7785', background: active ? '#fff' : '#eef1f4', borderRadius: 999, padding: '1px 8px' }}>
                       {counts[item.countKey]!.toLocaleString('he-IL')}
                     </span>
                   )}
@@ -160,30 +161,12 @@ export default function InternalShell({
               );
             })}
           </div>
+          {/* QA #14: קישור "פרופיל עסקי" הופיע פעמיים — נשאר רק ברשימת הניווט */}
           <div style={{ marginTop: 'auto', paddingTop: 14, borderTop: '1px solid #eef1f4' }}>
-            <a
-              href="/profile"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                textDecoration: 'none',
-                padding: '10px 12px',
-                borderRadius: 10,
-                fontSize: 13.5,
-                fontWeight: path === '/profile' ? 700 : 500,
-                color: path === '/profile' ? ACTIVE_FG : '#5b6b7a',
-                background: path === '/profile' ? ACTIVE_BG : 'transparent',
-                borderInlineStart: path === '/profile' ? `3px solid ${BLUE}` : '3px solid transparent',
-              }}
-            >
-              <span style={{ fontSize: 15 }}>⚙</span>
-              פרופיל עסקי
-            </a>
 
             {session ? (
               <div style={{ padding: '12px 12px 2px' }}>
-                <div style={{ fontSize: 11.5, color: '#8a97a3', marginBottom: 8, wordBreak: 'break-all' }}>
+                <div style={{ fontSize: 11.5, color: '#6b7785', marginBottom: 8, wordBreak: 'break-all' }}>
                   {session.user.email}
                 </div>
                 <button
@@ -243,9 +226,10 @@ export default function InternalShell({
               </div>
             )}
           </div>
-        </aside>
+        </nav>
       )}
-      <div
+      <main
+        id="main"
         style={{
           flex: 1,
           minWidth: 0,
@@ -268,9 +252,9 @@ export default function InternalShell({
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {isMobile && <MobileMenu />}
             <div>
-              <div style={{ fontSize: 17, fontWeight: 700 }}>{title}</div>
+              <h1 style={{ fontSize: 17, fontWeight: 700, margin: 0 }}>{title}</h1>
               {subtitle && (
-                <div style={{ fontSize: 12.5, color: '#7a8794', marginTop: 2 }}>{subtitle}</div>
+                <div style={{ fontSize: 12.5, color: '#62707e', marginTop: 2 }}>{subtitle}</div>
               )}
             </div>
           </div>
@@ -285,7 +269,7 @@ export default function InternalShell({
         >
           {children}
         </div>
-      </div>
+      </main>
       {isMobile && <MobileTabBar />}
     </div>
   );

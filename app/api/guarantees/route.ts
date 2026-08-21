@@ -53,8 +53,10 @@ export async function GET() {
     const sql =
       "SELECT publication_id, tender_id, description, publisher, claim_date, status " +
       "FROM procurement_tenders_all " +
-      "WHERE claim_date IS NOT NULL " + cacheBuster + " " +
-      "ORDER BY claim_date DESC NULLS LAST LIMIT 12";
+      // QA #10: קודם "ORDER BY claim_date DESC" הביא רשומות עם תאריכי זבל (9999, 9019, 2202).
+      // עכשיו רק מועדים בטווח סביר: מהיום ועד שנתיים קדימה.
+      "WHERE claim_date IS NOT NULL AND claim_date >= CURRENT_DATE AND claim_date <= CURRENT_DATE + INTERVAL '730 days' " + cacheBuster + " " +
+      "ORDER BY claim_date ASC LIMIT 12";
     const res = await fetch(API + "?query=" + encodeURIComponent(sql), { cache: "no-store" });
     if (!res.ok) throw new Error(`API ${res.status}`);
     const json = await res.json();

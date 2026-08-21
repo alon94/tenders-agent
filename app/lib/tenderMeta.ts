@@ -21,16 +21,11 @@ export function bandColor(score: number): string {
 
 // TICKET-12: הציון בדף הפרט נשען על אותם אשכולות מילות מפתח של
 // המנוע המרכזי (app/lib/domains.ts) — לא על רשימה פרטית נפרדת.
-import { DOMAINS } from "./domains";
+import { genericScore } from "./scoring";
 
-export function scoreFor(title: string, publisher = ""): number {
-  const h = (title + " " + publisher).toLowerCase();
-  let best = 55 + ((title.length % 3) * 10);
-  for (const d of DOMAINS) {
-    const hits = d.kw.filter((w) => h.includes(w.toLowerCase())).length;
-    if (hits) best = Math.max(best, Math.min(95, 50 + hits * 15));
-  }
-  return best;
+/** QA #04: דף הפרט והמסומנים משתמשים באותו ציון כללי כמו הדשבורד והסוכן. */
+export function scoreFor(title: string, publisher = "", publishDate = "", deadline = ""): number {
+  return genericScore({ title, publisher, publishDate, deadline });
 }
 
 export function statusTags(status: string, days: number | null, publisher?: string): Tag[] {

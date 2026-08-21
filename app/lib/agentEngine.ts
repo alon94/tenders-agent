@@ -5,7 +5,8 @@
 //  משותף ל-/api/agent (GET + POST).
 // ============================================================
 
-import { scoreTender, CAT_KW as CAT_KW_PUBLIC } from './scoring';
+import { scoreTender, CAT_KW as CAT_KW_PUBLIC, GENERIC_PROFILE } from './scoring';
+import { joinPublisher } from './tenderQuery';
 import { getTenders, type TenderRecord } from './db';
 
 const API = 'https://next.obudget.org/api/query';
@@ -48,12 +49,18 @@ export const CAT_LABELS: Record<string, string> = {
   other: 'אחר',
 };
 
+// QA #07: קודם אורח קיבל פרופיל ברירת מחדל סמוי (ייעוץ/טכנולוגיה/שיווק) —
+// והמסך הציג "טרם הוגדר פרופיל" לצד "1123 תואמים ל: ייעוץ וניהול…".
+// עכשיו ללא פרופיל הדירוג הוא הכללי (כל התחומים) — זהה לדשבורד ולדף הפרט.
 export const DEFAULT_PROFILE: AgentProfile = {
-  categories: (process.env.PROFILE_CATEGORIES || 'consulting,tech,marketing').split(','),
-  region: process.env.PROFILE_REGIONS?.split(',')[0] || 'national',
-  publisher_type: process.env.PROFILE_PUBLISHERS?.split(',')[0] || 'all',
-  keywords: process.env.PROFILE_KEYWORDS || '',
+  categories: GENERIC_PROFILE.categories || [],
+  region: 'all',
+  publisher_type: 'all',
+  keywords: '',
 };
+export function isGenericProfile(p: AgentProfile): boolean {
+  return p.categories.length === DEFAULT_PROFILE.categories.length && !(p.keywords || '').trim();
+}
 
 // --- דירוג התאמה — עטיפה סביב המנוע המאוחד (scoring.ts) ---
 export function scoreMatch(
@@ -139,7 +146,8 @@ export function rankTenders(rows: TenderRecord[], profile: AgentProfile): AgentT
   return rows
     .map((r) => {
       const title = r.title || '';
-      const publisher = r.publisher || r.publisher_unit || '';
+      // QA #17: אותו שם מפרסם כמו בדשבורד (publisher + unit ללא כפילות)
+      const publisher = joinPublisher(r.publisher, r.publisher_unit);
       const publishDate = r.publish_date ? String(r.publish_date).split('T')[0] : '';
       const deadline = r.deadline ? String(r.deadline).split('T')[0] : '';
       const { display, matched } = scoreMatch(title, publisher, profile, publishDate, deadline);
@@ -156,8 +164,9 @@ export function rankTenders(rows: TenderRecord[], profile: AgentProfile): AgentT
       };
     })
     .filter((t) => {
-      // מפתח ייחודי: מזהה + מפרסם (אותו מספר מכרז יכול להופיע אצל מפרסמים שונים)
-      const key = t.id + '|' + t.publisher;
+      // QA #04: מפתח ייחודי לפי מזהה בלבד — אותו מכרז הופיע פעמיים (78 ו-74)
+      // כי שם המפרסם נכתב בשתי צורות.
+      const key = t.id;
       if (!t.title || seen.has(key)) return false;
       seen.add(key);
       return true;
@@ -407,10 +416,10 @@ export function answerQuestion(question: string, ranked: AgentTender[]): AgentAn
 export type AgentStep = { icon: string; title: string; sub: string; state: 'done' | 'active' | 'pending' };
 
 export function buildSteps(total: number, matchedCount: number, highCount: number, profile: AgentProfile): AgentStep[] {
-  const catNames = (profile.categories || []).map((c) => CAT_LABELS[c] || c).slice(0, 3).join(', ');
+  const catNames = isGenericProfile(profile) ? '' : (profile.categories || []).map((c) => CAT_LABELS[c] || c).slice(0, 3).join(', ');
   return [
     { icon: '◉', title: 'איתור מכרזים', sub: `${total.toLocaleString('he-IL')} מכרזים פעילים נסרקו`, state: 'done' },
-    { icon: '◈', title: 'סינון לפי פרופיל', sub: catNames ? `${matchedCount} תואמים ל: ${catNames}` : `${matchedCount} מכרזים תואמים`, state: 'done' },
+    { icon: '◈', title: 'סינון לפי פרופיל', sub: catNames ? `${matchedCount} תואמים ל: ${catNames}` : `ללא פרופיל עסקי — דירוג כללי, ${matchedCount} מכרזים מסווגים`, state: 'done' },
     { icon: '★', title: 'דירוג והתאמה', sub: `${highCount} מכרזים בהתאמה גבוהה`, state: 'done' },
     { icon: '✎', title: 'מוכן לשאלות', sub: 'שאל את הסוכן על כל מכרז', state: 'active' },
   ];
