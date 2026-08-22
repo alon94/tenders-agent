@@ -12,6 +12,7 @@ import nodeCrypto from "crypto";
 // ops קורא את משתני הסביבה בזמן ריצה (לא בזמן טעינת המודול), ולכן
 // ייבוא רגיל בראש הקובץ תקין — הסביבה נקבעת לפני הקריאה לפונקציות.
 import { issueAdminToken, verifyAdminToken } from "../app/lib/ops";
+import { sanitizeRows } from "../app/lib/corpusHygiene";
 
 let failures = 0;
 function check(name: string, cond: boolean, detail = "") {
@@ -65,7 +66,7 @@ console.log("\nTICKET-12 — חיפוש מילת תחום מחזיר תוצאו�
     { id: "6", title: "אבטחה ושמירה במוסדות חינוך", publisher: "עיריית חיפה" },
     { id: "7", title: "קמפיין פרסום דיגיטלי", publisher: "משרד התיירות" },
     { id: "8", title: "עבודות בינוי ותשתיות ביוב", publisher: "תאגיד מים" },
-    { id: "9", title: "אספקת ריהוט משרדי", publisher: "מינהל הרכש" }, // לא מסווג
+    { id: "9", title: "משהו כללי לגמרי", publisher: "מינהל הרכש" }, // לא מסווג
   ];
   for (const d of DOMAINS) {
     const byFilter = fixtures.filter((t) => matchDomain(t, d.id)).map((t) => t.id).sort().join(",");
@@ -75,7 +76,7 @@ console.log("\nTICKET-12 — חיפוש מילת תחום מחזיר תוצאו�
     const byKw = fixtures.filter((t) => matchQuery(t, kw)).map((t) => t.id).sort().join(",");
     check(`תחום "${d.label}": חיפוש "${kw}" ⊇ סינון`, byFilter.split(",").every((x) => !x || byKw.includes(x)), `filter=[${byFilter}] kw=[${byKw}]`);
   }
-  check('חיפוש חופשי רגיל עדיין עובד ("ריהוט")', fixtures.filter((t) => matchQuery(t, "ריהוט")).length === 1);
+  check('חיפוש חופשי רגיל עדיין עובד ("כללי לגמרי")', fixtures.filter((t) => matchQuery(t, "כללי לגמרי")).length === 1);
 }
 
 // ---------- TICKET-13: תחומים דינמיים + לא מסווג ----------
@@ -85,7 +86,7 @@ console.log("\nTICKET-13 — תחומים נגזרים מהדאטה, bucket לא
     { title: "פיתוח תוכנה", publisher: "" },
     { title: "פיתוח אפליקציה", publisher: "" },
     { title: "שירותי ניקיון", publisher: "" },
-    { title: "אספקת נייר צילום", publisher: "" }, // לא מסווג
+    { title: "משהו כללי לגמרי", publisher: "" }, // לא מסווג
   ];
   const { domains, uncategorized } = domainCounts(fixtures);
   check("תחום ללא מכרזים מוסתר", domains.every((d) => d.count > 0));
@@ -332,7 +333,9 @@ console.log("\nQA/M-20 — מילות מפתח בפרופיל");
     `${with1.display} → ${withMany.display}`);
   check("עם מילות מפתח מגיעים ל'התאמה גבוהה' (80+)", withMany.display >= 80,
     `display=${withMany.display}`);
-  check("בלי מילות מפתח לא מגיעים ל-80", without.display < 80, `display=${without.display}`);
+  // QA #09: המילון הורחב (כותרת זו פוגעת בכמה מילות תחום) — הבדיקה נשארת על
+  // הפער: מילות מפתח מוסיפות מעל ומעבר לקטגוריות.
+  check("בלי מילות מפתח הציון נמוך מאשר איתן", without.display < withMany.display, `display=${without.display}`);
 }
 
 // ---------- QA/H-2 + B-1: בניית השאילתה ב-getTenders ----------
@@ -496,4 +499,25 @@ console.log("\nQA — שם מפרסם ללא כפילות (#17) ומיון (#16)
   check("ברזילי, אשקלון → לא רשות מקומית", !matchPublisher({ id: "1", title: "x", publisher: "משרד הבריאות - המרכז הרפואי ע\"ש ברזילי, אשקלון" }, "local"));
   check("עיריית אשקלון → רשות מקומית", matchPublisher({ id: "2", title: "x", publisher: "עיריית אשקלון" }, "local"));
   check("muni-* → רשות מקומית", matchPublisher({ id: "muni-9", title: "x", publisher: "כלשהו" }, "local"));
+}
+
+console.log("\nQA #09/#20 — סיווג מורחב והיגיינת רשומות");
+{
+  check("הקצאת רמ\"י 'מגורים שיוך דירות' → נדל\"ן", classifyTender({ title: "מגורים שיוך דירות", publisher: "רשות מקרקעי ישראל" }).includes("realestate"));
+  check("'נחלות במשבצת' → נדל\"ן", classifyTender({ title: "נחלות במשבצת" }).includes("realestate"));
+  check("מכשור באנגלית מבית חולים → בריאות (נסיגה לפי מפרסם)", classifyTender({ title: "SILICONE EMBOLECTOMY CATHETER", publisher: "משרד הבריאות - המרכז הרפואי שיבא" }).includes("health"));
+  check("'פטור ממכרז פייזר' מבית חולים → בריאות", classifyTender({ title: "פטור ממכרז - פייזר", publisher: "בית החולים איכילוב" }).includes("health"));
+  check("כותרת כללית ממשרד ממשלתי → עדיין לא מסווג (אין נסיגה גורפת)", classifyTender({ title: "משהו כללי לגמרי", publisher: "משרד האוצר" }).length === 0);
+  check("'מתקנים פוטו וולטאיים' → סביבה ואנרגיה", classifyTender({ title: "מתקנים פוטו וולטאיים" }).includes("environment"));
+  check("'שירותים וטרינריים לכלבים' → חקלאות ווטרינריה", classifyTender({ title: "אספקת שירותים וטרינריים לכלבים" }).includes("agriculture"));
+  const rows = sanitizeRows([
+    { id: "a", title: "בדיקה" } as never,
+    { id: "b", title: "קובץ המכרז" } as never,
+    { id: "c", title: "640/2026", publisher: "רשות מקרקעי ישראל", publish_date: "1016-08-17" } as never,
+    { id: "d", title: "מכרז אמיתי", publish_date: "2026-08-01" } as never,
+  ]);
+  check("כותרות בדיקה/placeholder מסוננות", rows.length === 2 && rows.every((r) => r.id !== "a" && r.id !== "b"));
+  check("כותרת רמ\"י מספרית מקבלת תווית", !!rows.find((r) => r.id === "c")?.title.startsWith("מכרז מקרקעין 640/2026"));
+  check("שנת פרסום לא סבירה → null", rows.find((r) => r.id === "c")?.publish_date === null);
+  check("רשומה תקינה לא נפגעת", rows.find((r) => r.id === "d")?.publish_date === "2026-08-01");
 }

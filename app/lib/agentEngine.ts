@@ -9,6 +9,7 @@ import { scoreTender, CAT_KW as CAT_KW_PUBLIC, GENERIC_PROFILE } from './scoring
 import { joinPublisher } from './tenderQuery';
 import { getTenders, type TenderRecord } from './db';
 import { waitUntil } from '@vercel/functions';
+import { sanitizeRows } from './corpusHygiene';
 
 const API = 'https://next.obudget.org/api/query';
 const STATUSES = `('פורסם','עתידי','פורסם ולא התקבלו השגות','פורסם והתקבלו השגות','בעדכון')`;
@@ -46,7 +47,8 @@ export const CAT_LABELS: Record<string, string> = {
   consulting: 'ייעוץ וניהול', tech: 'טכנולוגיה ותוכנה', marketing: 'שיווק ופרסום',
   construction: 'בינוי ותשתיות', legal: 'משפט וחשבונאות', education: 'חינוך והדרכה',
   security: 'אבטחה ושמירה', cleaning: 'ניקיון ותחזוקה', catering: 'קייטרינג ומזון',
-  transport: 'הסעות ולוגיסטיקה', health: 'בריאות ורפואה', environment: 'איכות סביבה',
+  transport: 'הסעות ולוגיסטיקה', health: 'בריאות ורפואה', environment: 'סביבה ואנרגיה',
+  agriculture: 'חקלאות ווטרינריה', supply: 'רכש וציוד',
   other: 'אחר',
 };
 
@@ -139,6 +141,7 @@ async function loadCorpus(): Promise<TenderRecord[]> {
       for (const page of rest) { if (page.length === 0) break; rows.push(...page); }
     }
     rows = rows.filter((t) => t.title && (!t.deadline || String(t.deadline).split('T')[0] >= today));
+    rows = sanitizeRows(rows);
   } catch {
     rows = [];
   }
