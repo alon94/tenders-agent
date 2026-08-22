@@ -420,24 +420,24 @@ export default function Dashboard(){
               </a>
             ) : (
               <div role="row" key={t.id||i} style={{display:'grid',gridTemplateColumns:'70px 1fr 232px 156px 150px',padding:'16px 18px',borderBottom:'1px solid #eef1f4',alignItems:'center'}}>
-                    <div style={{display:'flex',flexDirection:'column',alignItems:'flex-start',gap:5}}>
+                    <div role="cell" style={{display:'flex',flexDirection:'column',alignItems:'flex-start',gap:5}}>
                       <span style={{fontSize:21,fontWeight:700,color:DARK,lineHeight:1}}>{score}</span>
                       <span style={{width:30,height:3,borderRadius:2,background:bandColor(score)}}></span>
                     </div>
-                    <div style={{minWidth:0,paddingInlineEnd:16}}>
+                    <div role="cell" style={{minWidth:0,paddingInlineEnd:16}}>
                       {t.url||t.id
                         ?<a href={`/tender/${t.id}`} style={{fontSize:16.5,fontWeight:600,color:DARK,lineHeight:1.4,textDecoration:'none',display:'block'}}>{t.title||'ללא כותרת'}</a>
                         :<div style={{fontSize:15,fontWeight:600,color:DARK,lineHeight:1.4}}>{t.title||'ללא כותרת'}</div>}
                       <div style={{fontSize:13.5,color:'#62707e',marginTop:5}}>{t.publisher||'לא ידוע'} · פורסם {fd(t.publishDate)}</div>
                     </div>
-                    <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+                    <div role="cell" style={{display:'flex',flexWrap:'wrap',gap:6}}>
                       {tags.map((g,gi)=>(<span key={gi} title={g.title} style={{fontSize:11.5,fontWeight:600,padding:'3px 10px',borderRadius:6,background:g.bg,color:g.fg,border:`1px solid ${g.bd}`}}>{g.label}</span>))}
                     </div>
-                    <div style={{fontSize:13}}>
+                    <div role="cell" style={{fontSize:13}}>
                       <div style={{color:DARK,fontWeight:600}}>{isExempt(t.type,t.title)?<span style={{color:'#8a5db8',background:'#f3ecfb',borderRadius:6,padding:'2px 8px',fontSize:12,fontWeight:600}}>פטור</span>:fd(t.deadline)}</div>
                       {d!==null&&d>=0&&<div style={{color:d<=7?'#b04a34':'#62707e',fontSize:12,marginTop:3}}>נותרו {d} ימים</div>}
                     </div>
-                    <div style={{display:'flex',justifyContent:'flex-end',alignItems:'center',gap:6}}>
+                    <div role="cell" style={{display:'flex',justifyContent:'flex-end',alignItems:'center',gap:6}}>
                       <a href={`/tender/${t.id}`} style={{fontSize:12,fontWeight:600,color:'#1e5aa8',background:'#e8f1fb',border:'1px solid #cfe0f4',borderRadius:7,padding:'5px 11px',textDecoration:'none',whiteSpace:'nowrap'}}>פרטים</a>
                       <button type="button" onClick={(e)=>toggleMark(t.id,e)} aria-pressed={isMarked} aria-label={isMarked?'הסר סימון':'סמן מכרז'} title={isMarked?'הסר סימון':'סמן מכרז'} style={{fontSize:16,lineHeight:1,color:isMarked?'#d9a520':'#7f8c99',background:'transparent',border:'none',cursor:'pointer',padding:6}}>{isMarked?'★':'☆'}</button>
                     </div>

@@ -120,9 +120,9 @@ export default function SigninPage() {
           >
             ש
           </div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: DARK, textAlign: 'center' }}>
+          <h1 style={{ fontSize: 20, fontWeight: 800, color: DARK, textAlign: 'center', margin: 0 }}>
             התחברות לשווה מכרזים
-          </div>
+          </h1>
           <div style={{ fontSize: 13, color: MUTED, marginTop: 6, textAlign: 'center' }}>
             מועדון עסקים 360 · גילוי מכרזים מותאם אישית
           </div>
