@@ -1,0 +1,20 @@
+name: Keep warm
+# QA #03: הבקשה הראשונה אחרי ~10 דקות ללא תנועה עולה ~3 שנ' (cold start +
+# טעינת המאגר). קריאה קלה כל 5 דקות משאירה את ה-lambda והמטמון חמים.
+# Vercel Cron ב-Hobby מוגבל לפעם ביום — לכן GitHub Actions.
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: warm production + preview
+        run: |
+          for u in "${{ vars.SITE_URL }}" "https://tenders-agent-git-fix-qa-blockers-alonk.vercel.app"; do
+            [ -z "$u" ] && continue
+            curl -sS -o /dev/null -w "$u nav-counts %{http_code} %{time_total}s\n" "$u/api/nav-counts" || true
+            curl -sS -o /dev/null -w "$u search %{http_code} %{time_total}s\n" "$u/api/tenders/search?closed=1" || true
+          done
