@@ -491,3 +491,9 @@ console.log("\nQA — שם מפרסם ללא כפילות (#17) ומיון (#16)
   check("מיון לפי מועד הגשה — הקרוב קודם", sortTenders(rows, null, now, "deadline")[0].id === "b");
   check("מיון לפי פרסום — החדש קודם", sortTenders(rows, null, now, "published")[0].id === "b");
 }
+{
+  console.log("\nQA — רשות מקומית: שם עיר בתוך שם בית חולים אינו רשות");
+  check("ברזילי, אשקלון → לא רשות מקומית", !matchPublisher({ id: "1", title: "x", publisher: "משרד הבריאות - המרכז הרפואי ע\"ש ברזילי, אשקלון" }, "local"));
+  check("עיריית אשקלון → רשות מקומית", matchPublisher({ id: "2", title: "x", publisher: "עיריית אשקלון" }, "local"));
+  check("muni-* → רשות מקומית", matchPublisher({ id: "muni-9", title: "x", publisher: "כלשהו" }, "local"));
+}
