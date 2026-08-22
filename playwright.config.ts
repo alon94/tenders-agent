@@ -10,6 +10,11 @@ export default defineConfig({
     locale: 'he-IL',
     launchOptions: process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : undefined,
     viewport: { width: 1280, height: 800 },
+    // Vercel Deployment Protection / Firewall: מעבר באמצעות סוד Protection Bypass for Automation
+    // (Vercel → Project → Settings → Deployment Protection). נשמר כ-secret ב-GitHub.
+    extraHTTPHeaders: process.env.VERCEL_BYPASS
+      ? { 'x-vercel-protection-bypass': process.env.VERCEL_BYPASS, 'x-vercel-set-bypass-cookie': 'true' }
+      : undefined,
   },
   reporter: process.env.CI ? [['github'], ['list']] : 'list',
 });

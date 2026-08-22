@@ -44,9 +44,15 @@ jobs:
             sleep 20
           done
           echo "preview not ready"; exit 1
+      - name: diagnose what Vercel serves to the runner
+        run: |
+          curl -sS -D - -o /tmp/body "${{ steps.url.outputs.url }}/api/nav-counts" \
+            -H "x-vercel-protection-bypass: ${{ secrets.VERCEL_BYPASS }}" | head -20
+          head -c 400 /tmp/body; echo
       - run: npx playwright test
         env:
           BASE_URL: ${{ steps.url.outputs.url }}
+          VERCEL_BYPASS: ${{ secrets.VERCEL_BYPASS }}
           CI: 'true'
       - uses: actions/upload-artifact@v4
         if: failure()

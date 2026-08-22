@@ -20,12 +20,18 @@ async function collectConsoleErrors(page: Page): Promise<string[]> {
 // API עוברת דרך הדפדפן (fetch מתוך הדף), אחרי טעינה ראשונה של האתר.
 async function api(page: Page, path: string): Promise<any> {
   if (page.url() === 'about:blank') await page.goto('/signin');
-  return page.evaluate(async (p) => {
+  const res = await page.evaluate(async (p) => {
     const r = await fetch(p);
     const text = await r.text();
-    try { return { status: r.status, headers: { cache: r.headers.get('x-vercel-cache') }, json: JSON.parse(text) }; }
-    catch { return { status: r.status, headers: { cache: r.headers.get('x-vercel-cache') }, json: null, text: text.slice(0, 200) }; }
+    const headers = { cache: r.headers.get('x-vercel-cache'), type: r.headers.get('content-type') };
+    try { return { status: r.status, headers, json: JSON.parse(text) }; }
+    catch { return { status: r.status, headers, json: null, text: text.slice(0, 300) }; }
   }, path);
+  // אבחון ברור במקום TypeError: מה השרת הגיש בפועל (challenge? שגיאה?)
+  if (res.json === null && res.status !== 404) {
+    throw new Error(`API ${path} → status ${res.status}, content-type ${res.headers.type}\n${res.text}`);
+  }
+  return res;
 }
 
 // רעש של ספקי צד ג' שאינו באחריות האתר: Google Sign-In (FedCM/GSI) בסביבת CI, פונטים, favicon
