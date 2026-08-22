@@ -11,9 +11,33 @@ export const dynamic = "force-dynamic";
 //
 // POST ולא GET: הבקשה נושאת את הפרופיל העסקי (כולל מילות מפתח), ואין
 // סיבה שהוא ייכנס לכתובות ולוגי שרת.
+// QA #03: לאורח (ללא פרופיל) אותה שאילתה חוזרת על עצמה אצל כל המשתמשים —
+// GET עם פרמטרים ב-URL מאפשר ל-CDN של Vercel להגיש אותה מהקצה ב-<100ms,
+// בלי להגיע ל-lambda בכלל. עם פרופיל ממשיכים ב-POST (לא נכנס ל-URL/לוגים).
+export async function GET(req: Request) {
+  const u = new URL(req.url);
+  const g = (k: string) => u.searchParams.get(k);
+  const body = {
+    page: g('page'), perPage: g('perPage'),
+    filters: {
+      view: g('view'), biz: g('biz'), pub: g('pub'), maxD: g('days'),
+      showClosed: g('closed') === '1', showNoDate: g('nodate') !== '0', sbOnly: g('sb') === '1',
+      q: g('q'), tab: g('tab'), sort: g('sort'),
+    },
+    profile: null,
+  };
+  const res = await handle(body);
+  res.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
+  return res;
+}
+
 export async function POST(req: Request) {
+  const body = await req.json().catch(() => ({}));
+  return handle(body);
+}
+
+async function handle(body: any) {
   try {
-    const body = await req.json().catch(() => ({}));
     const page = Math.max(1, Math.min(Number(body?.page) || 1, 10000));
     const perPage = Math.max(1, Math.min(Number(body?.perPage) || 25, 100));
 
@@ -22,7 +46,7 @@ export async function POST(req: Request) {
       view: f.view === 'exempt' || f.view === 'smallbiz' ? f.view : null,
       biz: typeof f.biz === 'string' ? f.biz.slice(0, 40) : '',
       pub: typeof f.pub === 'string' ? f.pub.slice(0, 40) : '',
-      maxD: Number.isFinite(Number(f.maxD)) ? Math.min(Math.max(Number(f.maxD), 0), 3650) : 365,
+      maxD: f.maxD != null && f.maxD !== '' && Number.isFinite(Number(f.maxD)) ? Math.min(Math.max(Number(f.maxD), 0), 3650) : 365,
       showClosed: !!f.showClosed,
       showNoDate: f.showNoDate !== false,
       sbOnly: !!f.sbOnly,

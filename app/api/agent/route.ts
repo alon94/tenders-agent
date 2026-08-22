@@ -67,6 +67,9 @@ export async function GET(req: Request) {
       generic,
       // QA #07: רשימת "המתאימים ביותר" מגיעה מאותו דירוג כמו ההודעה — מקור אחד.
       top: ranked.slice(0, 10).map((t) => ({ id: t.id, title: t.title, publisher: t.publisher, deadline: t.deadline, score: t.score })),
+    }, {
+      // QA #03: תשובת האורח זהה לכולם — ניתנת להגשה מה-CDN
+      headers: generic ? { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600" } : { "Cache-Control": "private, no-store" },
     });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });

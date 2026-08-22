@@ -120,10 +120,20 @@ export default function Dashboard(){
     const handle=setTimeout(async()=>{
       setLoading(true);setErr(false);
       try{
-        const r=await fetch('/api/tenders/search',{method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({page:pg,perPage:PER,
-            filters:{view,biz,pub,maxD,showClosed,showNoDate,sbOnly,q,tab,sort:sort||undefined},
-            profile:bizProfile?{categories:bizProfile.categories,region:bizProfile.region,publisher_type:bizProfile.publisher_type,keywords:bizProfile.keywords||''}:null})});
+        // QA #03: אורח → GET (נענה מה-CDN); משתמש עם פרופיל → POST
+        let r:Response;
+        if(bizProfile){
+          r=await fetch('/api/tenders/search',{method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({page:pg,perPage:PER,
+              filters:{view,biz,pub,maxD,showClosed,showNoDate,sbOnly,q,tab,sort:sort||undefined},
+              profile:{categories:bizProfile.categories,region:bizProfile.region,publisher_type:bizProfile.publisher_type,keywords:bizProfile.keywords||''}})});
+        }else{
+          const ps=new URLSearchParams();
+          const put=(k:string,v:string,def:string)=>{if(v&&v!==def)ps.set(k,v);};
+          put('page',String(pg),'1');put('view',view||'','');put('biz',biz,'');put('pub',pub,'');put('days',String(maxD),'365');
+          put('closed',showClosed?'1':'','');put('nodate',showNoDate?'':'0','');put('sb',sbOnly?'1':'','');put('q',q.trim(),'');put('tab',tab,'all');put('sort',sort,'');
+          r=await fetch('/api/tenders/search?'+ps.toString());
+        }
         if(!r.ok)throw new Error('http '+r.status);
         const j=await r.json();
         // מתעלמים מתשובה של בקשה שכבר אינה העדכנית ביותר

@@ -8,6 +8,7 @@
 import { scoreTender, CAT_KW as CAT_KW_PUBLIC, GENERIC_PROFILE } from './scoring';
 import { joinPublisher } from './tenderQuery';
 import { getTenders, type TenderRecord } from './db';
+import { waitUntil } from '@vercel/functions';
 
 const API = 'https://next.obudget.org/api/query';
 const STATUSES = `('פורסם','עתידי','פורסם ולא התקבלו השגות','פורסם והתקבלו השגות','בעדכון')`;
@@ -112,32 +113,65 @@ async function fetchObudgetFallback(offset: number): Promise<TenderRecord[]> {
   }
 }
 
-export async function fetchActiveTenders(): Promise<TenderRecord[]> {
-  if (Date.now() - cache.at < CACHE_TTL && cache.rows.length > 0) return cache.rows;
+// QA #03 — ביצועים:
+//  1. רק העמודות שהלקוח צורך (לא select=*): ~40% פחות בייטים מ-Supabase.
+//  2. activeOnly בצד Supabase — לא מושכים מכרזים שמועדם חלף רק כדי לזרוק אותם.
+//  3. העמודים נמשכים במקביל ולא בטור (10 בקשות × ~300ms → ~400ms).
+//  4. stale-while-revalidate: אחרי החימום הראשון אף בקשה לא מחכה ל-DB —
+//     מטמון ישן מוגש מיד והרענון רץ ברקע. לפני כן כל cache miss (כל 10
+//     דקות, וכל lambda חדשה) עצר את המשתמש ל-3+ שניות.
+const CORPUS_COLUMNS = 'id,title,publisher,publisher_unit,publish_date,deadline,status,url,type,source,publication_id,small_biz,small_biz_confidence';
+const PAGE = 1000;
+const MAX_PAGES = 12;
+let refreshing: Promise<TenderRecord[]> | null = null;
 
+async function loadCorpus(): Promise<TenderRecord[]> {
   const today = new Date().toISOString().split('T')[0];
   let rows: TenderRecord[] = [];
-
   try {
-    // עד 10,000 רשומות מה-DB, בעימוד של 1000
-    for (let offset = 0; offset < 10000; offset += 1000) {
-      const page = await getTenders({ offset, limit: 1000 });
-      rows.push(...page);
-      if (page.length < 1000) break;
+    // עמוד ראשון קובע אם יש עוד; שאר העמודים במקביל
+    const first = await getTenders({ offset: 0, limit: PAGE, activeOnly: true, columns: CORPUS_COLUMNS });
+    rows = first;
+    if (first.length === PAGE) {
+      const rest = await Promise.all(
+        Array.from({ length: MAX_PAGES - 1 }, (_, i) => getTenders({ offset: (i + 1) * PAGE, limit: PAGE, activeOnly: true, columns: CORPUS_COLUMNS }).catch(() => [] as TenderRecord[]))
+      );
+      for (const page of rest) { if (page.length === 0) break; rows.push(...page); }
     }
-    // פעילים בלבד: מועד הגשה עתידי או ללא מועד
     rows = rows.filter((t) => t.title && (!t.deadline || String(t.deadline).split('T')[0] >= today));
   } catch {
     rows = [];
   }
-
   if (rows.length === 0) {
     const batches = await Promise.all([fetchObudgetFallback(0), fetchObudgetFallback(1000), fetchObudgetFallback(2000)]);
     rows = batches.flat().filter((r) => r.title && r.title !== 'מכרז ללא כותרת');
   }
-
-  if (rows.length > 0) cache = { at: Date.now(), rows };
   return rows;
+}
+
+export async function fetchActiveTenders(): Promise<TenderRecord[]> {
+  const age = Date.now() - cache.at;
+  if (cache.rows.length > 0 && age < CACHE_TTL) return cache.rows;
+
+  // מטמון ישן קיים → מגישים אותו מיד ומרעננים ברקע (פעם אחת בו-זמנית)
+  if (cache.rows.length > 0) {
+    if (!refreshing) {
+      refreshing = loadCorpus()
+        .then((rows) => { if (rows.length > 0) cache = { at: Date.now(), rows }; return cache.rows; })
+        .finally(() => { refreshing = null; });
+      // ב-Vercel ה-lambda עלולה להיעצר מיד אחרי התשובה — waitUntil משאיר את הרענון חי
+      try { waitUntil(refreshing); } catch { /* מחוץ ל-Vercel (בדיקות/מקומי) */ }
+    }
+    return cache.rows;
+  }
+
+  // טעינה ראשונה — בקשות מקבילות חולקות את אותו Promise
+  if (!refreshing) {
+    refreshing = loadCorpus()
+      .then((rows) => { if (rows.length > 0) cache = { at: Date.now(), rows }; return rows; })
+      .finally(() => { refreshing = null; });
+  }
+  return refreshing;
 }
 
 // --- דירוג מלא לפי פרופיל ---
