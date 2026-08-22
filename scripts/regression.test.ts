@@ -521,3 +521,20 @@ console.log("\nQA #09/#20 — סיווג מורחב והיגיינת רשומו�
   check("שנת פרסום לא סבירה → null", rows.find((r) => r.id === "c")?.publish_date === null);
   check("רשומה תקינה לא נפגעת", rows.find((r) => r.id === "d")?.publish_date === "2026-08-01");
 }
+
+console.log("\nתצוגת 'כוונה להתקשרות' — נפרדת מהגילוי הראשי");
+{
+  const now = Date.parse("2026-08-22T09:00:00Z");
+  const fx: any[] = [
+    { id: "1", title: "מגורים שיוך דירות", publisher: "רשות מקרקעי ישראל", type: "פרסום כוונה להתקשרות", publishDate: "2026-08-01" },
+    { id: "2", title: "פיתוח מערכת", publisher: "משרד האוצר", type: "מכרז פומבי", publishDate: "2026-08-01", deadline: "2026-09-30" },
+    { id: "3", title: "ספק יחיד — תרופה", publisher: "משרד הבריאות", type: "התקשרות בפטור במכרז", publishDate: "2026-08-01" },
+  ];
+  const main = queryTenders(fx, { showClosed: true }, null, 1, 25, now);
+  const intent = queryTenders(fx, { view: "intent", showClosed: true }, null, 1, 25, now);
+  const exempt = queryTenders(fx, { view: "exempt", showClosed: true }, null, 1, 25, now);
+  check("הגילוי הראשי לא כולל כוונה להתקשרות", main.total === 2 && main.tenders.every((t) => t.id !== "1"));
+  check("תצוגת כוונה מציגה רק אותן", intent.total === 1 && intent.tenders[0].id === "1");
+  check("פטורים לא כוללים כוונה", exempt.total === 1 && exempt.tenders[0].id === "3");
+  check("counts: active=2, intent=1, exempt=1", main.counts.active === 2 && main.counts.intent === 1 && main.counts.exempt === 1, JSON.stringify(main.counts));
+}

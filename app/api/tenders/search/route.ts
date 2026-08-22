@@ -73,7 +73,7 @@ async function handle(body: any) {
 
     const f = body?.filters || {};
     const filters: QueryFilters = {
-      view: f.view === 'exempt' || f.view === 'smallbiz' ? f.view : null,
+      view: f.view === 'exempt' || f.view === 'smallbiz' || f.view === 'intent' ? f.view : null,
       biz: typeof f.biz === 'string' ? f.biz.slice(0, 40) : '',
       pub: typeof f.pub === 'string' ? f.pub.slice(0, 40) : '',
       maxD: f.maxD != null && f.maxD !== '' && Number.isFinite(Number(f.maxD)) ? Math.min(Math.max(Number(f.maxD), 0), 3650) : 365,

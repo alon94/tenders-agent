@@ -68,6 +68,7 @@ export default function Dashboard(){
   // מצבי תצוגה מהסרגל: ?view=exempt / ?view=smallbiz, וחיפוש התחלתי ?q=
   const[exemptView]=useState<boolean>(()=>typeof window!=='undefined'&&new URLSearchParams(window.location.search).get('view')==='exempt');
   const[sbView]=useState<boolean>(()=>typeof window!=='undefined'&&new URLSearchParams(window.location.search).get('view')==='smallbiz');
+  const[intentView]=useState<boolean>(()=>typeof window!=='undefined'&&new URLSearchParams(window.location.search).get('view')==='intent');
   const[loading,setLoading]=useState(true);
   const[fetchedAt,setFetchedAt]=useState('');
   const[marked,setMarked]=useState<string[]>([]);
@@ -109,10 +110,10 @@ export default function Dashboard(){
   // ~5 שניות) רק כדי להציג 25 שורות. עכשיו נשלח עמוד אחד.
   // הלוגיקה עצמה חיה ב-app/lib/tenderQuery.ts — מקור אמת יחיד שנבדק
   // מול הגרסה המקורית על 432 צירופי מסננים.
-  const[srv,setSrv]=useState<{tenders:T[];total:number;counts:{base:number;closing:number;new:number;smallBiz:number;active:number;exempt:number};domains:{id:string;label:string;count:number}[];uncategorized:number;corpus:number}|null>(null);
+  const[srv,setSrv]=useState<{tenders:T[];total:number;counts:{base:number;closing:number;new:number;smallBiz:number;active:number;exempt:number;intent:number};domains:{id:string;label:string;count:number}[];uncategorized:number;corpus:number}|null>(null);
   const[err,setErr]=useState(false);
 
-  const view=exemptView?'exempt':sbView?'smallbiz':null;
+  const view=exemptView?'exempt':sbView?'smallbiz':intentView?'intent':null;
   const reqRef=useRef(0);
   useEffect(()=>{
     if(!ready)return;
@@ -150,7 +151,7 @@ export default function Dashboard(){
   },[ready,pg,view,biz,pub,maxD,showClosed,showNoDate,sbOnly,q,tab,sort,bizProfile]);
 
   const rows=srv?.tenders??[];
-  const counts=srv?.counts??{base:0,closing:0,new:0,smallBiz:0,active:0,exempt:0};
+  const counts=srv?.counts??{base:0,closing:0,new:0,smallBiz:0,active:0,exempt:0,intent:0};
   const tp=Math.max(1,Math.ceil((srv?.total??0)/PER));
   // QA #04: ציון אחד לכל המסכים — לפי פרופיל אם יש, אחרת הציון הכללי
   const scoreOf=useCallback((t:T):number=>displayScore(t,bizProfile?{categories:bizProfile.categories,region:bizProfile.region,publisher_type:bizProfile.publisher_type,keywords:bizProfile.keywords||''}:null,now),[bizProfile,now]);
@@ -164,11 +165,12 @@ export default function Dashboard(){
     return 'נסרק '+d.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
   })();
 
-  const activeCnt=counts.active, exemptCnt=counts.exempt, sbCnt=counts.smallBiz;
+  const activeCnt=counts.active, exemptCnt=counts.exempt, sbCnt=counts.smallBiz, intentCnt=counts.intent;
   const sideNav=[
     {icon:'⌂',label:'דף הבית',href:'/'},
-    {icon:'◧',label:'גילוי מכרזים',href:'/dashboard',active:!exemptView&&!sbView,count:activeCnt},
+    {icon:'◧',label:'גילוי מכרזים',href:'/dashboard',active:!exemptView&&!sbView&&!intentView,count:activeCnt},
     {icon:'⊘',label:'מכרזים פטורים',href:'/dashboard?view=exempt',active:exemptView,count:exemptCnt},
+    {icon:'◎',label:'כוונה להתקשרות',href:'/dashboard?view=intent',active:intentView,count:intentCnt},
     {icon:'⭐',label:'העדפה לעסקים קטנים',href:'/dashboard?view=smallbiz',active:sbView,count:sbCnt},
     {icon:'★',label:'מכרזים מסומנים',href:'/marked'},
     {icon:'◈',label:'מכרזי הסוכן החכם',href:'/agent'},
@@ -188,7 +190,7 @@ export default function Dashboard(){
   },[srv]);
   const smallBizCount=counts.smallBiz;
   const kpis=[
-    {value:srv?.corpus??0,label:'מכרזים פעילים במאגר',dot:BLUE},
+    {value:intentView?counts.intent:counts.active,label:intentView?'הודעות כוונה להתקשרות':'מכרזים פעילים במאגר',dot:BLUE},
     {value:counts.closing,label:'נסגרים בשבוע הקרוב',dot:'#b04a34'},
     {value:counts.new,label:'חדשים ב-7 ימים',dot:'#1e9e5a'},
     // QA #19: לחיצה על הכרטיס הפעילה בשקט מסנן סמוי (sbOnly). עכשיו היא מובילה לתצוגה הייעודית.
@@ -252,7 +254,7 @@ export default function Dashboard(){
           {/* header */}
           <div style={{background:'#fff',borderBottom:`1px solid ${BORDER}`,padding:isMobile?'12px 14px':'15px 26px',display:'flex',alignItems:'center',gap:isMobile?10:18,position:'sticky',top:0,zIndex:5}}>
             {isMobile && <MobileMenu/>}
-            <h1 style={{fontWeight:700,fontSize:isMobile?16:20,color:DARK,flex:'0 0 auto',margin:0}}>{exemptView?'מכרזים פטורים':sbView?'העדפה לעסקים קטנים':'גילוי מכרזים'}</h1>
+            <h1 style={{fontWeight:700,fontSize:isMobile?16:20,color:DARK,flex:'0 0 auto',margin:0}}>{exemptView?'מכרזים פטורים':sbView?'העדפה לעסקים קטנים':intentView?'כוונה להתקשרות':'גילוי מכרזים'}</h1>
             <div style={{flex:1,minWidth:0,display:'flex',alignItems:'center',gap:10,background:'#fff',border:'1.5px solid '+BLUE,borderRadius:10,padding:'12px 16px',maxWidth:520,boxShadow:'0 2px 10px rgba(43,111,196,0.12)'}}>
               <span style={{color:BLUE,fontSize:17,fontWeight:700}}>⌕</span>
               <input type="search" aria-label="חיפוש מכרזים" value={q} onChange={e=>{setQ(e.target.value);setPg(1);}} placeholder="חיפוש: נושא, גוף מפרסם, מספר מכרז…" className="search-input" style={{flex:1,border:'none',background:'transparent',fontSize:14.5,color:DARK,fontFamily:'inherit'}}/>
@@ -278,6 +280,11 @@ export default function Dashboard(){
           )}
 
           <div style={{padding:'22px 26px 30px',position:'relative'}}>
+            {intentView&&(
+              <div role="note" style={{background:'#f0f6fd',border:'1px solid #cfe0f4',borderRadius:10,padding:'12px 16px',marginBottom:16,fontSize:13.5,color:'#2a3a4c',lineHeight:1.55}}>
+                <b>מה זה "כוונה להתקשרות"?</b> הודעה של גוף ציבורי על כוונה להתקשר עם ספק מסוים ללא מכרז (תקנה 3א לתקנות חובת המכרזים), וכן הקצאות קרקע של רמ"י. לא מגישים להן הצעה — אבל ספק שיכול לספק את אותו שירות רשאי להגיש השגה בתוך המועד שנקבע. התצוגה הזו נפרדת מ"גילוי מכרזים".
+              </div>
+            )}
             {/* KPI strip */}
             <div style={{display:isMobile?'flex':'grid',gridTemplateColumns:isMobile?undefined:'repeat(5,1fr)',gap:isMobile?10:1,background:isMobile?'transparent':BORDER,border:isMobile?'none':`1px solid ${BORDER}`,borderRadius:10,overflow:isMobile?'auto':'hidden',overflowX:isMobile?'auto':undefined,marginBottom:22}}>
               {kpis.map(k=>(

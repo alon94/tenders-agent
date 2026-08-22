@@ -76,6 +76,16 @@ export function fmtDate(d: string): string {
  * מכוונות בזהירות: "הארכת התקשרות"/"מאשרים הארכה" נתפסות, אבל
  * "הארכת מועד ההגשה" (מכרז אמיתי שהאריך דדליין) — לא.
  */
+/**
+ * "פרסום כוונה להתקשרות" — הודעה על כוונה להתקשר עם ספק ללא מכרז (כולל
+ * הקצאות רמ"י). לא הליך שמגישים לו הצעה, אך בעל ערך מודיעיני (השגה/ספק).
+ */
+export function isIntent(type?: string | null, title?: string | null): boolean {
+  if (type && /כוונה להתקשר/.test(type)) return true;
+  if (title && /^פרסום כוונה להתקשר/.test(title)) return true;
+  return false;
+}
+
 export function isExempt(type?: string | null, title?: string | null): boolean {
   if (type && /פטור|ספק יחיד/.test(type)) return true;
   if (title && /(פטור ממכרז|ספק יחיד|מאשרים הארכה|הארכת (ה)?התקשרות|הרחבת (ה)?התקשרות|מימוש אופציה)/.test(title)) return true;

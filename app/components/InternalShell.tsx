@@ -19,9 +19,10 @@ const BORDER = '#e6eaee';
 const ACTIVE_BG = '#e8f1fb';
 const ACTIVE_FG = '#1e5aa8';
 
-const NAV: { icon: string; label: string; href: string; countKey?: 'active' | 'exempt' | 'smallbiz' }[] = [
+const NAV: { icon: string; label: string; href: string; countKey?: 'active' | 'exempt' | 'smallbiz' | 'intent' }[] = [
   { icon: '◧', label: 'גילוי מכרזים', href: '/dashboard', countKey: 'active' },
   { icon: '⊘', label: 'מכרזים פטורים', href: '/dashboard?view=exempt', countKey: 'exempt' },
+  { icon: '◎', label: 'כוונה להתקשרות', href: '/dashboard?view=intent', countKey: 'intent' },
   { icon: '⭐', label: 'העדפה לעסקים קטנים', href: '/dashboard?view=smallbiz', countKey: 'smallbiz' },
   { icon: '★', label: 'מכרזים מסומנים', href: '/marked' },
   { icon: '◈', label: 'מכרזי הסוכן החכם', href: '/agent' },
@@ -44,7 +45,7 @@ export default function InternalShell({
   const isMobile = useIsMobile();
   const path = usePathname();
   const [session, setSession] = useState<AuthSession | null>(null);
-  const [counts, setCounts] = useState<{ active?: number; exempt?: number; smallbiz?: number }>({});
+  const [counts, setCounts] = useState<{ active?: number; exempt?: number; smallbiz?: number; intent?: number }>({});
   const [navQ, setNavQ] = useState('');
 
   useEffect(() => {

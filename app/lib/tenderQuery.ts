@@ -9,7 +9,7 @@
 //  בדיוק, כדי שלא תיווצר סטייה בין מה שהשרת מסנן למה שהלקוח מצפה לו.
 // ============================================================
 
-import { parseHeDate, isExempt } from './tenderMeta';
+import { parseHeDate, isExempt, isIntent } from './tenderMeta';
 import { matchDomain, matchPublisher, matchQuery, domainCounts, type DomainCount } from './domains';
 import { scoreTender, genericScore } from './scoring';
 
@@ -25,7 +25,7 @@ export interface QueryProfile {
 }
 
 export interface QueryFilters {
-  view?: 'exempt' | 'smallbiz' | null;
+  view?: 'exempt' | 'smallbiz' | 'intent' | null;
   biz?: string; pub?: string;
   maxD?: number;
   showClosed?: boolean; showNoDate?: boolean;
@@ -52,6 +52,10 @@ export function applyBaseFilters(all: QueryTender[], f: QueryFilters, now = Date
   const showNoDate = f.showNoDate ?? true;
 
   let r = all;
+  // תצוגת "כוונה להתקשרות" מציגה רק אותן; שאר התצוגות (כולל הגילוי הראשי)
+  // מציגות הכול מלבדן — הן הליך נפרד שלא מגישים לו הצעה.
+  if (view === 'intent') r = r.filter((t) => isIntent(t.type || '', t.title));
+  else r = r.filter((t) => !isIntent(t.type || '', t.title));
   if (view === 'exempt') r = r.filter((t) => isExempt(t.type || '', t.title));
   if (view === 'smallbiz') r = r.filter(isSmallBiz);
   if (biz) r = r.filter((t) => matchDomain(t, biz));
@@ -132,7 +136,7 @@ export function joinPublisher(publisher?: string | null, unit?: string | null): 
 export interface QueryResult {
   tenders: QueryTender[];
   total: number;
-  counts: { base: number; closing: number; new: number; smallBiz: number; active: number; exempt: number };
+  counts: { base: number; closing: number; new: number; smallBiz: number; active: number; exempt: number; intent: number };
   domains: { id: string; label: string; count: number }[];
   uncategorized: number;
 }
@@ -169,8 +173,9 @@ export function queryTenders(
       closing: selectTab(base, 'closing', now).length,
       new: selectTab(base, 'new', now).length,
       smallBiz: all.filter(isSmallBiz).length,
-      active: all.length,
-      exempt: all.filter((t) => isExempt(t.type || '', t.title)).length,
+      active: all.filter((t) => !isIntent(t.type || '', t.title)).length,
+      exempt: all.filter((t) => isExempt(t.type || '', t.title) && !isIntent(t.type || '', t.title)).length,
+      intent: all.filter((t) => isIntent(t.type || '', t.title)).length,
     },
     domains, uncategorized,
   };
