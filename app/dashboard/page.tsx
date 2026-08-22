@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef, useSyncExternalStore } from "react";
 import { useIsMobile } from "../hooks/useIsMobile";
 import MobileTabBar from "../components/MobileTabBar";
 import MobileMenu from "../components/MobileMenu";
@@ -41,6 +41,7 @@ export default function Dashboard(){
   // בלי דגל מוכנות נורות *שתי* בקשות בכל טעינה למשתמש לא מחובר —
   // אחת לפני שהערך נקבע ואחת אחריו. אומת במדידה: 3.8 ש' פעמיים.
   const[ready,setReady]=useState(false);
+  const hydrated=useSyncExternalStore(()=>()=>{},()=>true,()=>false);
   useEffect(() => {
     const s = getSession();
     setSession(s);
@@ -201,6 +202,13 @@ export default function Dashboard(){
   const selWrap:React.CSSProperties={position:'relative'};
   const selStyle:React.CSSProperties={background:'#fff',color:'#5b6b7a',fontWeight:600,fontSize:13,padding:'8px 30px 8px 15px',borderRadius:7,border:'1px solid #e2e7ec',cursor:'pointer',appearance:'none',WebkitAppearance:'none',fontFamily:'inherit'};
 
+  // CI: React #418 — מצב הדף נגזר מ-URL (view/q/tab...) שהשרת לא מכיר, ולכן
+  // ה-HTML של השרת נבדל מזה של הלקוח. עד ההידרציה מוצג שלד ניטרלי.
+  if(!hydrated)return(
+    <main style={{minHeight:'100vh',background:'#f6f8fa',direction:'rtl',fontFamily:"'Assistant','Rubik',Arial,sans-serif",display:'flex',alignItems:'center',justifyContent:'center'}}>
+      <h1 style={{fontSize:16,fontWeight:600,color:'#5f6c7a'}}>טוען מכרזים…</h1>
+    </main>
+  );
   return(
     <div style={{minHeight:'100vh',background:'#eef1f4',fontFamily:"'Assistant','Rubik',Arial,sans-serif",direction:'rtl',color:DARK,padding:'0'}}>
       <div style={{display:'flex',minHeight:'100vh',background:'#f6f8fa'}}>

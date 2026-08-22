@@ -12,7 +12,18 @@ const PAGES = ['/', '/dashboard', '/dashboard?view=exempt', '/dashboard?view=int
 async function collectConsoleErrors(page: Page): Promise<string[]> {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
-  page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+  page.on('console', (m) => {
+    if (m.type() !== 'error') return;
+    const url = m.location()?.url || '';
+    // "Failed to load resource" בלי URL אינו ניתן לאבחון — מדווח דרך requestfailed (למטה) עם הכתובת
+    if (/Failed to load resource/.test(m.text()) && !url) return;
+    errors.push(m.text() + (url ? ` @ ${url}` : ''));
+  });
+  const origin = new URL(page.url() === 'about:blank' ? (test.info().project.use.baseURL as string) : page.url()).origin;
+  page.on('requestfailed', (r) => {
+    // רק משאבים של האתר עצמו; צד ג' (Google/פונטים) חסום לעיתים ב-CI
+    if (r.url().startsWith(origin)) errors.push(`requestfailed: ${r.failure()?.errorText} @ ${r.url()}`);
+  });
   return errors;
 }
 
@@ -35,7 +46,7 @@ async function api(page: Page, path: string): Promise<any> {
 }
 
 // רעש של ספקי צד ג' שאינו באחריות האתר: Google Sign-In (FedCM/GSI) בסביבת CI, פונטים, favicon
-const THIRD_PARTY = /font|favicon|ERR_BLOCKED_BY_CLIENT|GSI_LOGGER|FedCM|accounts list|accounts\.google|status of (403|429)/i;
+const THIRD_PARTY = /font|favicon|ERR_BLOCKED_BY_CLIENT|GSI_LOGGER|FedCM|accounts list|accounts\.google|gstatic|googleapis|status of (403|429)|net::ERR_FAILED$/i;
 
 async function waitForRows(page: Page) {
   await expect(page.locator('[role=row]').nth(1)).toBeVisible({ timeout: 30_000 });
