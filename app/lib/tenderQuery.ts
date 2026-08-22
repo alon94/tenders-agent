@@ -10,7 +10,7 @@
 // ============================================================
 
 import { parseHeDate, isExempt } from './tenderMeta';
-import { matchDomain, matchPublisher, matchQuery, domainCounts } from './domains';
+import { matchDomain, matchPublisher, matchQuery, domainCounts, type DomainCount } from './domains';
 import { scoreTender, genericScore } from './scoring';
 
 export interface QueryTender {
@@ -137,6 +137,20 @@ export interface QueryResult {
   uncategorized: number;
 }
 
+// QA #03: ספירת התחומים אינה תלויה בעמוד/מיון/טאב — נשמרת לכל צירוף מסננים
+// רלוונטי (עד 200 צירופים) לכל גרסת corpus.
+let dcCache: { src: unknown; map: Map<string, { domains: DomainCount[]; uncategorized: number }> } | null = null;
+function cachedDomainCounts(all: QueryTender[], f: QueryFilters, now: number) {
+  if (!dcCache || dcCache.src !== all) dcCache = { src: all, map: new Map() };
+  const key = [f.view || '', f.pub || '', f.maxD ?? 365, f.showClosed ? 1 : 0, f.showNoDate === false ? 0 : 1, f.sbOnly ? 1 : 0, (f.q || '').trim().toLowerCase(), Math.floor(now / 3_600_000)].join('|');
+  const hit = dcCache.map.get(key);
+  if (hit) return hit;
+  const v = domainCounts(applyBaseFilters(all, { ...f, biz: '' }, now));
+  if (dcCache.map.size > 200) dcCache.map.clear();
+  dcCache.map.set(key, v);
+  return v;
+}
+
 /** נקודת הכניסה — מסנן, מדרג, סופר ומחזיר עמוד אחד בלבד. */
 export function queryTenders(
   all: QueryTender[], filters: QueryFilters, profile: QueryProfile | null,
@@ -146,7 +160,7 @@ export function queryTenders(
   const shown = sortTenders(selectTab(base, filters.tab, now), profile, now, filters.sort);
   // QA #05: מספרי התחומים בתפריט נספרים על אותה קבוצה שמוצגת (ללא סינון התחום עצמו),
   // כך שבחירת "ניקיון (191)" באמת מחזירה 191.
-  const { domains, uncategorized } = domainCounts(applyBaseFilters(all, { ...filters, biz: '' }, now));
+  const { domains, uncategorized } = cachedDomainCounts(all, filters, now);
   return {
     tenders: shown.slice((page - 1) * perPage, page * perPage),
     total: shown.length,

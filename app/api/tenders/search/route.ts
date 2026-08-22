@@ -57,6 +57,15 @@ function toQueryTenders(rows: Awaited<ReturnType<typeof fetchActiveTenders>>): Q
   return out;
 }
 
+// QA #03: זמן הסנכרון האחרון נשאל מ-Supabase בכל בקשה (~200ms) — מספיק לרענן פעם בדקה.
+let syncCache: { at: number; v: string | null } = { at: 0, v: null };
+async function cachedLastSync(): Promise<string | null> {
+  if (Date.now() - syncCache.at < 60_000) return syncCache.v;
+  const v = await getLastSyncAt().catch(() => null);
+  syncCache = { at: Date.now(), v };
+  return v;
+}
+
 async function handle(body: any) {
   try {
     const page = Math.max(1, Math.min(Number(body?.page) || 1, 10000));
@@ -91,7 +100,7 @@ async function handle(body: any) {
     const all = toQueryTenders(rows);
 
     const result = queryTenders(all, filters, profile, page, perPage);
-    const fetchedAt = await getLastSyncAt();
+    const fetchedAt = await cachedLastSync();
 
     return NextResponse.json({ ...result, fetchedAt, corpus: all.length });
   } catch (err) {
