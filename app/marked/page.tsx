@@ -1,7 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
 import InternalShell from '../components/InternalShell';
-import { BORDER, DARK, bandColor, scoreFor, statusTags, daysLeft, fmtDate } from '../lib/tenderMeta';
+import { BORDER, DARK, bandColor, statusTags, daysLeft, fmtDate } from '../lib/tenderMeta';
+import { useProfileScore } from '../hooks/useProfileScore';
 
 interface Tender {
   id: string; title?: string; publisher?: string;
@@ -9,6 +10,7 @@ interface Tender {
 }
 
 export default function MarkedPage() {
+  const { scoreOf } = useProfileScore();
   const [all, setAll] = useState<Tender[]>([]);
   const [marked, setMarked] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,7 +81,7 @@ export default function MarkedPage() {
     };
     const header = ['ציון', 'נושא', 'גוף מפרסם', 'סטטוס', 'תאריך פרסום', 'מועד הגשה', 'קישור'];
     const lines = list.map((t) => [
-      String(scoreFor(t.title || '', t.publisher || '', t.publishDate || '', t.deadline || '')),
+      String(scoreOf(t)),
       t.title || '', t.publisher || '', t.status || '',
       fmtDate(t.publishDate || ''), fmtDate(t.deadline || ''), t.url || '',
     ].map(esc).join(','));
@@ -137,7 +139,7 @@ export default function MarkedPage() {
         ) : (
           shown.map((t) => {
             const d = daysLeft(t.deadline || '');
-            const score = scoreFor(t.title || '', t.publisher || '', t.publishDate || '', t.deadline || '');
+            const score = scoreOf(t);
             const tags = statusTags(t.status || '', d, t.publisher);
             return (
               <div key={t.id} style={{ display: 'grid', gridTemplateColumns: '70px 1fr 232px 150px 120px', padding: '14px 16px', alignItems: 'center', borderBottom: '1px solid ' + BORDER }}>

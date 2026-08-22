@@ -99,6 +99,8 @@ export default function Home() {
         </div>
       </header>
 
+      {/* re-QA: landmark main לדף השיווקי (כמו בדפים הפנימיים) */}
+      <main>
       {/* ---------- סליידר שיווקי (מנוהל מ-/admin) — ראשון מתחת להדר ---------- */}
       <section style={{ background: INK, borderBottom: "1px solid rgba(255,255,255,.1)" }}>
         <div className="wrap" style={{ paddingTop: 22, paddingBottom: 22 }}>
@@ -377,6 +379,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      </main>
 
       {/* ---------- פוטר ---------- */}
       <footer style={{ background: INK, color: "#93a9c1", padding: "40px 0" }}>

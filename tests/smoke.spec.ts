@@ -158,3 +158,35 @@ for (const path of ['/dashboard', '/tender/4000620538', '/agent', '/signin']) {
     expect(critical.map(fmt), 'הפרות critical').toEqual([]);
   });
 }
+
+// re-QA: רספונסיביות — ב-390px אין גלילה אופקית ותפריט/סרגל מובייל קיימים
+test.describe('מובייל (390×844)', () => {
+  test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  for (const path of ['/', '/dashboard', '/dashboard?view=intent', '/tender/4000620538', '/agent', '/signin']) {
+    test(`ללא גלילה אופקית: ${path}`, async ({ page }) => {
+      await page.goto(path);
+      if (path.startsWith('/dashboard')) await waitForRows(page);
+      await page.waitForLoadState('networkidle').catch(() => {});
+      const sw = await page.evaluate(() => document.documentElement.scrollWidth);
+      expect(sw, 'scrollWidth').toBeLessThanOrEqual(390 + 2);
+    });
+  }
+  test('ניווט מובייל זמין בדשבורד', async ({ page }) => {
+    await page.goto('/dashboard');
+    await waitForRows(page);
+    await expect(page.locator('button[aria-expanded], button[aria-label*="תפריט"]').first()).toBeVisible();
+  });
+});
+
+// re-QA #04: ציון זהה ברשימה, בדף המכרז ובמסומנים (אורח → generic)
+test('ציון זהה גם בדף "מסומנים"', async ({ page }) => {
+  const r = (await api(page, '/api/tenders/search?closed=1&perPage=1')).json;
+  const t = r.tenders[0];
+  await page.goto('/tender/' + t.id);
+  const detailScore = (await page.locator('[aria-label^="ציון התאמה"] span').first().textContent())?.trim();
+  await page.getByRole('button', { name: /שמירה למעקב/ }).click();
+  await page.goto('/marked');
+  const row = page.locator('[role=row]', { hasText: t.title.slice(0, 30) }).first();
+  await expect(row).toBeVisible();
+  await expect(row).toContainText(detailScore!);
+});

@@ -2,8 +2,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import InternalShell from '../../components/InternalShell';
-import { BORDER, DARK, bandColor, scoreFor, statusTags, daysLeft, fmtDate, isExempt } from '../../lib/tenderMeta';
+import { BORDER, DARK, bandColor, statusTags, daysLeft, fmtDate, isExempt } from '../../lib/tenderMeta';
 import { useIsMobile } from '../../hooks/useIsMobile';
+import { useProfileScore } from '../../hooks/useProfileScore';
 
 interface Doc { name?: string; title?: string; type?: string; date?: string; url: string; description?: string }
 interface TenderDetail {
@@ -69,8 +70,9 @@ export default function TenderPage() {
 
   const d = t ? daysLeft(t.deadline || '') : null;
   const exempt = t ? isExempt(t.type, t.title) : false;
-  // QA #04: אותו ציון כמו ברשימה ובסוכן — scoreFor עוטף את genericScore
-  const score = useMemo(() => t ? scoreFor(t.title || '', t.publisher || '', t.publishDate || '', t.deadline || '') : 0, [t]);
+  // QA #04 (re-QA): אותו ציון כמו ברשימה — מותאם לפרופיל אם קיים, אחרת generic
+  const { scoreOf } = useProfileScore();
+  const score = useMemo(() => (t ? scoreOf(t) : 0), [t, scoreOf]);
 
   function toggleMark() {
     const cur = readMarked();
