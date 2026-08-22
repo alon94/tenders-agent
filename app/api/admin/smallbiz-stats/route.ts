@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/app/lib/ops";
+import { requireAdmin, isOpsAuthorized } from "@/app/lib/ops";
 
 export const dynamic = "force-dynamic";
 
@@ -15,12 +15,11 @@ async function countExact(filter: string): Promise<number> {
   return parseInt((res.headers.get("content-range") || "/0").split("/")[1] || "0", 10);
 }
 
-// GET /api/admin/smallbiz-stats?secret=... (או Bearer של אדמין)
+// GET /api/admin/smallbiz-stats   (Authorization: Bearer <admin/CRON_SECRET>)
 // פירוק מלא של מצב בדיקת העדפת עסקים קטנים — לאימות המונים.
 export async function GET(req: Request) {
-  const url = new URL(req.url);
-  const bySecret = url.searchParams.get("secret") === process.env.CRON_SECRET && !!process.env.CRON_SECRET;
-  const admin = bySecret ? { email: "secret", role: "super" } : await requireAdmin(req);
+  // QA/B-3: ?secret= הוסר. כותרת בלבד, או אדמין מחובר.
+  const admin = (await isOpsAuthorized(req)) ? { email: "ops", role: "super" } : await requireAdmin(req);
   if (!admin) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
   const today = new Date().toISOString().split("T")[0];

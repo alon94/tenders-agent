@@ -47,7 +47,13 @@ async function runRmi(): Promise<TenderRecord[]> {
         const yearAgo = new Date(Date.now() - 365 * 86400000).toISOString().slice(0, 10);
         if (deadline ? deadline < today : !(publish && publish >= yearAgo)) continue;
         const internalId = str(o, ["MichrazID", "michrazId", "Id", "id"]);
-        const label = title || `מכרז מקרקעין ${num}`;
+        // QA #20: בלי שדה תיאור הכותרת היא המספר בלבד ("640/2026") — מצרפים ייעוד/יישוב כשקיימים
+        const yeud = str(o, ["Yeud", "yeud", "YeudName", "yeudName", "Purpose", "purpose", "SugMichraz", "sugMichraz"]);
+        const yeshuv = str(o, ["Yeshuv", "yeshuv", "Ishuv", "ishuv", "YeshuvName", "City", "city", "Shchuna", "shchuna"]);
+        const descriptive = [yeud, yeshuv].filter(Boolean).join(" ב");
+        const label = title && !/^\d{1,4}\/\d{4}$/.test(title.trim())
+          ? title
+          : `מכרז מקרקעין ${num || title}${descriptive ? " — " + descriptive : ""}`;
         recs.push({
           id: `rmi-${num ? String(num) : hashId(label)}`,
           tender_id: num ? String(num) : null,

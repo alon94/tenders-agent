@@ -719,3 +719,11 @@ body {
     }
     .nav-link-active { border-bottom: 1px solid #eef4fa; color: #2e86de; }
 }
+
+/* QA #22: מצב פוקוס נראה לשדות שה-outline שלהם בוטל בסגנון inline */
+.search-input:focus-visible, .filter-select:focus-visible, button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 2px solid #2b6fc4 !important;
+  outline-offset: 2px;
+}
+.search-input { outline: none; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }

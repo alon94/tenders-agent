@@ -50,6 +50,8 @@ export default function ProfilePage() {
   const [reg, setReg] = useState('all');
   const [pub, setPub] = useState('all');
   const [otherText, setOtherText] = useState('');
+  // QA/M-20: מילות מפתח — האות החזק ביותר במנוע הניקוד, שלא נאסף עד כה.
+  const [keywords, setKeywords] = useState('');
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
   const [initial, setInitial] = useState('');
@@ -69,16 +71,18 @@ export default function ProfilePage() {
           setReg(profile.region || 'all');
           setPub(profile.publisher_type || 'all');
           setOtherText(profile.category_other || '');
+          setKeywords(profile.keywords || '');
           setInitial(
             JSON.stringify({
               biz: profile.categories || [],
               reg: profile.region || 'all',
               pub: profile.publisher_type || 'all',
               otherText: profile.category_other || '',
+              keywords: profile.keywords || '',
             })
           );
         } else {
-          setInitial(JSON.stringify({ biz: [], reg: 'all', pub: 'all', otherText: '' }));
+          setInitial(JSON.stringify({ biz: [], reg: 'all', pub: 'all', otherText: '', keywords: '' }));
         }
       } catch {
         setError('טעינת הפרופיל נכשלה');
@@ -93,7 +97,7 @@ export default function ProfilePage() {
     setSaved(false);
   };
 
-  const current = JSON.stringify({ biz, reg, pub, otherText });
+  const current = JSON.stringify({ biz, reg, pub, otherText, keywords });
   const dirty = current !== initial;
 
   const save = async () => {
@@ -104,6 +108,7 @@ export default function ProfilePage() {
         category_other: biz.includes('other') ? otherText : null,
         region: reg,
         publisher_type: pub,
+        keywords: keywords.trim() || null,
       });
       setInitial(current);
       setSaved(true);
@@ -213,6 +218,50 @@ export default function ProfilePage() {
               />
             </div>
           )}
+
+          {/* QA/M-20: מילות מפתח. המנוע (scoring.ts:98) נותן להן 25 נקודות
+              בסיס ועוד 12.5 לכל התאמה נוספת — לעומת 12+6 לקטגוריות — אבל
+              עד עכשיו לא היה שום מסך שאוסף אותן, ולכן הן היו ריקות אצל כל
+              המשתמשים ואף מכרז לא הגיע לסף "התאמה גבוהה" (80+). */}
+          <div style={{ marginTop: 22, paddingTop: 20, borderTop: '1px solid #eef2f5' }}>
+            <label
+              htmlFor="kw-input"
+              style={{ display: 'block', fontWeight: 700, fontSize: 14, color: DARK, marginBottom: 5 }}
+            >
+              מילות מפתח
+            </label>
+            <div style={{ fontSize: 12.5, color: '#6b7a88', marginBottom: 10, lineHeight: 1.6, maxWidth: 520 }}>
+              המילים שמאפיינות בדיוק את מה שאתם מחפשים, מופרדות בפסיקים.
+              זהו הגורם המשפיע ביותר על דירוג ההתאמה — הרבה מעבר לקטגוריות.
+            </div>
+            <input
+              id="kw-input"
+              type="text"
+              value={keywords}
+              onChange={(e) => {
+                setKeywords(e.target.value);
+                setSaved(false);
+              }}
+              placeholder="לדוגמה: פיתוח תוכנה, אפיון מערכות, ייעוץ ארגוני, הדרכה"
+              style={{
+                width: '100%',
+                maxWidth: 520,
+                padding: '10px 14px',
+                borderRadius: 9,
+                border: '1px solid #e2e7ec',
+                background: '#f4f6f8',
+                color: DARK,
+                fontSize: 13.5,
+                fontFamily: 'inherit',
+              }}
+            />
+            <div style={{ fontSize: 12, color: keywords.trim() ? '#1b6b45' : '#a8500f', marginTop: 8, fontWeight: 600 }}>
+              {keywords.trim()
+                ? `✓ ${keywords.split(',').map((k) => k.trim()).filter(Boolean).length} מילות מפתח — ההתאמה תדייק לפיהן`
+                : '⚠ בלי מילות מפתח הדירוג מתבסס על הקטגוריות בלבד, ואף מכרז לא יגיע להתאמה גבוהה'}
+            </div>
+          </div>
+
           <div
             style={{
               marginTop: 16,

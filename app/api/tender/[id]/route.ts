@@ -92,7 +92,12 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
   if (id.startsWith('muni-')) {
     const fromDb = await detailFromDb(id).catch(() => null);
     if (fromDb) return NextResponse.json(fromDb, { status: 200 });
-    return NextResponse.json({ id, url: '', error: 'not found' }, { status: 200 });
+    return NextResponse.json({ id, url: '', error: 'not_found' }, { status: 404 });
+  }
+
+  // QA #06: מזהה לא חוקי (אותיות, אורך לא סביר) — 404 מיד, בלי לפנות למקור.
+  if (!/^[\w.-]{3,40}$/.test(id)) {
+    return NextResponse.json({ id, url: '', error: 'not_found' }, { status: 404 });
   }
 
   const sourceUrl = `https://mr.gov.il/ilgstorefront/he/p/${id}`;
@@ -121,6 +126,16 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
     const titleMatch = html.match(/<title>([^<]*)<\/title>/i);
     let title = titleMatch ? clean(titleMatch[1]) : '';
     title = title.replace(/^\d+\s*\|\s*/, '');
+
+    // QA #06: מזהה שלא קיים במקור מחזיר 200 עם דף "תוצאות חיפוש" — קודם הוא
+    // הוצג כמכרז אמיתי ("תוצאות חיפוש | ILG Site", ציון 75). עכשיו: 404.
+    const looksLikeSearchPage = /תוצאות חיפוש|ILG Site|Search Results/i.test(title) || !title;
+    if (looksLikeSearchPage) {
+      const fromDb = await detailFromDb(id).catch(() => null);
+      if (fromDb) return NextResponse.json(fromDb, { status: 200 });
+      return NextResponse.json({ id, url: sourceUrl, error: 'not_found' }, { status: 404 });
+    }
+    title = title.replace(/\s*\|\s*ILG Site\s*$/i, '');
 
     // TICKET-11: המקור מחזיר DD/MM/YYYY — ממירים ל-ISO חד-משמעי,
     // כך שהלקוח לעולם לא מפרש יום/חודש הפוך.
@@ -166,7 +181,8 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
     if (tIdx !== -1) {
       for (let j = tIdx + 1; j < frags.length; j++) {
         if (frags[j].includes('אולי יעניין') || frags[j] === 'אודות') break;
-        if (frags[j].length < 40) data.topics.push(frags[j]);
+        // QA #17: התווית 'נושאים' עצמה ותוויות ניווט אינן נושא
+        if (frags[j].length < 40 && !/^(נושאים|נושא|תחום|תחומים)\s*:?$/.test(frags[j])) data.topics.push(frags[j]);
         if (data.topics.length >= 6) break;
       }
     }

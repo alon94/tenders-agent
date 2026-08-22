@@ -120,9 +120,9 @@ export default function SigninPage() {
           >
             ש
           </div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: DARK, textAlign: 'center' }}>
+          <h1 style={{ fontSize: 20, fontWeight: 800, color: DARK, textAlign: 'center', margin: 0 }}>
             התחברות לשווה מכרזים
-          </div>
+          </h1>
           <div style={{ fontSize: 13, color: MUTED, marginTop: 6, textAlign: 'center' }}>
             מועדון עסקים 360 · גילוי מכרזים מותאם אישית
           </div>
@@ -159,10 +159,13 @@ export default function SigninPage() {
 
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: 14 }}>
-            <label style={{ display: 'block', fontSize: 12.5, fontWeight: 600, color: '#5b6b7a', marginBottom: 6 }}>
+            <label htmlFor="signin-email" style={{ display: 'block', fontSize: 12.5, fontWeight: 600, color: '#5b6b7a', marginBottom: 6 }}>
               אימייל
             </label>
             <input
+              id="signin-email"
+              name="email"
+              autoComplete="email"
               type="email"
               required
               value={email}
@@ -174,7 +177,7 @@ export default function SigninPage() {
 
           <div style={{ marginBottom: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-              <label style={{ fontSize: 12.5, fontWeight: 600, color: '#5b6b7a' }}>סיסמה</label>
+              <label htmlFor="signin-password" style={{ fontSize: 12.5, fontWeight: 600, color: '#5b6b7a' }}>סיסמה</label>
               <button
                 type="button"
                 onClick={handleForgotPassword}
@@ -193,6 +196,9 @@ export default function SigninPage() {
               </button>
             </div>
             <input
+              id="signin-password"
+              name="password"
+              autoComplete="current-password"
               type={showPw ? "text" : "password"}
               required
               value={password}

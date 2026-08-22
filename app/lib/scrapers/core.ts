@@ -85,6 +85,11 @@ export function heDateToIso(raw: string | null | undefined): string | null {
   const mo = Number(m[2]);
   const d = Number(m[1]);
   if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+  // QA/H-5: שפיות על השנה. בלי זה נכנסו למאגר מועדי הגשה בשנת 9999,
+  // 9019 ו-2206 (שגיאות הקלדה במקור), שהוצגו כ"נותרו 2,911,852 ימים".
+  const yr = Number(m[3]);
+  const thisYear = new Date().getFullYear();
+  if (yr < thisYear - 20 || yr > thisYear + 10) return null;
   return `${m[3]}-${mm}-${dd}`;
 }
 

@@ -3,8 +3,16 @@
 //  הרצה: npm test   (npx tsx scripts/regression.test.ts)
 // ============================================================
 import { parseHeDate, fmtDate, daysLeft } from "../app/lib/tenderMeta";
+import { scoreTender, genericScore, displayScore } from "../app/lib/scoring";
+import { applyBaseFilters, queryTenders, joinPublisher, sortTenders } from "../app/lib/tenderQuery";
+import { isExempt } from "../app/lib/tenderMeta";
 import { harvestTenderLinks, rowsToRecords, heDateToIso as scraperHeDateToIso } from "../app/lib/scrapers/core";
 import { DOMAINS, classifyTender, matchDomain, matchPublisher, matchQuery, domainCounts, UNCATEGORIZED_ID } from "../app/lib/domains";
+import nodeCrypto from "crypto";
+// ops קורא את משתני הסביבה בזמן ריצה (לא בזמן טעינת המודול), ולכן
+// ייבוא רגיל בראש הקובץ תקין — הסביבה נקבעת לפני הקריאה לפונקציות.
+import { issueAdminToken, verifyAdminToken } from "../app/lib/ops";
+import { sanitizeRows } from "../app/lib/corpusHygiene";
 
 let failures = 0;
 function check(name: string, cond: boolean, detail = "") {
@@ -58,7 +66,7 @@ console.log("\nTICKET-12 — חיפוש מילת תחום מחזיר תוצאו�
     { id: "6", title: "אבטחה ושמירה במוסדות חינוך", publisher: "עיריית חיפה" },
     { id: "7", title: "קמפיין פרסום דיגיטלי", publisher: "משרד התיירות" },
     { id: "8", title: "עבודות בינוי ותשתיות ביוב", publisher: "תאגיד מים" },
-    { id: "9", title: "אספקת ריהוט משרדי", publisher: "מינהל הרכש" }, // לא מסווג
+    { id: "9", title: "משהו כללי לגמרי", publisher: "מינהל הרכש" }, // לא מסווג
   ];
   for (const d of DOMAINS) {
     const byFilter = fixtures.filter((t) => matchDomain(t, d.id)).map((t) => t.id).sort().join(",");
@@ -68,7 +76,7 @@ console.log("\nTICKET-12 — חיפוש מילת תחום מחזיר תוצאו�
     const byKw = fixtures.filter((t) => matchQuery(t, kw)).map((t) => t.id).sort().join(",");
     check(`תחום "${d.label}": חיפוש "${kw}" ⊇ סינון`, byFilter.split(",").every((x) => !x || byKw.includes(x)), `filter=[${byFilter}] kw=[${byKw}]`);
   }
-  check('חיפוש חופשי רגיל עדיין עובד ("ריהוט")', fixtures.filter((t) => matchQuery(t, "ריהוט")).length === 1);
+  check('חיפוש חופשי רגיל עדיין עובד ("כללי לגמרי")', fixtures.filter((t) => matchQuery(t, "כללי לגמרי")).length === 1);
 }
 
 // ---------- TICKET-13: תחומים דינמיים + לא מסווג ----------
@@ -78,7 +86,7 @@ console.log("\nTICKET-13 — תחומים נגזרים מהדאטה, bucket לא
     { title: "פיתוח תוכנה", publisher: "" },
     { title: "פיתוח אפליקציה", publisher: "" },
     { title: "שירותי ניקיון", publisher: "" },
-    { title: "אספקת נייר צילום", publisher: "" }, // לא מסווג
+    { title: "משהו כללי לגמרי", publisher: "" }, // לא מסווג
   ];
   const { domains, uncategorized } = domainCounts(fixtures);
   check("תחום ללא מכרזים מוסתר", domains.every((d) => d.count > 0));
@@ -143,5 +151,390 @@ console.log("\nסקרייפרים — harvestTenderLinks על HTML לדוגמה"
   check("heDateToIso: 12/08/2026 → אוגוסט", scraperHeDateToIso("12/08/2026") === "2026-08-12");
 }
 
-console.log(failures === 0 ? "\n✅ כל הבדיקות עברו" : `\n❌ ${failures} בדיקות נכשלו`);
-process.exit(failures === 0 ? 0 : 1);
+// ---------- QA/B-3 + B-4: טוקן האדמין ----------
+// בדיקות שמגנות על תיקוני סבב ה-QA. סביבה מקומית בלבד, בלי גישה לרשת.
+console.log("\nQA/B-3 + B-4 — חתימה ואימות של טוקן האדמין");
+{
+  process.env.ADMIN_TOKEN_SECRET = "test-signing-secret";
+  process.env.ADMIN_PASSWORD = "correct-horse";
+  const SEED = "alonkatabi17@gmail.com";
+  const PREFIX = "pwadm.";
+
+  // require אחרי הגדרת הסביבה — המפתח נקרא בזמן ריצה.
+  const ops = { issueAdminToken, verifyAdminToken };
+  const sign = (b64: string) =>
+    nodeCrypto.createHmac("sha256", process.env.ADMIN_TOKEN_SECRET!).update(b64).digest("base64url");
+  const mk = (payload: string) => {
+    const b64 = Buffer.from(payload).toString("base64url");
+    return `${PREFIX}${b64}.${sign(b64)}`;
+  };
+
+  // בקרה חיובית: מוודאת ש-mk() חותם במפתח שהמימוש באמת קורא. בלעדיה,
+  // בדיקות הזהות/התפקיד למטה היו עוברות מהסיבה הלא-נכונה (דחייה על
+  // חתימה) גם מול קוד פגיע, ולא היו מוכיחות דבר.
+  check("בקרה חיובית: mk() מייצר חתימה שהמימוש מקבל",
+    ops.verifyAdminToken(mk(`${SEED}|super|${Date.now() + 60000}`))?.role === "super");
+
+  const good = ops.issueAdminToken("correct-horse");
+  check("סיסמה נכונה מנפיקה טוקן", typeof good === "string" && good!.startsWith(PREFIX));
+  check("סיסמה שגויה לא מנפיקה טוקן", ops.issueAdminToken("wrong") === null);
+  check("סיסמה ריקה לא מנפיקה טוקן", ops.issueAdminToken("") === null);
+  check("סיסמה באורך שונה לא מפילה את safeEqual", ops.issueAdminToken("x") === null);
+
+  const id = ops.verifyAdminToken(good!);
+  check("טוקן תקין מאומת ומחזיר super", id?.role === "super" && id?.email === SEED);
+
+  // B-3: מטען מזויף בלי חתימה תקפה
+  const forged = Buffer.from(`attacker@evil.com|super|${Date.now() + 60000}`).toString("base64url");
+  check("מטען מזויף בלי חתימה תקפה נדחה", ops.verifyAdminToken(`${PREFIX}${forged}.deadbeef`) === null);
+
+  // B-3: חתימה תקפה אך זהות אחרת — הזהות מאומתת, לא רק החתימה
+  check("חתימה תקפה + מייל זר → נדחה",
+    ops.verifyAdminToken(mk(`someone@else.com|super|${Date.now() + 60000}`)) === null);
+
+  // B-3: תפקיד מחוץ לרשימת ההיתר
+  check("תפקיד לא מוכר (root) → נדחה",
+    ops.verifyAdminToken(mk(`${SEED}|root|${Date.now() + 60000}`)) === null);
+
+  // תוקף
+  check("טוקן שפג תוקפו נדחה", ops.verifyAdminToken(mk(`${SEED}|super|${Date.now() - 1000}`)) === null);
+  check("תוקף לא מספרי נדחה", ops.verifyAdminToken(mk(`${SEED}|super|not-a-number`)) === null);
+
+  // B-4: תוקף 12 שעות ולא שבוע
+  const expMs = Number(
+    Buffer.from(good!.slice(PREFIX.length).split(".")[0], "base64url").toString().split("|")[2]
+  ) - Date.now();
+  check("תוקף הטוקן ≤ 12 שעות", expMs > 0 && expMs <= 12 * 3600 * 1000 + 5000,
+    `${(expMs / 3600000).toFixed(1)}h`);
+
+  check("טוקן בלי הקידומת נדחה", ops.verifyAdminToken("Bearer abc") === null);
+  check("מחרוזת ריקה נדחית", ops.verifyAdminToken("") === null);
+}
+
+// ---------- QA/H-1: הסינון בצד שרת זהה לסינון שרץ בדפדפן ----------
+// הסיכון היחיד בהעברת הסינון לשרת הוא סטייה התנהגותית. הבדיקה הזו
+// מריצה את הלוגיקה *המקורית* מ-dashboard/page.tsx מול המודול המשותף,
+// על 240 צירופי מסננים, ומוודאת שהתוצאה זהה לחלוטין.
+console.log("\nQA/H-1 — סינון בצד שרת ≡ הסינון המקורי בדפדפן");
+{
+  const now = Date.parse("2026-08-17T09:00:00Z");
+  const iso = (d: number) => new Date(now + d * 86400000).toISOString().slice(0, 10);
+  const fx: any[] = [
+    { id: "1", title: "פיתוח מערכת תוכנה", publisher: "משרד האוצר", type: "מכרז פומבי", publishDate: iso(-3), deadline: iso(5) },
+    { id: "2", title: "שירותי ניקיון", publisher: "עיריית חיפה", type: "מכרז", publishDate: iso(-40), deadline: iso(60) },
+    { id: "3", title: "פטור ממכרז — ספק יחיד", publisher: "משרד הבריאות", type: "פטור ממכרז", publishDate: iso(-10) },
+    { id: "4", title: "הסעות תלמידים", publisher: "מועצה אזורית", type: "מכרז", publishDate: iso(-500) },
+    { id: "5", title: "ייעוץ ארגוני", publisher: "רשות המסים", type: "מכרז", publishDate: iso(-1), deadline: iso(-2) },
+    { id: "6", title: "אספקת ריהוט", publisher: "מינהל הרכש", type: "מכרז", publishDate: iso(-6), deadline: iso(400) },
+    { id: "7", title: "קמפיין פרסום", publisher: "משרד התיירות", type: "מכרז", publishDate: iso(-2), deadline: iso(3), smallBiz: true, smallBizConfidence: "high" },
+    { id: "8", title: "בינוי ותשתיות", publisher: "תאגיד מים", type: "מכרז", publishDate: iso(-90), smallBiz: true, smallBizConfidence: "low" },
+  ];
+
+  // --- הלוגיקה המקורית, כפי שהייתה ב-dashboard/page.tsx ---
+  const dl = (d: string) => { const x = parseHeDate(d); return x === null ? null : Math.ceil((x.getTime() - now) / 86400000); };
+  const original = (all: any[], o: any) => {
+    let r = all;
+    if (o.exemptView) r = r.filter((t) => isExempt(t.type, t.title));
+    if (o.sbView) r = r.filter((t) => t.smallBiz && (t.smallBizConfidence === "high" || t.smallBizConfidence === "medium"));
+    if (o.biz) r = r.filter((t) => matchDomain(t, o.biz));
+    if (o.pub) r = r.filter((t) => matchPublisher(t, o.pub));
+    if (!o.showClosed) r = r.filter((t) => { const d = dl(t.deadline); return d === null || d >= 0; });
+    if (!o.showNoDate) r = r.filter((t) => !!t.deadline);
+    r = r.filter((t) => {
+      const d = dl(t.deadline);
+      if (d !== null && d < 0) return o.showClosed;
+      if (d === null) {
+        if (!o.showNoDate) return false;
+        const pd = parseHeDate(t.publishDate);
+        return pd === null || pd.getTime() > now - 365 * 86400000;
+      }
+      return d <= o.maxD;
+    });
+    if (o.sbOnly) r = r.filter((t) => t.smallBiz && (t.smallBizConfidence === "high" || t.smallBizConfidence === "medium"));
+    if (o.q && o.q.trim()) r = r.filter((t) => matchQuery(t, o.q));
+    return r;
+  };
+
+  let combos = 0, mismatches = 0;
+  // exemptView ו-sbView נגזרים שניהם מאותו פרמטר ?view= בדשבורד
+  // (page.tsx:65-66), ולכן הם מוציאים זה את זה. איטרציה על שלושת
+  // המצבים האפשריים בפועל, ולא על שני בוליאנים בלתי תלויים.
+  for (const view of [null, "exempt", "smallbiz"] as const)
+  for (const showClosed of [false, true])
+  for (const showNoDate of [false, true])
+  for (const sbOnly of [false, true])
+  for (const maxD of [7, 30, 365])
+  for (const q of ["", "תוכנה", "ניקיון"])
+  for (const biz of ["", "tech"]) {
+    combos++;
+    const o = { exemptView: view === "exempt", sbView: view === "smallbiz", showClosed, showNoDate, sbOnly, maxD, q, biz, pub: "" };
+    const a = original(fx, o).map((t) => t.id).join(",");
+    const b = applyBaseFilters(fx, {
+      view,
+      biz, pub: "", maxD, showClosed, showNoDate, sbOnly, q,
+    }, now).map((t) => t.id).join(",");
+    if (a !== b) { mismatches++; if (mismatches <= 2) console.error(`    צירוף חורג: ${JSON.stringify(o)} → [${a}] vs [${b}]`); }
+  }
+  check(`${combos} צירופי מסננים — השרת מחזיר בדיוק כמו הדפדפן`, mismatches === 0, `${mismatches} חריגות`);
+
+  // עימוד: העמודים לא חופפים ומכסים את הכל
+  const r1 = queryTenders(fx, { showClosed: true, maxD: 3650 }, null, 1, 3, now);
+  const r2 = queryTenders(fx, { showClosed: true, maxD: 3650 }, null, 2, 3, now);
+  const ids1 = r1.tenders.map((t) => t.id), ids2 = r2.tenders.map((t) => t.id);
+  check("עמוד 1 מחזיר בדיוק perPage", ids1.length === 3, String(ids1.length));
+  check("אין חפיפה בין עמודים", ids1.every((i) => !ids2.includes(i)));
+  check("total משקף את כל התוצאות ולא רק את העמוד", r1.total === applyBaseFilters(fx, { showClosed: true, maxD: 3650 }, now).length);
+
+  // מיון לפי ציון פועל רק כשיש פרופיל
+  const withProf = queryTenders(fx, { showClosed: true, maxD: 3650 }, { categories: ["tech"], region: "all", publisher_type: "all", keywords: "תוכנה" }, 1, 8, now);
+  check("עם פרופיל — המכרז התואם ביותר ראשון", withProf.tenders[0].id === "1", withProf.tenders[0].id);
+}
+
+// ---------- QA/H-5: שפיות על שנת התאריך ----------
+// לפני התיקון נכנסו למאגר מועדי הגשה בשנת 9999, 9019 ו-2206 (שגיאות
+// הקלדה במקור), שהוצגו למשתמש כ"נותרו 2,911,852 ימים".
+console.log("\nQA/H-5 — ולידציה על שנת התאריך");
+{
+  const y = new Date().getFullYear();
+  check("שנה סבירה מתקבלת", scraperHeDateToIso(`15/09/${y}`) === `${y}-09-15`);
+  check("שנה קרובה בעתיד מתקבלת", scraperHeDateToIso(`15/09/${y + 3}`) !== null);
+  check("שנת 9999 נדחית", scraperHeDateToIso("01/01/9999") === null);
+  check("שנת 9019 נדחית", scraperHeDateToIso("16/09/9019") === null);
+  check("שנת 2206 נדחית", scraperHeDateToIso("16/08/2206") === null);
+  check("שנה רחוקה מדי בעבר נדחית", scraperHeDateToIso(`01/01/${y - 25}`) === null);
+  check("חודש לא חוקי עדיין נדחה", scraperHeDateToIso("13/13/2026") === null);
+}
+
+// ---------- QA/M-20: מילות מפתח הן הגורם המכריע בדירוג ----------
+// עד לתיקון הזה, השדה keywords נקרא על ידי scoring.ts אך לא נאסף באף
+// מסך — ולכן היה ריק אצל כל המשתמשים. התוצאה: אף מכרז לא חצה את סף
+// "התאמה גבוהה" (80), כי קטגוריות לבדן לא מספיקות.
+console.log("\nQA/M-20 — מילות מפתח בפרופיל");
+{
+  const now = Date.now();
+  const iso = (d: number) => new Date(now + d * 86400000).toISOString().slice(0, 10);
+  const tender = {
+    title: "מכרז לאספקת שירותי פיתוח תוכנה ואפיון מערכות מידע",
+    publisher: "משרד האוצר",
+    publishDate: iso(-2),
+    deadline: iso(7),
+  };
+  const base = { categories: ["tech"], region: "national", publisher_type: "all" };
+
+  const without = scoreTender(tender, { ...base, keywords: "" } as never, now);
+  const with1 = scoreTender(tender, { ...base, keywords: "פיתוח תוכנה" } as never, now);
+  const withMany = scoreTender(tender, { ...base, keywords: "פיתוח תוכנה, אפיון, מערכות מידע" } as never, now);
+
+  check("בלי מילות מפתח — הרלוונטיות נמוכה", without.relevance < with1.relevance,
+    `${without.relevance} vs ${with1.relevance}`);
+  check("מילת מפתח אחת מעלה את הציון", with1.display > without.display,
+    `${without.display} → ${with1.display}`);
+  check("עוד מילות מפתח מעלות עוד", withMany.display >= with1.display,
+    `${with1.display} → ${withMany.display}`);
+  check("עם מילות מפתח מגיעים ל'התאמה גבוהה' (80+)", withMany.display >= 80,
+    `display=${withMany.display}`);
+  // QA #09: המילון הורחב (כותרת זו פוגעת בכמה מילות תחום) — הבדיקה נשארת על
+  // הפער: מילות מפתח מוסיפות מעל ומעבר לקטגוריות.
+  check("בלי מילות מפתח הציון נמוך מאשר איתן", without.display < withMany.display, `display=${without.display}`);
+}
+
+// ---------- QA/H-2 + B-1: בניית השאילתה ב-getTenders ----------
+// db.ts קורא את משתני הסביבה בזמן טעינת המודול, ולכן ייבוא דינמי אחרי
+// הגדרתם. global.fetch מוחלף כדי ללכוד את ה-URL בלי לפנות לרשת.
+async function dbQueryTests() {
+  console.log("\nQA/H-2 + B-1 — בניית השאילתה של getTenders");
+  process.env.SUPABASE_URL = "https://example.supabase.co";
+  process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-key";
+
+  const calls: string[] = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    calls.push(String(input));
+    return new Response("[]", { status: 200, headers: { "content-type": "application/json" } });
+  }) as typeof fetch;
+
+  try {
+    const { getTenders } = await import("../app/lib/db");
+
+    // H-2: שובר שוויון ייחודי במיון
+    await getTenders({ offset: 1000 });
+    const ordered = decodeURIComponent(calls[0]);
+    check("H-2: המיון כולל שובר שוויון id.asc", ordered.includes("id.asc"), ordered.slice(0, 160));
+    check("H-2: סדר המיון נשמר (publish_date → deadline → id)",
+      /order=publish_date\.desc\.nullslast,deadline\.desc\.nullslast,id\.asc/.test(ordered));
+
+    // B-1: שליפה לפי מזהים
+    calls.length = 0;
+    await getTenders({ ids: ["4000620563", "muni-77"], activeOnly: false });
+    const byIds = decodeURIComponent(calls[0]);
+    check("B-1: נבנה מסנן id=in.(...)", /id=in\.\("4000620563","muni-77"\)/.test(byIds), byIds.slice(0, 200));
+
+    // B-1: מזהים + activeOnly=false → בלי מסנן מועד הגשה
+    check("B-1: שליפה לפי מזהים לא מסננת מכרזים שמועדם חלף", !byIds.includes("deadline.gte"));
+
+    // B-1: escaping לפי כללי PostgREST — לוכסן אחורי, לא הכפלת מרכאה.
+    // הכפלה בסגנון SQL גררה 400 PGRST100 והפילה את כל בקשת המסומנים.
+    calls.length = 0;
+    await getTenders({ ids: ['a"b'] });
+    check("B-1: מרכאה במזהה מוברחת בלוכסן אחורי", decodeURIComponent(calls[0]).includes('"a\\"b"'),
+      decodeURIComponent(calls[0]).slice(0, 120));
+    calls.length = 0;
+    await getTenders({ ids: ['a\\b'] });
+    check("B-1: לוכסן אחורי במזהה מוכפל", decodeURIComponent(calls[0]).includes('"a\\\\b"'),
+      decodeURIComponent(calls[0]).slice(0, 120));
+    // פסיק ועברית בתוך מרכאות — תקינים ללא escaping נוסף
+    calls.length = 0;
+    await getTenders({ ids: ['מכרז, ניקיון-עיריית חיפה'] });
+    // URLSearchParams מקודד רווח כ-'+' (form-encoding), ו-PostgREST מפענח
+    // אותו חזרה לרווח — ולכן הפענוח בבדיקה חייב לעשות את אותו הדבר.
+    const urlDecode = (s: string) => decodeURIComponent(s.replace(/\+/g, " "));
+    check("B-1: פסיק ועברית בתוך מרכאות נשמרים",
+      urlDecode(calls[0]).includes('"מכרז, ניקיון-עיריית חיפה"'),
+      urlDecode(calls[0]).slice(0, 140));
+
+    // רגרסיה: בלי ids אין מסנן id
+    calls.length = 0;
+    await getTenders({ activeOnly: true });
+    const plain = decodeURIComponent(calls[0]);
+    check("ללא ids — אין מסנן id בשאילתה", !/[?&]id=in\./.test(plain));
+    check("activeOnly עדיין מסנן לפי מועד הגשה", plain.includes("deadline.gte"));
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+}
+
+// ---------- QA: מטפלי המסלולים נכשלים-סגור ----------
+// מפעיל את ה-handlers ישירות עם Request אמיתי (בלי שרת מאזין), בשני
+// תרחישי סביבה. שתי הרגרסיות שנתפסו כאן בפועל:
+//   • domains-debug אישר בקשה ללא שום אישור כש-CRON_SECRET לא הוגדר
+//     (undefined !== undefined הוא false).
+//   • /api/admin/login זרק על סיסמה *נכונה* כשאין מפתח חתימה, בעוד
+//     סיסמה שגויה החזירה 401 — אורקל שמאפשר לפצח את הסיסמה לפי הסטטוס.
+async function routeAuthTests() {
+  console.log("\nQA — מטפלי מסלולים נכשלים-סגור");
+  const status = async (p: Promise<Response>) => {
+    try { return (await p).status; } catch { return 500; }
+  };
+
+  for (const [label, env] of [
+    ["בלי CRON_SECRET ובלי ADMIN_TOKEN_SECRET", {}],
+    ["עם CRON_SECRET", { CRON_SECRET: "s3cr3t" }],
+  ] as [string, Record<string, string>][]) {
+    for (const k of ["CRON_SECRET", "ADMIN_TOKEN_SECRET"]) delete process.env[k];
+    Object.assign(process.env, env);
+    process.env.ADMIN_PASSWORD = "correct-horse";
+
+    const bust = "?v=" + label.length + Object.keys(env).length;
+    const dd = await import("../app/api/domains-debug/route" + bust);
+    const login = await import("../app/api/admin/login/route" + bust);
+    const mkLogin = (pw: string) => new Request("http://x/api/admin/login", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ password: pw }),
+    });
+
+    check(`[${label}] domains-debug ללא אישור → 401`,
+      (await status(dd.GET(new Request("http://x/api/domains-debug")))) === 401);
+    check(`[${label}] domains-debug עם "Bearer undefined" → 401`,
+      (await status(dd.GET(new Request("http://x/api/domains-debug", {
+        headers: { authorization: "Bearer undefined" } })))) === 401);
+
+    const okPw = await status(login.POST(mkLogin("correct-horse")));
+    const badPw = await status(login.POST(mkLogin("nope")));
+    if (Object.keys(env).length === 0) {
+      check(`[${label}] סיסמה נכונה ושגויה מחזירות אותו סטטוס (בלי אורקל)`,
+        okPw === badPw && okPw === 501, `ok=${okPw} bad=${badPw}`);
+    } else {
+      check(`[${label}] סיסמה נכונה → 200, שגויה → 401`,
+        okPw === 200 && badPw === 401, `ok=${okPw} bad=${badPw}`);
+    }
+  }
+}
+
+dbQueryTests()
+  .then(routeAuthTests)
+  .catch((e) => { failures++; console.error("  ✗ בדיקה אסינכרונית זרקה שגיאה — " + e); })
+  .then(() => {
+    console.log(failures === 0 ? "\n✅ כל הבדיקות עברו" : `\n❌ ${failures} בדיקות נכשלו`);
+    process.exit(failures === 0 ? 0 : 1);
+  });
+
+// ---------- QA 2026-08 — תיקוני דוח ה-QA ----------
+console.log("\nQA — סינון גוף מפרסם (#01)");
+{
+  const hosp = { id: "1", title: "ביצוע עבודות אחזקה", publisher: "משרד הבריאות - המרכז הרפואי ע\"ש ברזילי, אשקלון" };
+  const muni = { id: "muni-5", title: "רכז דיגיטל", publisher: "מעלה אדומים" };
+  const uni = { id: "2", title: "שירותי ניקיון", publisher: "אוניברסיטת תל אביב" };
+  const rail = { id: "3", title: "מכרז", publisher: "רכבת ישראל בע\"מ" };
+  check("בית חולים → מערכת הבריאות", matchPublisher(hosp, "health"));
+  check("רשות מקומית חשופה (מעלה אדומים) → רשויות מקומיות", matchPublisher(muni, "local"));
+  check("אוניברסיטת (סמיכות) → מוסדות חינוך", matchPublisher(uni, "edu"));
+  check("רכבת → חברות ממשלתיות", matchPublisher(rail, "infra"));
+}
+
+console.log("\nQA — ציון אחיד ודטרמיניסטי (#04)");
+{
+  const t = { title: "EASYMAILOOK תוסף לאימייל", publisher: "משרד הבריאות", publishDate: "2026-08-06", deadline: "2026-08-23" };
+  const now = new Date("2026-08-21").getTime();
+  check("אותו מכרז → אותו ציון בשתי קריאות", genericScore(t, now) === genericScore(t, now));
+  check("displayScore ללא פרופיל ≡ genericScore", displayScore(t, null, now) === genericScore(t, now));
+  check("displayScore עם פרופיל ריק ≡ genericScore", displayScore(t, { categories: [] }, now) === genericScore(t, now));
+  check("הציון אינו תלוי באורך הכותרת", genericScore({ ...t, title: t.title + " " }, now) === genericScore(t, now));
+}
+
+console.log("\nQA — שם מפרסם ללא כפילות (#17) ומיון (#16)");
+{
+  check("publisher כלול ב-unit → פעם אחת", joinPublisher("משרד הבריאות", "משרד הבריאות - איכילוב") === "משרד הבריאות - איכילוב");
+  check("unit ריק → publisher בלבד", joinPublisher("משרד החינוך", null) === "משרד החינוך");
+  check("שניים שונים → מחוברים", joinPublisher("א", "ב") === "א - ב");
+  const rows = [
+    { id: "a", title: "x", publisher: "", deadline: "2026-09-30", publishDate: "2026-08-01" },
+    { id: "b", title: "y", publisher: "", deadline: "2026-08-25", publishDate: "2026-08-20" },
+  ];
+  const now = new Date("2026-08-21").getTime();
+  check("מיון לפי מועד הגשה — הקרוב קודם", sortTenders(rows, null, now, "deadline")[0].id === "b");
+  check("מיון לפי פרסום — החדש קודם", sortTenders(rows, null, now, "published")[0].id === "b");
+}
+{
+  console.log("\nQA — רשות מקומית: שם עיר בתוך שם בית חולים אינו רשות");
+  check("ברזילי, אשקלון → לא רשות מקומית", !matchPublisher({ id: "1", title: "x", publisher: "משרד הבריאות - המרכז הרפואי ע\"ש ברזילי, אשקלון" }, "local"));
+  check("עיריית אשקלון → רשות מקומית", matchPublisher({ id: "2", title: "x", publisher: "עיריית אשקלון" }, "local"));
+  check("muni-* → רשות מקומית", matchPublisher({ id: "muni-9", title: "x", publisher: "כלשהו" }, "local"));
+}
+
+console.log("\nQA #09/#20 — סיווג מורחב והיגיינת רשומות");
+{
+  check("הקצאת רמ\"י 'מגורים שיוך דירות' → נדל\"ן", classifyTender({ title: "מגורים שיוך דירות", publisher: "רשות מקרקעי ישראל" }).includes("realestate"));
+  check("'נחלות במשבצת' → נדל\"ן", classifyTender({ title: "נחלות במשבצת" }).includes("realestate"));
+  check("מכשור באנגלית מבית חולים → בריאות (נסיגה לפי מפרסם)", classifyTender({ title: "SILICONE EMBOLECTOMY CATHETER", publisher: "משרד הבריאות - המרכז הרפואי שיבא" }).includes("health"));
+  check("'פטור ממכרז פייזר' מבית חולים → בריאות", classifyTender({ title: "פטור ממכרז - פייזר", publisher: "בית החולים איכילוב" }).includes("health"));
+  check("כותרת כללית ממשרד ממשלתי → עדיין לא מסווג (אין נסיגה גורפת)", classifyTender({ title: "משהו כללי לגמרי", publisher: "משרד האוצר" }).length === 0);
+  check("'מתקנים פוטו וולטאיים' → סביבה ואנרגיה", classifyTender({ title: "מתקנים פוטו וולטאיים" }).includes("environment"));
+  check("'שירותים וטרינריים לכלבים' → חקלאות ווטרינריה", classifyTender({ title: "אספקת שירותים וטרינריים לכלבים" }).includes("agriculture"));
+  const rows = sanitizeRows([
+    { id: "a", title: "בדיקה" } as never,
+    { id: "b", title: "קובץ המכרז" } as never,
+    { id: "c", title: "640/2026", publisher: "רשות מקרקעי ישראל", publish_date: "1016-08-17" } as never,
+    { id: "d", title: "מכרז אמיתי", publish_date: "2026-08-01" } as never,
+  ]);
+  check("כותרות בדיקה/placeholder מסוננות", rows.length === 2 && rows.every((r) => r.id !== "a" && r.id !== "b"));
+  check("כותרת רמ\"י מספרית מקבלת תווית", !!rows.find((r) => r.id === "c")?.title.startsWith("מכרז מקרקעין 640/2026"));
+  check("שנת פרסום לא סבירה → null", rows.find((r) => r.id === "c")?.publish_date === null);
+  check("רשומה תקינה לא נפגעת", rows.find((r) => r.id === "d")?.publish_date === "2026-08-01");
+}
+
+console.log("\nתצוגת 'כוונה להתקשרות' — נפרדת מהגילוי הראשי");
+{
+  const now = Date.parse("2026-08-22T09:00:00Z");
+  const fx: any[] = [
+    { id: "1", title: "מגורים שיוך דירות", publisher: "רשות מקרקעי ישראל", type: "פרסום כוונה להתקשרות", publishDate: "2026-08-01" },
+    { id: "2", title: "פיתוח מערכת", publisher: "משרד האוצר", type: "מכרז פומבי", publishDate: "2026-08-01", deadline: "2026-09-30" },
+    { id: "3", title: "ספק יחיד — תרופה", publisher: "משרד הבריאות", type: "התקשרות בפטור במכרז", publishDate: "2026-08-01" },
+  ];
+  const main = queryTenders(fx, { showClosed: true }, null, 1, 25, now);
+  const intent = queryTenders(fx, { view: "intent", showClosed: true }, null, 1, 25, now);
+  const exempt = queryTenders(fx, { view: "exempt", showClosed: true }, null, 1, 25, now);
+  check("הגילוי הראשי לא כולל כוונה להתקשרות", main.total === 2 && main.tenders.every((t) => t.id !== "1"));
+  check("תצוגת כוונה מציגה רק אותן", intent.total === 1 && intent.tenders[0].id === "1");
+  check("פטורים לא כוללים כוונה", exempt.total === 1 && exempt.tenders[0].id === "3");
+  check("counts: active=2, intent=1, exempt=1", main.counts.active === 2 && main.counts.intent === 1 && main.counts.exempt === 1, JSON.stringify(main.counts));
+}

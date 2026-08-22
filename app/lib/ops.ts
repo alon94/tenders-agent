@@ -91,6 +91,62 @@ export async function ensureOpsTables(): Promise<void> {
 }
 
 // --- רישום תפעולי (best-effort) ---
+/**
+ * QA/H-6: פותח שורת ריצה מיד בכניסה ומחזיר את ה-id שלה.
+ * recordSyncRun נקרא רק בסוף, אחרי כל העבודה — וב-timeout של הפלטפורמה
+ * ה-isolate נהרג קודם, כך שריצה שנפלה בטיים-אאוט לא הותירה שום עדות.
+ * השורה נפתחת עם error='incomplete', ולכן היא *לא* נספרת כריצה מוצלחת
+ * ב-getLastSyncAt (שמסנן error=is.null) — ורק אם הריצה תסתיים כרגיל
+ * finishSyncRun ינקה את השדה.
+ */
+export async function startSyncRun(run: {
+  type: 'sync' | 'smallbiz' | 'sources';
+  started_at: string;
+  trigger: string;
+}): Promise<number | null> {
+  try {
+    await ensureOpsTables();
+    const res = await fetch(restUrl('/sync_runs'), {
+      method: 'POST',
+      headers: svcHeaders({ Prefer: 'return=representation' }),
+      body: JSON.stringify({
+        type: run.type, started_at: run.started_at, trigger: run.trigger,
+        duration_ms: null, counts_json: { phase: 'started' },
+        error: 'incomplete: run did not finish',
+      }),
+    });
+    if (!res.ok) return null;
+    const rows = await res.json().catch(() => []);
+    return rows?.[0]?.id ?? null;
+  } catch (e) {
+    console.error('ops.startSyncRun failed:', e);
+    return null;
+  }
+}
+
+/** משלים שורה שנפתחה ב-startSyncRun. נופל-לאחור ל-recordSyncRun אם אין id. */
+export async function finishSyncRun(id: number | null, run: {
+  type: 'sync' | 'smallbiz' | 'sources';
+  started_at: string;
+  duration_ms: number;
+  trigger: string;
+  counts: Record<string, unknown>;
+  error?: string | null;
+}): Promise<void> {
+  if (id == null) return recordSyncRun(run);
+  try {
+    await fetch(restUrl(`/sync_runs?id=eq.${id}`), {
+      method: 'PATCH',
+      headers: svcHeaders({ Prefer: 'return=minimal' }),
+      body: JSON.stringify({
+        duration_ms: run.duration_ms, counts_json: run.counts, error: run.error || null,
+      }),
+    });
+  } catch (e) {
+    console.error('ops.finishSyncRun failed:', e);
+  }
+}
+
 export async function recordSyncRun(run: {
   type: 'sync' | 'smallbiz' | 'sources';
   started_at: string;
@@ -149,6 +205,23 @@ export function detectTrigger(req: Request): string {
 // --- אימות אדמין ---
 export interface AdminIdentity { email: string; role: string; }
 
+/**
+ * QA/B-3: אימות למסלולי תפעול/דיבוג באמצעות CRON_SECRET.
+ * הסוד מתקבל מכותרת בלבד — לא מ-?secret= בכתובת, שנשמרת בלוגי Vercel,
+ * בהיסטוריית הדפדפן ובכותרות Referer. ההשוואה בזמן קבוע, והפונקציה
+ * נכשלת-סגור כאשר CRON_SECRET אינו מוגדר.
+ */
+export async function isOpsAuthorized(req: Request): Promise<boolean> {
+  const expected = process.env.CRON_SECRET;
+  if (!expected) return false;
+  const bearer = (req.headers.get('authorization') || '').replace(/^Bearer /, '');
+  const header = req.headers.get('x-cron-secret') || '';
+  for (const candidate of [bearer, header]) {
+    if (candidate && safeEqual(candidate, expected)) return true;
+  }
+  return false;
+}
+
 export async function requireAdmin(req: Request): Promise<AdminIdentity | null> {
   const auth = req.headers.get('authorization') || '';
   const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
@@ -171,15 +244,29 @@ export async function requireAdmin(req: Request): Promise<AdminIdentity | null> 
   const email = user?.email;
   if (!email) return null;
 
-  // מייל → הרשאה בטבלת admins (התאמה ללא תלות ברישיות)
+  // מייל → הרשאה בטבלת admins.
+  // QA/B-2: בעבר השורה הזו השתמשה ב-`ilike` והזריקה את המייל מהטוקן
+  // כ*תבנית*. התווים `_`, `%` ו-`*` שורדים את encodeURIComponent
+  // ומתפקדים כתווים כלליים, כך שכתובת כמו alonkatabi1_@gmail.com הייתה
+  // תואמת את שורת הסופר-אדמין.
+  //
+  // הניסיון הראשון לתקן זאת (שתי השוואות `eq`) איבד את חוסר-התלות
+  // ברישיות: כשהמייל בטוקן כבר קטן, ההשוואה השנייה נדלגת, ואדמין
+  // ששורתו נשמרה עם אות גדולה היה ננעל בחוץ ללא דרך שחזור.
+  // הפתרון: להביא את הטבלה כולה (טבלה זעירה) ולהשוות בזיכרון —
+  // התאמה מדויקת, חסרת-רישיות, בלי שום סמנטיקת תבנית.
   await ensureOpsTables();
-  const res = await fetch(restUrl(`/admins?email=ilike.${encodeURIComponent(email)}&select=email,role`), {
+  const normalized = email.toLowerCase().trim();
+  const res = await fetch(restUrl('/admins?select=email,role'), {
     headers: svcHeaders(),
     cache: 'no-store',
   });
   if (!res.ok) return null;
-  const rows = await res.json().catch(() => []);
-  if (rows?.[0]) return { email: rows[0].email, role: rows[0].role };
+  const rows = (await res.json().catch(() => [])) as { email?: string; role?: string }[];
+  const hit = Array.isArray(rows)
+    ? rows.find((r) => String(r?.email ?? '').toLowerCase().trim() === normalized)
+    : undefined;
+  if (hit?.email && hit?.role) return { email: hit.email, role: hit.role };
 
   // תיקון עצמי: אם זה ה-super admin המוגדר אך השורה חסרה (המיגרציה
   // רצה לפני שהערך נקבע, או נמחקה) — משלימים אותה כאן.
@@ -244,17 +331,46 @@ export async function recentEmails(limit = 30) {
 // ============================================================
 
 const ADMIN_TOKEN_PREFIX = 'pwadm.';
-const ADMIN_TOKEN_TTL_MS = 7 * 24 * 3600 * 1000; // שבוע — כניסה יומית נוחה
+// QA/B-4: היה שבוע, בעוד שההערה למעלה הבטיחה 12 שעות. הטוקן חסר-מצב
+// ולא ניתן לביטול, ולכן ככל שהתוקף קצר יותר — כך קטן חלון הנזק.
+const ADMIN_TOKEN_TTL_MS = 12 * 3600 * 1000;
+// QA/B-3: רק תפקידים מוכרים מתקבלים מתוך מטען הטוקן.
+const ADMIN_ROLES = new Set(['viewer', 'admin', 'super']);
+
+/**
+ * QA/B-3: מפתח החתימה של טוקני האדמין.
+ * קודם: נפל למחרוזת הקבועה 'fallback-key' — טוקן שניתן לזיוף על ידי כל מי
+ * שקרא את הקוד. עכשיו: זורק שגיאה אם אין סוד אמיתי.
+ * ADMIN_TOKEN_SECRET מועדף כדי להפריד בין חתימת האדמין לאימות ה-cron;
+ * CRON_SECRET נשמר כנפילה-לאחור כדי לא לשבור פריסות קיימות.
+ */
+function adminSigningKey(): string {
+  const key = process.env.ADMIN_TOKEN_SECRET || process.env.CRON_SECRET;
+  if (!key) throw new Error('Missing ADMIN_TOKEN_SECRET (or CRON_SECRET) for admin token signing');
+  return key;
+}
 
 function hmac(data: string): string {
-  const key = process.env.CRON_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || 'fallback-key';
-  return crypto.createHmac('sha256', key).update(data).digest('base64url');
+  return crypto.createHmac('sha256', adminSigningKey()).update(data).digest('base64url');
+}
+
+/** השוואה בזמן קבוע — מונעת דליפת מידע דרך מדידת זמן. */
+function safeEqual(a: string, b: string): boolean {
+  const ba = Buffer.from(a, 'utf8');
+  const bb = Buffer.from(b, 'utf8');
+  if (ba.length !== bb.length) {
+    // עדיין מבצעים השוואה כדי לשמור על זמן אחיד, ואז מחזירים false.
+    crypto.timingSafeEqual(ba, ba);
+    return false;
+  }
+  return crypto.timingSafeEqual(ba, bb);
 }
 
 /** מאמת סיסמה ומנפיק טוקן אדמין חתום. מחזיר null אם הסיסמה שגויה. */
 export function issueAdminToken(password: string): string | null {
   const expected = process.env.ADMIN_PASSWORD;
-  if (!expected || password !== expected) return null;
+  // QA/B-4: השוואה בזמן קבוע במקום !== .
+  if (!expected || !safeEqual(password, expected)) return null;
   const payload = `${SEED_SUPER_ADMIN}|super|${Date.now() + ADMIN_TOKEN_TTL_MS}`;
   const b64 = Buffer.from(payload).toString('base64url');
   return `${ADMIN_TOKEN_PREFIX}${b64}.${hmac(b64)}`;
@@ -268,10 +384,22 @@ export function verifyAdminToken(token: string): AdminIdentity | null {
   if (dot < 0) return null;
   const b64 = rest.slice(0, dot);
   const sig = rest.slice(dot + 1);
-  if (hmac(b64) !== sig) return null; // חתימה לא תקינה
+  // QA/B-3/B-4: השוואת חתימה בזמן קבוע. adminSigningKey זורק כשאין סוד,
+  // ולכן עוטפים — טוקן פשוט נדחה במקום להפיל את הבקשה ב-500.
+  try {
+    if (!safeEqual(hmac(b64), sig)) return null; // חתימה לא תקינה
+  } catch {
+    return null;
+  }
   try {
     const [email, role, expStr] = Buffer.from(b64, 'base64url').toString().split('|');
-    if (Number(expStr) < Date.now()) return null; // פג תוקף
+    const exp = Number(expStr);
+    if (!Number.isFinite(exp) || exp < Date.now()) return null; // פג תוקף
+    // QA/B-3: קודם הוחזרו email ו-role כפי שהיו כתובים במטען, בלי בדיקה.
+    // עכשיו התפקיד חייב להיות מוכר, והמייל חייב להיות הסופר-אדמין המוגדר —
+    // שהוא הזהות היחידה ש-issueAdminToken מנפיק בפועל.
+    if (!email || !ADMIN_ROLES.has(role)) return null;
+    if (email.toLowerCase() !== SEED_SUPER_ADMIN.toLowerCase()) return null;
     return { email, role };
   } catch {
     return null;
@@ -426,7 +554,7 @@ export interface MailRecipient {
 export async function listMailRecipients(): Promise<MailRecipient[]> {
   const users = await listRegisteredUsers();
   if (!users.length) return [];
-  const res = await fetch(restUrl('/business_profiles?select=user_id,categories,category_other,region,publisher_type'), { headers: svcHeaders(), cache: 'no-store' });
+  const res = await fetch(restUrl('/business_profiles?select=user_id,categories,category_other,region,publisher_type,keywords'), { headers: svcHeaders(), cache: 'no-store' });
   if (!res.ok) { console.error('ops.listMailRecipients profiles failed:', res.status); return []; }
   const rows = (await res.json().catch(() => [])) as Record<string, unknown>[];
   const byUser = new Map<string, Record<string, unknown>>();
@@ -440,7 +568,10 @@ export async function listMailRecipients(): Promise<MailRecipient[]> {
       categories: Array.isArray(p.categories) ? (p.categories as string[]) : [],
       region: String(p.region || 'all'),
       publisherType: String(p.publisher_type || 'all'),
-      keywords: String(p.category_other || ''),
+      // QA/M-20: קודם נלקח כאן category_other — שדה "תחום עיסוק אחר" החופשי
+      // שימש בטעות כמילות מפתח לדיוור. עכשיו נקרא השדה הייעודי, עם
+      // נפילה-לאחור ל-category_other עבור פרופילים ישנים.
+      keywords: String(p.keywords || p.category_other || ''),
     });
   }
   return out;

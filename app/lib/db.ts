@@ -46,7 +46,10 @@ function authHeaders(extra: Record<string, string> = {}): Record<string, string>
 // the scan pipeline actually last ran, independent of per-row fetched_at.
 export async function getLastSyncAt(): Promise<string | null> {
     try {
-        const path = "/sync_runs?select=started_at&error=is.null&order=started_at.desc&limit=1";
+        // QA/H-6: קודם לא היה סינון לפי type, ולכן ריצת smallbiz או
+        // sources מוצלחת "כיסתה" על כשל בסנכרון המכרזים והממשק הציג
+        // זמן טרי גם כשהסנכרון נפל. עכשיו נספרת רק ריצת sync.
+        const path = "/sync_runs?select=started_at&type=eq.sync&error=is.null&order=started_at.desc&limit=1";
         const res = await fetch(restUrl(path), { headers: authHeaders(), cache: "no-store" });
         if (!res.ok) return null;
         const rows = (await res.json()) as { started_at?: string }[];
@@ -117,12 +120,26 @@ export async function upsertTenders(tenders: TenderRecord[]): Promise<{ count: n
 }
 
 // Reads tenders from the DB with optional search + pagination.
-export async function getTenders(opts: { search?: string; offset?: number; limit?: number; activeOnly?: boolean } = {}): Promise<TenderRecord[]> {
-    const { search, offset = 0, limit = 1000, activeOnly = false } = opts;
+export async function getTenders(opts: { search?: string; offset?: number; limit?: number; activeOnly?: boolean; ids?: string[]; columns?: string } = {}): Promise<TenderRecord[]> {
+    const { search, offset = 0, limit = 1000, activeOnly = false, ids, columns } = opts;
 
   const params = new URLSearchParams();
-    params.set("select", "*");
-    params.set("order", "publish_date.desc.nullslast,deadline.desc.nullslast");
+    // QA/H-1: `select=*` משך כל עמודה, כולל שני שדות טקסט כבדים שאינם
+    // מוצגים בשום מקום בלקוח. columns מאפשר לצמצם למה שבאמת נדרש.
+    params.set("select", columns || "*");
+    // QA/H-2: `publish_date, deadline` אינו מפתח מיון ייחודי — אלפי רשומות
+    // חולקות את אותו זוג ערכים. בעימוד לפי Range, שורות שנופלות על גבול
+    // עמוד הוחזרו פעמיים ואחרות דולגו לגמרי: סריקה מלאה החזירה 9,485
+    // מזהים ייחודיים מתוך 9,503 קיימים. `id.asc` הוא שובר השוויון שהופך
+    // את סדר המיון לדטרמיניסטי ומחזיר את הרשומות האבודות.
+    params.set("order", "publish_date.desc.nullslast,deadline.desc.nullslast,id.asc");
+    // QA/B-1: שליפה לפי רשימת מזהים — עמוד המכרזים המסומנים היה שולף את
+    // 1,000 הראשונים בלבד ומסנן מקומית, כך ש-89% מהסימונים נעלמו.
+    if (ids && ids.length) {
+      // PostgREST מבריח מרכאה בתוך in.() עם לוכסן אחורי (\") ולא בהכפלה
+      // בסגנון SQL. הכפלה גררה שגיאת פרסור 400 והפילה את כל הבקשה.
+      params.set("id", `in.(${ids.map((v) => `"${String(v).replace(/([\\"])/g, "\\$1")}"`).join(",")})`);
+    }
     if (activeOnly) {
       // חגורת ביטחון שרת-צד: מכרזים שמועד הגשתם עבר לא נשלחים ללקוח
       // כלל — מחסן גם דפדפנים שמריצים bundle ישן מהמטמון. עטוף ב-and
