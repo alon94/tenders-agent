@@ -56,7 +56,7 @@ export async function GET() {
       // QA #10: קודם "ORDER BY claim_date DESC" הביא רשומות עם תאריכי זבל (9999, 9019, 2202).
       // עכשיו רק מועדים בטווח סביר: מהיום ועד שנתיים קדימה.
       "WHERE claim_date IS NOT NULL AND claim_date >= CURRENT_DATE AND claim_date <= CURRENT_DATE + INTERVAL '730 days' " + cacheBuster + " " +
-      "ORDER BY claim_date ASC LIMIT 12";
+      "ORDER BY claim_date ASC LIMIT 240";
     const res = await fetch(API + "?query=" + encodeURIComponent(sql), { cache: "no-store" });
     if (!res.ok) throw new Error(`API ${res.status}`);
     const json = await res.json();
@@ -65,7 +65,11 @@ export async function GET() {
   // that as a real failure instead of silently showing 0 guarantees.
   if (json?.error) throw new Error(String(json.error));
     if (!Array.isArray(json?.rows)) throw new Error('Unexpected API response: missing rows');
-    const rows = json.rows;
+    // QA #10: דגימה מפוזרת על פני החלון (ולא 12 הראשונים עם אותו תאריך) —
+    // כך המסך מדגים גם ערבויות פעילות וגם כאלה שפגות בקרוב.
+    const all: any[] = Array.isArray(json.rows) ? json.rows : [];
+    const step = Math.max(1, Math.floor(all.length / 12));
+    const rows = all.filter((_: unknown, i: number) => i % step === 0).slice(0, 12);
     const items = derive(rows);
     const totalAmount = items.filter((g) => g.status !== "pending").reduce((s, g) => s + g.amount, 0);
     const active = items.filter((g) => g.status === "active").length;
