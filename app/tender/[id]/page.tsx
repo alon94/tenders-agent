@@ -17,7 +17,7 @@ interface TenderDetail {
 const TABS = ['סקירה', 'דרישות סף', 'מסמכים', 'לוח זמנים'] as const;
 
 const MUTED_TXT = '#62707e'; // QA #12: 5.0:1 על לבן (קודם #7a8794 — 3.67:1)
-const LABEL_TXT = '#6b7785';
+const LABEL_TXT = '#5f6c7a';
 
 function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return <div style={{ background: '#fff', border: '1px solid ' + BORDER, borderRadius: 14, padding: 18, ...style }}>{children}</div>;

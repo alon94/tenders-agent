@@ -119,7 +119,7 @@ export default function InternalShell({
             </div>
             <div style={{ lineHeight: 1.2 }}>
               <div style={{ fontWeight: 800, fontSize: 14.5 }}>שווה מכרזים</div>
-              <div style={{ fontSize: 11, color: '#6b7785' }}>מועדון עסקים 360</div>
+              <div style={{ fontSize: 11, color: '#5f6c7a' }}>מועדון עסקים 360</div>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f4f6f8', border: `1.5px solid ${BLUE}33`, borderRadius: 10, padding: '9px 12px', marginBottom: 14 }}>
@@ -153,7 +153,7 @@ export default function InternalShell({
                   <span style={{ fontSize: 15 }}>{item.icon}</span>
                   <span style={{ flex: 1 }}>{item.label}</span>
                   {item.countKey && counts[item.countKey] !== undefined && (
-                    <span style={{ fontSize: 11, fontWeight: 700, color: active ? ACTIVE_FG : '#6b7785', background: active ? '#fff' : '#eef1f4', borderRadius: 999, padding: '1px 8px' }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: active ? ACTIVE_FG : '#5f6c7a', background: active ? '#fff' : '#eef1f4', borderRadius: 999, padding: '1px 8px' }}>
                       {counts[item.countKey]!.toLocaleString('he-IL')}
                     </span>
                   )}
@@ -166,7 +166,7 @@ export default function InternalShell({
 
             {session ? (
               <div style={{ padding: '12px 12px 2px' }}>
-                <div style={{ fontSize: 11.5, color: '#6b7785', marginBottom: 8, wordBreak: 'break-all' }}>
+                <div style={{ fontSize: 11.5, color: '#5f6c7a', marginBottom: 8, wordBreak: 'break-all' }}>
                   {session.user.email}
                 </div>
                 <button

@@ -197,7 +197,7 @@ export default function Dashboard(){
         <nav aria-label="ניווט ראשי" style={{flex:'0 0 238px',background:'#fff',borderInlineEnd:`1px solid ${BORDER}`,padding:'22px 16px',display:isMobile?'none':'flex',flexDirection:'column',gap:3,position:'sticky',top:0,alignSelf:'flex-start',height:'100vh'}}>
           <a href="/dashboard" style={{display:'flex',alignItems:'center',gap:11,padding:'0 8px 20px',marginBottom:8,borderBottom:'1px solid #eef1f4',textDecoration:'none'}}>
             <div style={{width:34,height:34,borderRadius:8,background:BLUE,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize:16,fontWeight:800}}>ש</div>
-            <div style={{lineHeight:1.15}}><div style={{fontWeight:700,fontSize:15.5,color:DARK}}>שווה מכרזים</div><div style={{fontSize:11,color:'#6b7785'}}>מועדון עסקים 360</div></div>
+            <div style={{lineHeight:1.15}}><div style={{fontWeight:700,fontSize:15.5,color:DARK}}>שווה מכרזים</div><div style={{fontSize:11,color:'#5f6c7a'}}>מועדון עסקים 360</div></div>
           </a>
           {sideNav.map(s=>(
             <a key={s.label} href={s.href} aria-current={s.active?'page':undefined} style={{display:'flex',alignItems:'center',gap:11,padding:'11px 12px',borderRadius:9,fontSize:14.5,textDecoration:'none',
@@ -208,7 +208,7 @@ export default function Dashboard(){
               <span style={{fontSize:16,opacity:s.active?1:.65}}>{s.icon}</span>
               <span style={{flex:1}}>{s.label}</span>
               {'count' in s&&(s as any).count>0&&(
-                <span style={{fontSize:11,fontWeight:700,color:s.active?'#1e5aa8':'#6b7785',background:s.active?'#fff':'#eef1f4',borderRadius:999,padding:'1px 8px'}}>
+                <span style={{fontSize:11,fontWeight:700,color:s.active?'#1e5aa8':'#5f6c7a',background:s.active?'#fff':'#eef1f4',borderRadius:999,padding:'1px 8px'}}>
                   {((s as any).count as number).toLocaleString('he-IL')}
                 </span>
               )}
@@ -225,7 +225,7 @@ export default function Dashboard(){
           <div style={{marginTop:14,paddingTop:14,borderTop:`1px solid ${BORDER}`}}>
             {session ? (
               <div>
-                <div style={{fontSize:11.5,color:'#6b7785',marginBottom:8,wordBreak:'break-all'}}>{session.user.email}</div>
+                <div style={{fontSize:11.5,color:'#5f6c7a',marginBottom:8,wordBreak:'break-all'}}>{session.user.email}</div>
                 <button type="button" onClick={handleSignOut} style={{width:'100%',padding:'8px 12px',borderRadius:9,border:'1px solid #e2e7ec',background:'#fff',color:'#5b6b7a',fontSize:12.5,fontWeight:600,cursor:'pointer'}}>התנתקות</button>
               </div>
             ) : (
@@ -246,7 +246,7 @@ export default function Dashboard(){
             <div style={{flex:1,minWidth:0,display:'flex',alignItems:'center',gap:10,background:'#fff',border:'1.5px solid '+BLUE,borderRadius:10,padding:'12px 16px',maxWidth:520,boxShadow:'0 2px 10px rgba(43,111,196,0.12)'}}>
               <span style={{color:BLUE,fontSize:17,fontWeight:700}}>⌕</span>
               <input type="search" aria-label="חיפוש מכרזים" value={q} onChange={e=>{setQ(e.target.value);setPg(1);}} placeholder="חיפוש: נושא, גוף מפרסם, מספר מכרז…" className="search-input" style={{flex:1,border:'none',background:'transparent',fontSize:14.5,color:DARK,fontFamily:'inherit'}}/>
-              {q&&<button type="button" aria-label="נקה חיפוש" onClick={()=>{setQ('');setPg(1);}} style={{color:'#6b7785',cursor:'pointer',fontSize:15,background:'none',border:'none',padding:0}}>✕</button>}
+              {q&&<button type="button" aria-label="נקה חיפוש" onClick={()=>{setQ('');setPg(1);}} style={{color:'#5f6c7a',cursor:'pointer',fontSize:15,background:'none',border:'none',padding:0}}>✕</button>}
             </div>
             {!isMobile && (<>
 <span style={{marginInlineStart:'auto',fontSize:12.5,color:'#62707e',display:'inline-flex',alignItems:'center',gap:7,flex:'0 0 auto'}}>
@@ -288,11 +288,11 @@ export default function Dashboard(){
               })}
               <div style={{...selWrap,marginInlineStart:'auto'}}>
                 <select aria-label="סינון לפי תחום" className="filter-select" value={biz} onChange={e=>{setBiz(e.target.value);setPg(1);}} style={selStyle}>{bizOptions.map(b=><option key={b.id} value={b.id}>{b.label}</option>)}</select>
-                <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',fontSize:10,color:'#6b7785',pointerEvents:'none'}}>▾</span>
+                <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',fontSize:10,color:'#5f6c7a',pointerEvents:'none'}}>▾</span>
               </div>
               <div style={selWrap}>
                 <select aria-label="סינון לפי גוף מפרסם" className="filter-select" value={pub} onChange={e=>{setPub(e.target.value);setPg(1);}} style={selStyle}>{PUBS.map(p=><option key={p.id} value={p.id}>{p.label}</option>)}</select>
-                <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',fontSize:10,color:'#6b7785',pointerEvents:'none'}}>▾</span>
+                <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',fontSize:10,color:'#5f6c7a',pointerEvents:'none'}}>▾</span>
               </div>
               {/* QA #16: מיון אמיתי — קודם כפתור "⇅ סינון" עם אייקון מיון ובלי אפשרות למיין */}
               <div style={selWrap}>
@@ -302,7 +302,7 @@ export default function Dashboard(){
                   <option value="score">ציון התאמה (הגבוה קודם)</option>
                   <option value="published">תאריך פרסום (החדש קודם)</option>
                 </select>
-                <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',fontSize:10,color:'#6b7785',pointerEvents:'none'}}>▾</span>
+                <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',fontSize:10,color:'#5f6c7a',pointerEvents:'none'}}>▾</span>
               </div>
               <button onClick={()=>setShowFilters(v=>!v)} aria-expanded={showFilters} style={{...chip,padding:'8px 12px',background:showFilters?'#e8f1fb':'#fff',color:showFilters?'#1e5aa8':'#5b6b7a',borderColor:showFilters?'#cfe0f4':'#e2e7ec'}}>⚙ מסננים נוספים</button>
             </div>
@@ -433,7 +433,7 @@ export default function Dashboard(){
                 <button onClick={()=>setPg(tp)} disabled={pg===tp} style={{...chip,opacity:pg===tp?.5:1}}>אחרון</button>
               </nav>
             )}
-            <div style={{textAlign:'center',padding:'16px 0',color:'#6b7785',fontSize:12}}>
+            <div style={{textAlign:'center',padding:'16px 0',color:'#5f6c7a',fontSize:12}}>
               נתונים: <a href="https://next.obudget.org" target="_blank" rel="noopener noreferrer" style={{color:BLUE}}>BudgetKey</a> · מינהל הרכש הממשלתי · {fetchedAt?scannedLabel:'מתעדכן מדי בוקר'}
             </div>
           </div>

@@ -14,7 +14,7 @@ type Msg = { role: 'agent' | 'user'; text: string; tenders?: TenderCard[] };
 const STEP_STYLE = {
   done:    { bg: '#e8f1fb', fg: '#1e5aa8', mark: '✓' },
   active:  { bg: '#fbf3d8', fg: '#8a6d1f', mark: '●' },
-  pending: { bg: '#eef1f4', fg: '#6b7785', mark: '○' },
+  pending: { bg: '#eef1f4', fg: '#5f6c7a', mark: '○' },
 };
 
 function fmtDate(d: string): string {
@@ -180,7 +180,7 @@ export default function AgentPage() {
                 <div style={{ fontSize: 13.5, fontWeight: 600, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.title}</div>
                 <div style={{ fontSize: 12, color: '#62707e' }}>{m.publisher || '—'}{m.deadline ? ' · מועד: ' + fmtDate(m.deadline) : ''}</div>
               </div>
-              <span aria-hidden="true" style={{ color: '#6b7785', fontSize: 13 }}>‹</span>
+              <span aria-hidden="true" style={{ color: '#5f6c7a', fontSize: 13 }}>‹</span>
             </a>
           ))}
           {!matchedLoading && matched.length === 0 && <div style={{ fontSize: 13, color: '#62707e' }}>לא נמצאו מכרזים מתאימים כרגע.</div>}
