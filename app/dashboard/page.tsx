@@ -47,8 +47,10 @@ export default function Dashboard(){
     setSession(s);
     // אורח: ברירת מחדל — הצג הכל, כולל מכרזים שמועד הגשתם עבר
     if (!s) setShowClosed(true);
-    setReady(true);
-    const onChange = () => setSession(getSession());
+    // re-QA: למשתמש מחובר ה-ready נקבע רק אחרי טעינת הפרופיל — אחרת נורות
+    // שתי בקשות (GET גנרי ואז POST מותאם) בכל טעינה.
+    if (!s) setReady(true);
+    const onChange = () => setSession(prev => { const n = getSession(); return (n?.user?.email || '') === (prev?.user?.email || '') ? prev : n; });
     window.addEventListener(AUTH_EVENT, onChange);
     window.addEventListener('storage', onChange);
     return () => {
@@ -59,7 +61,7 @@ export default function Dashboard(){
   // משתמש מחובר: טעינת הפרופיל העסקי לדירוג מותאם
   useEffect(() => {
     if (!session) { setBizProfile(null); return; }
-    fetchMyProfile().then(p => setBizProfile(p)).catch(() => setBizProfile(null));
+    fetchMyProfile().then(p => setBizProfile(p)).catch(() => setBizProfile(null)).finally(() => setReady(true));
   }, [session]);
   async function handleSignOut() {
     await signOut();
