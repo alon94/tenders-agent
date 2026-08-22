@@ -100,17 +100,23 @@ export function scoreOf(t: QueryTender, profile: QueryProfile | null, now = Date
 }
 
 export function sortTenders(rows: QueryTender[], profile: QueryProfile | null, now = Date.now(), sort?: QueryFilters['sort']): QueryTender[] {
-  const byDeadline = (a: QueryTender, b: QueryTender) => (daysTo(a.deadline, now) ?? 9999) - (daysTo(b.deadline, now) ?? 9999);
-  const byScore = (a: QueryTender, b: QueryTender) => scoreOf(b, profile, now) - scoreOf(a, profile, now);
-  const byPublished = (a: QueryTender, b: QueryTender) =>
-    (parseHeDate(b.publishDate || '')?.getTime() ?? 0) - (parseHeDate(a.publishDate || '')?.getTime() ?? 0);
-  // QA #16: מיון מפורש. ברירת מחדל: לפי ציון למשתמש עם פרופיל, לפי מועד הגשה לאורח.
+  // QA #03: קודם הציון ותאריכים פורסרו בתוך ה-comparator — O(n log n) קריאות
+  // ל-scoreTender/parseHeDate על ~9,000 שורות = 3+ שניות לכל דפדוף.
+  // עכשיו מחושבים פעם אחת לשורה (decorate-sort-undecorate).
   const mode = sort || (profile ? 'score' : 'deadline');
+  const needScore = mode === 'score' || mode === 'deadline';
+  type Dec = { t: QueryTender; d: number; s: number; p: number };
+  const dec: Dec[] = rows.map((t) => ({
+    t,
+    d: daysTo(t.deadline, now) ?? 9999,
+    s: needScore ? scoreOf(t, profile, now) : 0,
+    p: parseHeDate(t.publishDate || '')?.getTime() ?? 0,
+  }));
   const cmp =
-    mode === 'score' ? (a: QueryTender, b: QueryTender) => byScore(a, b) || byDeadline(a, b) :
-    mode === 'published' ? (a: QueryTender, b: QueryTender) => byPublished(a, b) || byDeadline(a, b) :
-    (a: QueryTender, b: QueryTender) => byDeadline(a, b) || byScore(a, b);
-  return [...rows].sort(cmp);
+    mode === 'score' ? (a: Dec, b: Dec) => b.s - a.s || a.d - b.d :
+    mode === 'published' ? (a: Dec, b: Dec) => b.p - a.p || a.d - b.d :
+    (a: Dec, b: Dec) => a.d - b.d || b.s - a.s;
+  return dec.sort(cmp).map((x) => x.t);
 }
 
 /** QA #17: "משרד הבריאות - X - משרד הבריאות - X" → פעם אחת. */

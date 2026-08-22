@@ -101,7 +101,18 @@ function kwHit(text: string, kw: string[]): boolean {
  * רשומות כ"שיווק ופרסום". שדה type נתמך אך ורק דרך המיפוי המפורש
  * TYPE_TO_DOMAIN, והמפרסם משרת סינון גופים וחיפוש חופשי בלבד.
  */
+// QA #03: הסיווג נקרא עשרות פעמים לכל מכרז בכל בקשה (סינון, ספירה, חיפוש).
+// האובייקטים מגיעים ממטמון יציב, ולכן התוצאה נשמרת עליהם (WeakMap) —
+// חישוב אחד לכל מכרז לכל חיי המטמון.
+const classifyCache = new WeakMap<object, string[]>();
 export function classifyTender(t: ClassifiableTender): string[] {
+  const hit = classifyCache.get(t);
+  if (hit) return hit;
+  const out = classifyUncached(t);
+  classifyCache.set(t, out);
+  return out;
+}
+function classifyUncached(t: ClassifiableTender): string[] {
   const text = (t.title || "").toLowerCase();
   const ids = new Set<string>();
   for (const d of DOMAINS) if (kwHit(text, d.kw)) ids.add(d.id);

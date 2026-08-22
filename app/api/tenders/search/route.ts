@@ -36,6 +36,27 @@ export async function POST(req: Request) {
   return handle(body);
 }
 
+// QA #03: המרת ~9,000 הרשומות ל-QueryTender נעשית פעם אחת לכל גרסת מטמון
+// ולא בכל בקשה — וכך גם מטמון הסיווג (לפי זהות האובייקט) נשמר בין בקשות.
+let mapped: { src: unknown; out: QueryTender[] } | null = null;
+function toQueryTenders(rows: Awaited<ReturnType<typeof fetchActiveTenders>>): QueryTender[] {
+  if (mapped && mapped.src === rows) return mapped.out;
+  const out: QueryTender[] = rows.map((r, i) => ({
+      id: String(r.id ?? i),
+      title: String(r.title ?? ''),
+      publisher: joinPublisher(r.publisher, r.publisher_unit),
+      publishDate: r.publish_date ? String(r.publish_date).split('T')[0] : undefined,
+      deadline: r.deadline ? String(r.deadline).split('T')[0] : undefined,
+      status: String(r.status ?? ''),
+      url: String(r.url ?? ''),
+      type: String(r.type ?? ''),
+      smallBiz: r.small_biz === true,
+      smallBizConfidence: r.small_biz_confidence ?? null,
+  }));
+  mapped = { src: rows, out };
+  return out;
+}
+
 async function handle(body: any) {
   try {
     const page = Math.max(1, Math.min(Number(body?.page) || 1, 10000));
@@ -67,18 +88,7 @@ async function handle(body: any) {
         : null;
 
     const rows = await fetchActiveTenders();
-    const all: QueryTender[] = rows.map((r, i) => ({
-      id: String(r.id ?? i),
-      title: String(r.title ?? ''),
-      publisher: joinPublisher(r.publisher, r.publisher_unit),
-      publishDate: r.publish_date ? String(r.publish_date).split('T')[0] : undefined,
-      deadline: r.deadline ? String(r.deadline).split('T')[0] : undefined,
-      status: String(r.status ?? ''),
-      url: String(r.url ?? ''),
-      type: String(r.type ?? ''),
-      smallBiz: r.small_biz === true,
-      smallBizConfidence: r.small_biz_confidence ?? null,
-    }));
+    const all = toQueryTenders(rows);
 
     const result = queryTenders(all, filters, profile, page, perPage);
     const fetchedAt = await getLastSyncAt();
