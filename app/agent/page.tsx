@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import InternalShell from '../components/InternalShell';
 import { BORDER, DARK } from '../lib/tenderMeta';
 import { fetchMyProfile, type BusinessProfile } from '../lib/profileApi';
+import { getSession } from '../lib/authClient';
 import { useIsMobile } from '../hooks/useIsMobile';
 
 type Step = { icon: string; title: string; sub: string; state: 'done' | 'active' | 'pending' };
@@ -105,7 +106,9 @@ export default function AgentPage() {
         profileRef.current = await fetchMyProfile().catch(() => null);
         const prof = profileRef.current;
         setHasProfile(!!prof && Array.isArray(prof.categories) && prof.categories.length > 0);
-        const r = await fetch('/api/agent' + profileQuery(prof));
+        // מסע הלקוח: הטוקן קובע בשרת אם הסוכן רץ על הפתוחים (רשום) או על הארכיון (אורח)
+        const tok = getSession()?.access_token;
+        const r = await fetch('/api/agent' + profileQuery(prof), tok ? { headers: { Authorization: `Bearer ${tok}` } } : undefined);
         const d = await r.json();
         setScanning(d.scanning || 0);
         setSteps(d.steps || []);
@@ -134,9 +137,10 @@ export default function AgentPage() {
     setThinking(true);
     try {
       const p = profileRef.current;
+      const tok = getSession()?.access_token;
       const res = await fetch('/api/agent', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(tok ? { Authorization: `Bearer ${tok}` } : {}) },
         body: JSON.stringify({
           question: text,
           profile: p ? { categories: p.categories, region: p.region, publisher_type: p.publisher_type, keywords: p.keywords || '' } : undefined,

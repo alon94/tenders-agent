@@ -10,6 +10,15 @@ import {
   isGenericProfile,
   type AgentProfile,
 } from "@/app/lib/agentEngine";
+import { resolveAudience } from "@/app/lib/audience";
+
+// מסע הלקוח: אורח אינו רואה מכרזים פתוחים — גם לא דרך הסוכן.
+// לרשום הסוכן רץ על הפתוחים; לאורח על הארכיון (שנסגרו) בלבד.
+function forAudience<T extends { deadline?: string | null }>(rows: T[], audience: 'guest' | 'member'): T[] {
+  const now = Date.now();
+  const closed = (r: T) => { const v = r.deadline ? new Date(String(r.deadline).split('T')[0]).getTime() : NaN; return Number.isFinite(v) && v < now; };
+  return audience === 'guest' ? rows.filter(closed) : rows.filter((r) => !closed(r));
+}
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -36,7 +45,7 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const profile = profileFromParams(searchParams);
 
-    const rows = await fetchActiveTenders();
+    const rows = forAudience(await fetchActiveTenders(), await resolveAudience(req));
     const ranked = rankTenders(rows, profile);
     const matched = ranked.filter((t) => t.matched);
     const high = matched.filter((t) => t.score >= HIGH_MATCH);
@@ -91,7 +100,7 @@ export async function POST(req: Request) {
       keywords: typeof p.keywords === "string" ? p.keywords : DEFAULT_PROFILE.keywords,
     };
 
-    const rows = await fetchActiveTenders();
+    const rows = forAudience(await fetchActiveTenders(), await resolveAudience(req));
     const ranked = rankTenders(rows, profile);
     const answer = answerQuestion(question, ranked);
 

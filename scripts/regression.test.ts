@@ -538,3 +538,26 @@ console.log("\nתצוגת 'כוונה להתקשרות' — נפרדת מהגי�
   check("פטורים לא כוללים כוונה", exempt.total === 1 && exempt.tenders[0].id === "3");
   check("counts: active=2, intent=1, exempt=1", main.counts.active === 2 && main.counts.intent === 1 && main.counts.exempt === 1, JSON.stringify(main.counts));
 }
+
+console.log("\nמסע הלקוח — audience: אורח=נסגרו בלבד, רשום=פתוחים בלבד");
+{
+  const now = Date.parse("2026-08-23T09:00:00Z");
+  const iso = (d: number) => new Date(now + d * 86400000).toISOString().split("T")[0];
+  const fx: any[] = [
+    { id: "open1", title: "מכרז פתוח תוכנה", publisher: "משרד האוצר", type: "מכרז", publishDate: iso(-3), deadline: iso(10) },
+    { id: "open2", title: "מכרז פתוח ניקיון", publisher: "עיריית חיפה", type: "מכרז", publishDate: iso(-8), deadline: iso(40) },
+    { id: "closed1", title: "מכרז שנסגר ייעוץ", publisher: "רשות המסים", type: "מכרז", publishDate: iso(-30), deadline: iso(-2) },
+    { id: "closed2", title: "מכרז שנסגר בינוי", publisher: "תאגיד מים", type: "מכרז", publishDate: iso(-60), deadline: iso(-15) },
+    { id: "nodate", title: "מכרז ללא מועד", publisher: "מועצה אזורית", type: "מכרז", publishDate: iso(-20) },
+  ];
+  const guest = queryTenders(fx, { audience: "guest" }, null, 1, 25, now);
+  check("אורח: רק מכרזים שנסגרו", guest.total === 2 && guest.tenders.every((t) => ["closed1", "closed2"].includes(t.id)), JSON.stringify(guest.tenders.map((t) => t.id)));
+  const guestTryOpen = queryTenders(fx, { audience: "guest", showClosed: false }, null, 1, 25, now);
+  check("אורח: פרמטרי לקוח לא עוקפים את הגייטינג", guestTryOpen.total === 2 && guestTryOpen.tenders.every((t) => t.id.startsWith("closed")));
+  const member = queryTenders(fx, { audience: "member" }, null, 1, 25, now);
+  check("רשום: רק פתוחים (כולל ללא-מועד עדכני)", member.total === 3 && member.tenders.every((t) => ["open1", "open2", "nodate"].includes(t.id)), JSON.stringify(member.tenders.map((t) => t.id)));
+  const memberTryClosed = queryTenders(fx, { audience: "member", showClosed: true }, null, 1, 25, now);
+  check("רשום: showClosed=true לא מחזיר סגורים", memberTryClosed.tenders.every((t) => !t.id.startsWith("closed")));
+  const legacy = queryTenders(fx, { showClosed: true, maxD: 3650 }, null, 1, 25, now);
+  check("ללא audience: התנהגות ישנה נשמרת", legacy.total === 5);
+}

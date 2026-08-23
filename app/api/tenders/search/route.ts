@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { fetchActiveTenders } from "@/app/lib/agentEngine";
 import { getLastSyncAt } from "@/app/lib/db";
 import { queryTenders, joinPublisher, type QueryFilters, type QueryProfile, type QueryTender } from "@/app/lib/tenderQuery";
+import { resolveAudience } from "@/app/lib/audience";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,7 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   const u = new URL(req.url);
   const g = (k: string) => u.searchParams.get(k);
+  const audience = await resolveAudience(req);
   const body = {
     page: g('page'), perPage: g('perPage'),
     filters: {
@@ -26,14 +28,17 @@ export async function GET(req: Request) {
     },
     profile: null,
   };
-  const res = await handle(body);
-  res.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
+  const res = await handle(body, audience);
+  // רק תשובת אורח (זהה לכולם) נכנסת ל-CDN; תשובת משתמש רשום אישית ולא נשמרת.
+  if (audience === 'guest') res.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
+  else res.headers.set('Cache-Control', 'private, no-store');
   return res;
 }
 
 export async function POST(req: Request) {
+  const audience = await resolveAudience(req);
   const body = await req.json().catch(() => ({}));
-  return handle(body);
+  return handle(body, audience);
 }
 
 // QA #03: המרת ~9,000 הרשומות ל-QueryTender נעשית פעם אחת לכל גרסת מטמון
@@ -66,7 +71,7 @@ async function cachedLastSync(): Promise<string | null> {
   return v;
 }
 
-async function handle(body: any) {
+async function handle(body: any, audience: 'guest' | 'member' = 'guest') {
   try {
     const page = Math.max(1, Math.min(Number(body?.page) || 1, 10000));
     const perPage = Math.max(1, Math.min(Number(body?.perPage) || 25, 100));
@@ -82,7 +87,9 @@ async function handle(body: any) {
       sbOnly: !!f.sbOnly,
       q: typeof f.q === 'string' ? f.q.slice(0, 200) : '',
       tab: f.tab === 'closing' || f.tab === 'new' ? f.tab : 'all',
-      sort: f.sort === 'score' || f.sort === 'deadline' || f.sort === 'published' ? f.sort : undefined,
+      // אורח צופה בארכיון — מיון ברירת המחדל הוא תאריך פרסום (מועד הגשה עבר ממילא)
+      sort: f.sort === 'score' || f.sort === 'deadline' || f.sort === 'published' ? f.sort : (audience === 'guest' ? 'published' : undefined),
+      audience,
     };
 
     const p = body?.profile;
@@ -102,7 +109,7 @@ async function handle(body: any) {
     const result = queryTenders(all, filters, profile, page, perPage);
     const fetchedAt = await cachedLastSync();
 
-    return NextResponse.json({ ...result, fetchedAt, corpus: all.length });
+    return NextResponse.json({ ...result, fetchedAt, corpus: all.length, audience });
   } catch (err) {
     console.error('POST /api/tenders/search failed:', err);
     return NextResponse.json({ error: 'search_failed' }, { status: 500 });

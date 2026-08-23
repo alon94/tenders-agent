@@ -25,6 +25,11 @@ export interface QueryProfile {
 }
 
 export interface QueryFilters {
+  /**
+   * מסע הלקוח: guest ⇒ רק מכרזים שנסגרו (ארכיון); member ⇒ רק פתוחים.
+   * undefined ⇒ התנהגות ישנה (showClosed) — לתאימות בדיקות/צרכנים פנימיים.
+   */
+  audience?: 'guest' | 'member';
   view?: 'exempt' | 'smallbiz' | 'intent' | null;
   biz?: string; pub?: string;
   maxD?: number;
@@ -60,6 +65,20 @@ export function applyBaseFilters(all: QueryTender[], f: QueryFilters, now = Date
   if (view === 'smallbiz') r = r.filter(isSmallBiz);
   if (biz) r = r.filter((t) => matchDomain(t, biz));
   if (pub) r = r.filter((t) => matchPublisher(t, pub));
+  if (f.audience === 'guest') {
+    // אורח: ארכיון בלבד — מכרזים שמועד הגשתם עבר. פרמטרי showClosed/מועד
+    // מהלקוח אינם מוסמכים ומתעלמים מהם.
+    r = r.filter((t) => { const d = daysTo(t.deadline, now); return d !== null && d < 0; });
+  } else if (f.audience === 'member') {
+    // רשום: פתוחים בלבד (או ללא מועד, אם פורסמו בשנה האחרונה).
+    r = r.filter((t) => {
+      const d = daysTo(t.deadline, now);
+      if (d !== null) return d >= 0 && d <= maxD;
+      if (!showNoDate) return false;
+      const p = parseHeDate(t.publishDate || '');
+      return p === null || p.getTime() > now - 365 * 86400000;
+    });
+  } else {
   if (!showClosed) r = r.filter((t) => { const d = daysTo(t.deadline, now); return d === null || d >= 0; });
   if (!showNoDate) r = r.filter((t) => !!t.deadline);
   r = r.filter((t) => {
@@ -74,6 +93,7 @@ export function applyBaseFilters(all: QueryTender[], f: QueryFilters, now = Date
     }
     return d <= maxD;
   });
+  }
   if (sbOnly) r = r.filter(isSmallBiz);
   if (q && q.trim()) r = r.filter((t) => matchQuery(t, q));
   return r;
@@ -146,7 +166,7 @@ export interface QueryResult {
 let dcCache: { src: unknown; map: Map<string, { domains: DomainCount[]; uncategorized: number }> } | null = null;
 function cachedDomainCounts(all: QueryTender[], f: QueryFilters, now: number) {
   if (!dcCache || dcCache.src !== all) dcCache = { src: all, map: new Map() };
-  const key = [f.view || '', f.pub || '', f.maxD ?? 365, f.showClosed ? 1 : 0, f.showNoDate === false ? 0 : 1, f.sbOnly ? 1 : 0, (f.q || '').trim().toLowerCase(), Math.floor(now / 3_600_000)].join('|');
+  const key = [f.audience || '', f.view || '', f.pub || '', f.maxD ?? 365, f.showClosed ? 1 : 0, f.showNoDate === false ? 0 : 1, f.sbOnly ? 1 : 0, (f.q || '').trim().toLowerCase(), Math.floor(now / 3_600_000)].join('|');
   const hit = dcCache.map.get(key);
   if (hit) return hit;
   const v = domainCounts(applyBaseFilters(all, { ...f, biz: '' }, now));

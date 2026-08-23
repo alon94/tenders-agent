@@ -37,7 +37,8 @@ const DARK='#1a2330', BLUE='#2b6fc4', MUTED='#667380', BORDER='#e6eaee';
 export default function Dashboard(){
   const [session, setSession] = useState<AuthSession | null>(null);
   const [bizProfile, setBizProfile] = useState<BusinessProfile | null>(null);
-  // QA/H-1: בדיקת הסשן קובעת את showClosed, שהוא תלות של בקשת החיפוש.
+  // QA/H-1 (מעודכן במסע הלקוח): קהל היעד נקבע בשרת לפי הטוקן; כאן רק
+  // ממתינים שה-session והפרופיל ייטענו לפני הבקשה הראשונה.
   // בלי דגל מוכנות נורות *שתי* בקשות בכל טעינה למשתמש לא מחובר —
   // אחת לפני שהערך נקבע ואחת אחריו. אומת במדידה: 3.8 ש' פעמיים.
   const[ready,setReady]=useState(false);
@@ -45,8 +46,7 @@ export default function Dashboard(){
   useEffect(() => {
     const s = getSession();
     setSession(s);
-    // אורח: ברירת מחדל — הצג הכל, כולל מכרזים שמועד הגשתם עבר
-    if (!s) setShowClosed(true);
+    // מסע הלקוח: אורח רואה רק מכרזים שנסגרו, רשום רק פתוחים — נאכף בשרת
     // re-QA: למשתמש מחובר ה-ready נקבע רק אחרי טעינת הפרופיל — אחרת נורות
     // שתי בקשות (GET גנרי ואז POST מותאם) בכל טעינה.
     if (!s) setReady(true);
@@ -81,7 +81,6 @@ export default function Dashboard(){
   const[biz,setBiz]=useState(()=>sp().get('biz')||'');
   const[pub,setPub]=useState(()=>sp().get('pub')||'');
   const[maxD,setMaxD]=useState(()=>{const v=Number(sp().get('days'));return v>=7&&v<=365?v:365;});
-  const[showClosed,setShowClosed]=useState(()=>sp().get('closed')==='1');
   const[showNoDate,setShowNoDate]=useState(()=>sp().get('nodate')!=='0');
   const[sbOnly,setSbOnly]=useState(()=>sp().get('sb')==='1');
   const[tab,setTab]=useState<'all'|'closing'|'new'>(()=>{const t=sp().get('tab');return t==='closing'||t==='new'?t:'all';});
@@ -93,9 +92,9 @@ export default function Dashboard(){
     const u=new URL(window.location.href);
     const set=(k:string,v:string,def:string)=>{if(v&&v!==def)u.searchParams.set(k,v);else u.searchParams.delete(k);};
     set('q',q,'');set('biz',biz,'');set('pub',pub,'');set('tab',tab,'all');set('sort',sort,'');set('page',String(pg),'1');
-    set('days',String(maxD),'365');set('closed',showClosed?'1':'','');set('nodate',showNoDate?'':'0','');set('sb',sbOnly?'1':'','');
+    set('days',String(maxD),'365');set('nodate',showNoDate?'':'0','');set('sb',sbOnly?'1':'','');
     window.history.replaceState(null,'',u.toString());
-  },[q,biz,pub,tab,sort,pg,maxD,showClosed,showNoDate,sbOnly]);
+  },[q,biz,pub,tab,sort,pg,maxD,showNoDate,sbOnly]);
   const[showFilters,setShowFilters]=useState(false);
   const PER=25;
   const isMobile=useIsMobile();
@@ -124,18 +123,19 @@ export default function Dashboard(){
     const handle=setTimeout(async()=>{
       setLoading(true);setErr(false);
       try{
-        // QA #03: אורח → GET (נענה מה-CDN); משתמש עם פרופיל → POST
+        // מסע הלקוח: רשום → POST עם טוקן (פתוחים, מותאם אישית, לא נשמר ב-CDN);
+        // אורח → GET ללא טוקן (ארכיון סגורים, נענה מה-CDN לכולם).
         let r:Response;
-        if(bizProfile){
-          r=await fetch('/api/tenders/search',{method:'POST',headers:{'Content-Type':'application/json'},
+        if(session){
+          r=await fetch('/api/tenders/search',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},
             body:JSON.stringify({page:pg,perPage:PER,
-              filters:{view,biz,pub,maxD,showClosed,showNoDate,sbOnly,q,tab,sort:sort||undefined},
-              profile:{categories:bizProfile.categories,region:bizProfile.region,publisher_type:bizProfile.publisher_type,keywords:bizProfile.keywords||''}})});
+              filters:{view,biz,pub,maxD,showNoDate,sbOnly,q,tab,sort:sort||undefined},
+              profile:bizProfile?{categories:bizProfile.categories,region:bizProfile.region,publisher_type:bizProfile.publisher_type,keywords:bizProfile.keywords||''}:null})});
         }else{
           const ps=new URLSearchParams();
           const put=(k:string,v:string,def:string)=>{if(v&&v!==def)ps.set(k,v);};
           put('page',String(pg),'1');put('view',view||'','');put('biz',biz,'');put('pub',pub,'');put('days',String(maxD),'365');
-          put('closed',showClosed?'1':'','');put('nodate',showNoDate?'':'0','');put('sb',sbOnly?'1':'','');put('q',q.trim(),'');put('tab',tab,'all');put('sort',sort,'');
+          put('nodate',showNoDate?'':'0','');put('sb',sbOnly?'1':'','');put('q',q.trim(),'');put('tab',tab,'all');put('sort',sort,'');
           r=await fetch('/api/tenders/search?'+ps.toString());
         }
         if(!r.ok)throw new Error('http '+r.status);
@@ -151,7 +151,7 @@ export default function Dashboard(){
     // השהיה קצרה רק להקלדה בחיפוש, כדי לא לירות בקשה לכל תו
     },q?250:0);
     return()=>clearTimeout(handle);
-  },[ready,pg,view,biz,pub,maxD,showClosed,showNoDate,sbOnly,q,tab,sort,bizProfile]);
+  },[ready,pg,view,biz,pub,maxD,showNoDate,sbOnly,q,tab,sort,session,bizProfile]);
 
   const rows=srv?.tenders??[];
   const counts=srv?.counts??{base:0,closing:0,new:0,smallBiz:0,active:0,exempt:0,intent:0};
@@ -194,7 +194,7 @@ export default function Dashboard(){
   const smallBizCount=counts.smallBiz;
   const kpis=[
     {value:intentView?counts.intent:counts.active,label:intentView?'הודעות כוונה להתקשרות':'מכרזים פעילים במאגר',dot:BLUE},
-    {value:counts.closing,label:'נסגרים בשבוע הקרוב',dot:'#b04a34'},
+    session?{value:counts.closing,label:'נסגרים בשבוע הקרוב',dot:'#b04a34'}:{value:counts.base,label:'בארכיון הפתוח לצפייה',dot:'#b04a34'},
     {value:counts.new,label:'חדשים ב-7 ימים',dot:'#1e9e5a'},
     // QA #19: לחיצה על הכרטיס הפעילה בשקט מסנן סמוי (sbOnly). עכשיו היא מובילה לתצוגה הייעודית.
     {value:smallBizCount,label:'⭐ העדפה לעסקים קטנים',dot:'#1e5aa8',onClick:()=>{window.location.href='/dashboard?view=smallbiz';}},
@@ -307,7 +307,7 @@ export default function Dashboard(){
 
             {/* toolbar */}
             <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:14,flexWrap:'wrap'}}>
-              {[{k:'all',label:`כל המכרזים · ${counts.base.toLocaleString()}`},{k:'closing',label:`נסגרים בשבוע · ${counts.closing}`},{k:'new',label:`חדשים · ${counts.new}`}].map(tb=>{
+              {[{k:'all',label:`${session?'כל המכרזים':'ארכיון מכרזים'} · ${counts.base.toLocaleString()}`},...(session?[{k:'closing',label:`נסגרים בשבוע · ${counts.closing}`}]:[]),{k:'new',label:`חדשים · ${counts.new}`}].map(tb=>{
                 const active=tab===tb.k;
                 return(
                   <button key={tb.k} onClick={()=>{setTab(tb.k as any);setPg(1);}} style={{...chip,background:active?DARK:'#fff',color:active?'#fff':'#5b6b7a',border:active?'none':'1px solid #e2e7ec'}}>{tb.label}</button>
@@ -324,7 +324,7 @@ export default function Dashboard(){
               {/* QA #16: מיון אמיתי — קודם כפתור "⇅ סינון" עם אייקון מיון ובלי אפשרות למיין */}
               <div style={selWrap}>
                 <select aria-label="מיון" className="filter-select" value={sort} onChange={e=>{setSort(e.target.value as any);setPg(1);}} style={selStyle}>
-                  <option value="">מיון: {bizProfile?'התאמה':'מועד הגשה'}</option>
+                  <option value="">מיון: {bizProfile?'התאמה':session?'מועד הגשה':'תאריך פרסום'}</option>
                   <option value="deadline">מועד הגשה (הקרוב קודם)</option>
                   <option value="score">ציון התאמה (הגבוה קודם)</option>
                   <option value="published">תאריך פרסום (החדש קודם)</option>
@@ -341,15 +341,23 @@ export default function Dashboard(){
                   <span style={{fontSize:12.5,fontWeight:700,color:MUTED}}>נסגר בתוך {maxD} ימים</span>
                   <input type="range" min={7} max={365} value={maxD} onChange={e=>{setMaxD(Number(e.target.value));setPg(1);}} style={{accentColor:BLUE}}/>
                 </div>
-                <label style={{display:'flex',alignItems:'center',gap:8,fontSize:13.5,color:'#33475b',cursor:'pointer'}}><input type="checkbox" checked={showClosed} onChange={e=>setShowClosed(e.target.checked)} style={{accentColor:BLUE,width:16,height:16}}/>הצג גם שנסגרו</label>
                 <label style={{display:'flex',alignItems:'center',gap:8,fontSize:13.5,color:'#33475b',cursor:'pointer'}}><input type="checkbox" checked={showNoDate} onChange={e=>setShowNoDate(e.target.checked)} style={{accentColor:BLUE,width:16,height:16}}/>הצג גם ללא מועד</label>
                 <label style={{display:'flex',alignItems:'center',gap:8,fontSize:13.5,color:'#33475b',cursor:'pointer'}}><input type="checkbox" checked={sbOnly} onChange={e=>{setSbOnly(e.target.checked);setPg(1);}} style={{accentColor:BLUE,width:16,height:16}}/>⭐ העדפה לעסקים קטנים בלבד</label>
-                <button onClick={()=>{setBiz('');setPub('');setMaxD(365);setShowClosed(!session);setShowNoDate(true);setSbOnly(false);setQ('');setSort('');setPg(1);}} style={{...chip,marginInlineStart:'auto'}}>איפוס ✕</button>
+                <button onClick={()=>{setBiz('');setPub('');setMaxD(365);setShowNoDate(true);setSbOnly(false);setQ('');setSort('');setPg(1);}} style={{...chip,marginInlineStart:'auto'}}>איפוס ✕</button>
               </div>
             )}
 
             {/* table */}
             <div role="status" aria-live="polite" style={{position:'absolute',width:1,height:1,overflow:'hidden',clip:'rect(0 0 0 0)'}}>{loading?'טוען תוצאות':`${(srv?.total??0).toLocaleString('he-IL')} תוצאות`}</div>
+            {!session&&(
+              <div style={{background:'#eef6ff',border:'1px solid #cfe0f4',borderRadius:10,padding:'14px 18px',marginBottom:12,display:'flex',alignItems:'center',gap:14,flexWrap:'wrap'}}>
+                <div style={{flex:'1 1 260px'}}>
+                  <div style={{fontWeight:700,color:DARK,fontSize:14.5}}>אתם צופים בארכיון — מכרזים שמועד ההגשה שלהם עבר</div>
+                  <div style={{fontSize:13,color:'#4a5a6a',marginTop:3}}>הרשמה חינם פותחת את כל {counts.active.toLocaleString('he-IL')} המכרזים הפעילים, כולל התאמה אישית לעסק שלכם.</div>
+                </div>
+                <a href="/signup" style={{background:'#1e5aa8',color:'#fff',borderRadius:8,padding:'9px 18px',fontSize:13.5,fontWeight:700,textDecoration:'none',whiteSpace:'nowrap'}}>הרשמה חינם ←</a>
+              </div>
+            )}
             <div role="table" aria-label="רשימת מכרזים" aria-busy={loading} style={{background:'#fff',border:`1px solid ${BORDER}`,borderRadius:10,overflow:'hidden',opacity:loading&&rows.length?.55:1,transition:'opacity .15s'}}>
               {!isMobile && (<div role="row" style={{display:'grid',gridTemplateColumns:'70px 1fr 232px 156px 150px',padding:'12px 18px',background:'#f7f9fb',borderBottom:`1px solid ${BORDER}`,fontSize:12,fontWeight:700,color:'#5f6c7a'}}>
                 <span role="columnheader">ציון</span><span role="columnheader">נושא המכרז</span><span role="columnheader">סטטוס</span><span role="columnheader">מועד הגשה</span><span role="columnheader" aria-label="פעולות"></span>
