@@ -165,7 +165,8 @@ test.describe('מובייל (390×844)', () => {
   for (const path of ['/', '/dashboard', '/dashboard?view=intent', '/tender/4000620538', '/agent', '/signin']) {
     test(`ללא גלילה אופקית: ${path}`, async ({ page }) => {
       await page.goto(path);
-      if (path.startsWith('/dashboard')) await waitForRows(page);
+      // במובייל הרשימה מוצגת ככרטיסים (ללא role=row) — ממתינים לקישור מכרז
+      if (path.startsWith('/dashboard')) await expect(page.locator('a[href^="/tender/"]').first()).toBeVisible({ timeout: 30_000 });
       await page.waitForLoadState('networkidle').catch(() => {});
       const sw = await page.evaluate(() => document.documentElement.scrollWidth);
       expect(sw, 'scrollWidth').toBeLessThanOrEqual(390 + 2);
@@ -173,7 +174,7 @@ test.describe('מובייל (390×844)', () => {
   }
   test('ניווט מובייל זמין בדשבורד', async ({ page }) => {
     await page.goto('/dashboard');
-    await waitForRows(page);
+    await expect(page.locator('a[href^="/tender/"]').first()).toBeVisible({ timeout: 30_000 });
     await expect(page.locator('button[aria-expanded], button[aria-label*="תפריט"]').first()).toBeVisible();
   });
 });
@@ -187,7 +188,8 @@ test('ציון זהה גם בדף "מסומנים"', async ({ page }) => {
   await page.getByRole('button', { name: /שמירה למעקב/ }).click();
   await page.goto('/marked');
   const row = page.locator('[role=row]', { hasText: t.title.slice(0, 30) }).first();
-  await expect(row).toBeVisible();
+  // דף המסומנים טוען את כל המאגר — נדרשת המתנה ארוכה יותר בסביבת CI
+  await expect(row).toBeVisible({ timeout: 30_000 });
   await expect(row).toContainText(detailScore!);
 });
 
