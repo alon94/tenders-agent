@@ -2,9 +2,31 @@ import type { Metadata } from 'next'
 import './globals.css'
 import FloatingTenders from './components/FloatingTenders'
 
+const SITE = process.env.NEXT_PUBLIC_SITE_URL || 'https://tenders-agent.vercel.app'
+
 export const metadata: Metadata = {
-    title: 'שווה מכרזים | נתונים חיים ממינהל הרכש הממשלתי',
-    description: 'מנוע מכרזים חכם — עדכון יומי מנח"ר ומינהל הרכש הממשלתי',
+    metadataBase: new URL(SITE),
+    title: {
+        default: 'שווה מכרזים | כל המכרזים הציבוריים בישראל, מעודכן יומית',
+        template: '%s',
+    },
+    description: 'מנוע מכרזים חכם — כל המכרזים הציבוריים בישראל במקום אחד: מינהל הרכש הממשלתי, רשויות מקומיות וגופים ציבוריים, עם התאמה אישית לעסק שלך.',
+    alternates: { canonical: SITE },
+    openGraph: {
+        siteName: 'שווה מכרזים',
+        locale: 'he_IL',
+        type: 'website',
+        url: SITE,
+    },
+}
+
+// SEO: זהות הארגון והאתר עבור מנועי חיפוש
+const ORG_JSONLD = {
+    '@context': 'https://schema.org',
+    '@graph': [
+        { '@type': 'Organization', name: 'שווה מכרזים', url: SITE, description: 'גילוי מכרזים ציבוריים בישראל — שירות של מועדון עסקים 360' },
+        { '@type': 'WebSite', name: 'שווה מכרזים', url: SITE, inLanguage: 'he' },
+    ],
 }
 
 export default function RootLayout({
@@ -15,6 +37,7 @@ export default function RootLayout({
     return (
         <html lang="he" dir="rtl">
             <body>
+                <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_JSONLD) }} />
                 {children}
                 <FloatingTenders />
                 <style>{`

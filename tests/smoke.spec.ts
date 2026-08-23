@@ -190,3 +190,35 @@ test('ציון זהה גם בדף "מסומנים"', async ({ page }) => {
   await expect(row).toBeVisible();
   await expect(row).toContainText(detailScore!);
 });
+
+// SEO: metadata ייחודי, canonical ו-JSON-LD בדף מכרז; sitemap מלא
+test('SEO: דף מכרז — title ייחודי, canonical, JSON-LD', async ({ page }) => {
+  const r = (await api(page, '/api/tenders/search?closed=1&perPage=1')).json;
+  const t = r.tenders[0];
+  await page.goto('/tender/' + t.id);
+  const title = await page.title();
+  expect(title, 'title כולל את שם המכרז').toContain(t.title.slice(0, 20));
+  const canonical = await page.locator('link[rel=canonical]').getAttribute('href');
+  expect(canonical).toContain('/tender/' + t.id);
+  const ld = await page.locator('script[type="application/ld+json"]').allTextContents();
+  expect(ld.some((s) => s.includes('schema.org')), 'JSON-LD קיים').toBe(true);
+});
+
+test('SEO: sitemap.xml כולל דפי מכרז', async ({ page }) => {
+  await page.goto('/signin');
+  const xml = await page.evaluate(async () => (await fetch('/sitemap.xml')).text());
+  expect(xml).toContain('<urlset');
+  expect(xml).toContain('/tender/');
+  expect(xml).toContain('/dashboard');
+});
+
+test('SEO: title ייחודי לדפים הראשיים', async ({ page }) => {
+  const seen = new Set<string>();
+  for (const p of ['/', '/dashboard', '/agent', '/sources', '/guarantee']) {
+    await page.goto(p);
+    const title = await page.title();
+    expect(title.length, `title ב-${p}`).toBeGreaterThan(10);
+    expect(seen.has(title), `title ייחודי ב-${p}`).toBe(false);
+    seen.add(title);
+  }
+});
