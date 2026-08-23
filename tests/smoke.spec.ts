@@ -192,10 +192,20 @@ test('ציון זהה גם בדף "מסומנים"', async ({ page }) => {
     if ((await saveBtn.getAttribute('aria-pressed')) !== 'true') await saveBtn.click();
     expect(await saveBtn.getAttribute('aria-pressed'), 'aria-pressed').toBe('true');
   }).toPass({ timeout: 20_000 });
+  // אבחון ביניים: מה באמת נשמר, ומה ה-API מחזיר עבורו — כדי שכשל בשלב הבא יהיה מוסבר
+  const saved = await page.evaluate(() => localStorage.getItem('markedTenders'));
+  expect(saved, 'markedTenders ב-localStorage').toContain(t.id);
+  const byId = await page.evaluate(async (id) => {
+    const r = await fetch('/api/tenders?id=' + encodeURIComponent(id));
+    const text = await r.text();
+    try { const j = JSON.parse(text); return { status: r.status, n: (j.tenders || j || []).length }; }
+    catch { return { status: r.status, n: -1, text: text.slice(0, 150) }; }
+  }, t.id);
+  expect(byId.n, `/api/tenders?id=${t.id} → ` + JSON.stringify(byId)).toBe(1);
   await page.goto('/marked');
   // איתור לפי מזהה (קישור "פרטים") — הכותרת עשויה להיות מקודדת שונה בין המקורות
   const row = page.locator('[role=row]', { has: page.locator(`a[href="/tender/${t.id}"]`) }).first();
-  await expect(row).toBeVisible({ timeout: 30_000 });
+  await expect(row, 'שורת המכרז ב-/marked').toBeVisible({ timeout: 30_000 });
   await expect(row).toContainText(detailScore!);
 });
 
