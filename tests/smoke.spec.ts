@@ -185,7 +185,13 @@ test('ציון זהה גם בדף "מסומנים"', async ({ page }) => {
   const t = r.tenders[0];
   await page.goto('/tender/' + t.id);
   const detailScore = (await page.locator('[aria-label^="ציון התאמה"] span').first().textContent())?.trim();
-  await page.getByRole('button', { name: /שמירה למעקב/ }).click();
+  // הכפתור קיים ב-HTML מהשרת עוד לפני hydration — לחיצה מוקדמת הולכת לאיבוד.
+  // לכן לוחצים עד ש-aria-pressed מאשר שהשמירה נקלטה.
+  const saveBtn = page.locator('button[aria-pressed]').first();
+  await expect(async () => {
+    if ((await saveBtn.getAttribute('aria-pressed')) !== 'true') await saveBtn.click();
+    expect(await saveBtn.getAttribute('aria-pressed'), 'aria-pressed').toBe('true');
+  }).toPass({ timeout: 20_000 });
   await page.goto('/marked');
   // איתור לפי מזהה (קישור "פרטים") — הכותרת עשויה להיות מקודדת שונה בין המקורות
   const row = page.locator('[role=row]', { has: page.locator(`a[href="/tender/${t.id}"]`) }).first();
