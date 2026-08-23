@@ -5,7 +5,7 @@
 //  גישה: משתמשים בטבלת admins בלבד; אחרים מקבלים "אין הרשאה".
 // ============================================================
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { getSession, type AuthSession } from '../lib/authClient';
 
 const DARK = '#1a2330';
@@ -79,17 +79,32 @@ export default function AdminPage() {
   const [pwBusy, setPwBusy] = useState(false);
   const [showPw, setShowPw] = useState(false);
 
-  // טוקן אדמין-סיסמה נשמר בין רענונים; נשלח כ-Bearer בדיוק כמו טוקן Supabase
+  // הטוקן שעבר את אימות ה-overview הוא המקור לכל שאר הבקשות.
+  // באג: קודם adminToken העדיף pwadm_token ישן מ-localStorage בעוד שהטעינה
+  // הראשית השתמשה בטוקן ה-session — הדף נטען, אבל משתמשים/אנליטיקה/שקופיות
+  // קיבלו 403 מטוקן פג. עכשיו כולם משתמשים באותו bearer מאומת.
+  const bearerRef = useRef<string | null>(null);
   const adminToken = useCallback((): string | null => {
+    if (bearerRef.current) return bearerRef.current;
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem('pwadm_token') || session?.access_token || null;
+    return session?.access_token || localStorage.getItem('pwadm_token') || null;
   }, [session]);
 
   const loadWith = useCallback(async (bearer: string) => {
     try {
       const r = await fetch('/api/admin/overview', { headers: { Authorization: `Bearer ${bearer}` } });
-      if (r.status === 403) { if (bearer?.startsWith('pwadm.')) localStorage.removeItem('pwadm_token'); setState('forbidden'); return; }
+      if (r.status === 403) {
+        if (bearer?.startsWith('pwadm.')) localStorage.removeItem('pwadm_token');
+        // הטוקן שנכשל אינו בהכרח היחיד — מנסים את החלופה לפני ויתור
+        const alt = bearer === getSession()?.access_token ? localStorage.getItem('pwadm_token') : getSession()?.access_token;
+        if (alt && alt !== bearer) {
+          const r2 = await fetch('/api/admin/overview', { headers: { Authorization: `Bearer ${alt}` } });
+          if (r2.ok) { bearerRef.current = alt; setData(await r2.json()); setState('ready'); return; }
+        }
+        setState('forbidden'); return;
+      }
       if (!r.ok) { setState('error'); return; }
+      bearerRef.current = bearer;
       setData(await r.json());
       setState('ready');
     } catch { setState('error'); }
