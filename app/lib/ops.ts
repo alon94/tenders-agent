@@ -176,7 +176,7 @@ export async function recordSyncRun(run: {
 
 export async function recordEmail(entry: {
   recipient: string;
-  type: 'daily' | 'alert' | 'test';
+  type: 'daily' | 'alert' | 'test' | 'login-alert';
   tender_count: number;
   status: string;
   message_id?: string;
