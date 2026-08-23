@@ -106,8 +106,8 @@ test('אורח: הודעה אדומה ברורה — נדרשת התחברות',
   await waitForRows(page);
   const alert = page.getByRole('alert').filter({ hasText: 'כדי לראות מכרזים עדכניים נדרשת התחברות' });
   await expect(alert).toBeVisible();
-  // אדומה בפועל — צבע הטקסט של הכותרת
-  const color = await alert.locator('div').first().evaluate((el) => getComputedStyle(el).color);
+  // אדומה בפועל — צבע הטקסט של הכותרת עצמה (לא ה-div העוטף)
+  const color = await alert.getByText('כדי לראות מכרזים עדכניים נדרשת התחברות').evaluate((el) => getComputedStyle(el).color);
   expect(color).toBe('rgb(176, 42, 30)');
   await expect(page.locator('a[href="/signin"]', { hasText: 'התחברות' }).first()).toBeVisible();
   await expect(page.locator('a[href="/signup"]', { hasText: 'הרשמה' }).first()).toBeVisible();
