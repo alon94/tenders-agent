@@ -101,11 +101,28 @@ test('אורח: רק מכרזים שנסגרו, ללא מעקף פרמטרים',
   }
 });
 
-test('אורח: באנר הרשמה מוצג בדשבורד עם קישור להרשמה', async ({ page }) => {
+test('אורח: הודעה אדומה ברורה — נדרשת התחברות', async ({ page }) => {
   await page.goto('/dashboard');
   await waitForRows(page);
-  await expect(page.getByText('אתם צופים בארכיון')).toBeVisible();
+  const alert = page.getByRole('alert').filter({ hasText: 'כדי לראות מכרזים עדכניים נדרשת התחברות' });
+  await expect(alert).toBeVisible();
+  // אדומה בפועל — צבע הטקסט של הכותרת
+  const color = await alert.locator('div').first().evaluate((el) => getComputedStyle(el).color);
+  expect(color).toBe('rgb(176, 42, 30)');
+  await expect(page.locator('a[href="/signin"]', { hasText: 'התחברות' }).first()).toBeVisible();
   await expect(page.locator('a[href="/signup"]', { hasText: 'הרשמה' }).first()).toBeVisible();
+});
+
+test('אורח: קטגוריות אחרות נעולות (API + מסך נעילה)', async ({ page }) => {
+  for (const v of ['exempt', 'smallbiz', 'intent']) {
+    const r = (await api(page, `/api/tenders/search?view=${v}`)).json;
+    expect(r.requiresAuth, `view=${v}`).toBe(true);
+    expect(r.total, `view=${v} ריק`).toBe(0);
+  }
+  await page.goto('/dashboard?view=exempt');
+  await expect(page.getByText('קטגוריה זו זמינה למשתמשים מחוברים בלבד')).toBeVisible();
+  await page.goto('/agent');
+  await expect(page.getByText('כדי לראות מכרזים עדכניים נדרשת התחברות')).toBeVisible();
 });
 
 test('ציון התאמה זהה ברשימה ובדף המכרז', async ({ page }) => {
@@ -129,12 +146,10 @@ test('מזהה מכרז לא קיים → 404 ודף "לא נמצא"', async ({ 
 
 test('תצוגת "כוונה להתקשרות" נפרדת מהגילוי הראשי', async ({ page }) => {
   const main = (await api(page, '/api/tenders/search?perPage=100')).json;
-  const intent = (await api(page, '/api/tenders/search?view=intent&perPage=100')).json;
-  // סה"כ הכוונות במאגר (בלתי תלוי בקהל) — מ-nav-counts; רשימת האורח עשויה להיות קטנה
+  // סה"כ הכוונות במאגר קיים (מ-nav-counts); רשימת הכוונות עצמה נעולה לאורח
   const nav = (await api(page, '/api/nav-counts')).json;
   expect(nav.intent).toBeGreaterThan(0);
   expect(main.tenders.every((t: { type: string }) => !/כוונה להתקשר/.test(t.type))).toBe(true);
-  expect(intent.tenders.every((t: { type: string }) => /כוונה להתקשר/.test(t.type))).toBe(true);
 });
 
 test('"לא מסווג" מתחת ל-25% (ארכיון אורח)', async ({ page }) => {
@@ -190,8 +205,10 @@ test.describe('מובייל (390×844)', () => {
   for (const path of ['/', '/dashboard', '/dashboard?view=intent', '/tender/4000620538', '/agent', '/signin']) {
     test(`ללא גלילה אופקית: ${path}`, async ({ page }) => {
       await page.goto(path);
-      // במובייל הרשימה מוצגת ככרטיסים (ללא role=row) — ממתינים לקישור מכרז
-      if (path.startsWith('/dashboard')) await expect(page.locator('a[href^="/tender/"]').first()).toBeVisible({ timeout: 30_000 });
+      // במובייל הרשימה מוצגת ככרטיסים (ללא role=row) — ממתינים לקישור מכרז;
+      // תצוגת קטגוריה נעולה לאורח מציגה מסך נעילה במקום רשימה
+      if (path.includes('view=')) await expect(page.getByText('קטגוריה זו זמינה למשתמשים מחוברים בלבד')).toBeVisible({ timeout: 30_000 });
+      else if (path.startsWith('/dashboard')) await expect(page.locator('a[href^="/tender/"]').first()).toBeVisible({ timeout: 30_000 });
       await page.waitForLoadState('networkidle').catch(() => {});
       const sw = await page.evaluate(() => document.documentElement.scrollWidth);
       expect(sw, 'scrollWidth').toBeLessThanOrEqual(390 + 2);

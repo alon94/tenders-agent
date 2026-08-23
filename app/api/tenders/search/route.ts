@@ -109,7 +109,9 @@ async function handle(body: any, audience: 'guest' | 'member' = 'guest') {
     const result = queryTenders(all, filters, profile, page, perPage);
     const fetchedAt = await cachedLastSync();
 
-    return NextResponse.json({ ...result, fetchedAt, corpus: all.length, audience });
+    // קטגוריה נעולה לאורח — דגל מפורש שהלקוח מציג עבורו מסך התחברות
+    const requiresAuth = audience === 'guest' && !!filters.view;
+    return NextResponse.json({ ...result, fetchedAt, corpus: all.length, audience, requiresAuth });
   } catch (err) {
     console.error('POST /api/tenders/search failed:', err);
     return NextResponse.json({ error: 'search_failed' }, { status: 500 });

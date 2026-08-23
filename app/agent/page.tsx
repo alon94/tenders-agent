@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import InternalShell from '../components/InternalShell';
 import { BORDER, DARK } from '../lib/tenderMeta';
 import { fetchMyProfile, type BusinessProfile } from '../lib/profileApi';
@@ -157,6 +157,25 @@ export default function AgentPage() {
     } finally {
       setThinking(false);
     }
+  }
+
+  // מסע הלקוח: הסוכן החכם זמין למשתמשים מחוברים בלבד.
+  // הבדיקה רק אחרי hydration — אחרת ה-HTML מהשרת נבדל מהלקוח (React #418).
+  const hydrated = useSyncExternalStore(() => () => {}, () => true, () => false);
+  if (hydrated && !getSession()) {
+    return (
+      <InternalShell title="הסוכן החכם" subtitle="זמין למשתמשים מחוברים">
+        <div style={{ background: '#fff', border: '1px solid ' + BORDER, borderRadius: 14, padding: '46px 24px', textAlign: 'center', maxWidth: 760 }}>
+          <div style={{ fontSize: 34, marginBottom: 10 }}>🔒</div>
+          <div role="alert" style={{ fontWeight: 800, color: '#b02a1e', fontSize: 16.5 }}>כדי לראות מכרזים עדכניים נדרשת התחברות</div>
+          <div style={{ fontSize: 13.5, color: '#5f6c7a', marginTop: 6 }}>הסוכן החכם סורק את המכרזים הפתוחים ומדרג התאמה לעסק שלך — זמין למשתמשים מחוברים בלבד. ההרשמה חינם.</div>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 16 }}>
+            <a href="/signin" style={{ background: '#b02a1e', color: '#fff', borderRadius: 8, padding: '10px 22px', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>התחברות</a>
+            <a href="/signup" style={{ background: '#fff', color: '#b02a1e', border: '1px solid #b02a1e', borderRadius: 8, padding: '10px 22px', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>הרשמה חינם</a>
+          </div>
+        </div>
+      </InternalShell>
+    );
   }
 
   return (

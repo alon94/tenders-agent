@@ -560,4 +560,12 @@ console.log("\nמסע הלקוח — audience: אורח=נסגרו בלבד, ר�
   check("רשום: showClosed=true לא מחזיר סגורים", memberTryClosed.tenders.every((t) => !t.id.startsWith("closed")));
   const legacy = queryTenders(fx, { showClosed: true, maxD: 3650 }, null, 1, 25, now);
   check("ללא audience: התנהגות ישנה נשמרת", legacy.total === 5);
+  // קטגוריות נעולות לאורח — פטורים/כוונה/עסקים קטנים מוחזרות ריקות
+  const fx2: any[] = [...fx, { id: "ex1", title: "פטור ממכרז — ספק יחיד", publisher: "משרד הבריאות", type: "פטור ממכרז", publishDate: iso(-40), deadline: iso(-3) }];
+  for (const v of ["exempt", "smallbiz", "intent"] as const) {
+    const g = queryTenders(fx2, { audience: "guest", view: v }, null, 1, 25, now);
+    check(`אורח: תצוגת ${v} נעולה (ריקה)`, g.total === 0, String(g.total));
+  }
+  const mEx = queryTenders(fx2, { audience: "member", view: "exempt" }, null, 1, 25, now);
+  check("רשום: תצוגת פטורים עובדת (פתוחים בלבד)", mEx.tenders.every((t) => t.id !== "ex1"));
 }

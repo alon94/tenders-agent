@@ -66,7 +66,10 @@ export function applyBaseFilters(all: QueryTender[], f: QueryFilters, now = Date
   if (biz) r = r.filter((t) => matchDomain(t, biz));
   if (pub) r = r.filter((t) => matchPublisher(t, pub));
   if (f.audience === 'guest') {
-    // אורח: ארכיון בלבד — מכרזים שמועד הגשתם עבר. פרמטרי showClosed/מועד
+    // אורח: רק הגילוי הראשי (ארכיון) פתוח. כל קטגוריה אחרת — פטורים,
+    // כוונה להתקשרות, עסקים קטנים — דורשת התחברות ומוחזרת ריקה.
+    if (view) return [];
+    // ארכיון בלבד — מכרזים שמועד הגשתם עבר. פרמטרי showClosed/מועד
     // מהלקוח אינם מוסמכים ומתעלמים מהם.
     r = r.filter((t) => { const d = daysTo(t.deadline, now); return d !== null && d < 0; });
   } else if (f.audience === 'member') {

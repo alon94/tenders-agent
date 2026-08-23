@@ -350,14 +350,28 @@ export default function Dashboard(){
             {/* table */}
             <div role="status" aria-live="polite" style={{position:'absolute',width:1,height:1,overflow:'hidden',clip:'rect(0 0 0 0)'}}>{loading?'טוען תוצאות':`${(srv?.total??0).toLocaleString('he-IL')} תוצאות`}</div>
             {!session&&(
-              <div style={{background:'#eef6ff',border:'1px solid #cfe0f4',borderRadius:10,padding:'14px 18px',marginBottom:12,display:'flex',alignItems:'center',gap:14,flexWrap:'wrap'}}>
+              <div role="alert" style={{background:'#fdecea',border:'1px solid #f1b7b0',borderRadius:10,padding:'14px 18px',marginBottom:12,display:'flex',alignItems:'center',gap:14,flexWrap:'wrap'}}>
                 <div style={{flex:'1 1 260px'}}>
-                  <div style={{fontWeight:700,color:DARK,fontSize:14.5}}>אתם צופים בארכיון — מכרזים שמועד ההגשה שלהם עבר</div>
-                  <div style={{fontSize:13,color:'#4a5a6a',marginTop:3}}>הרשמה חינם פותחת את כל {counts.active.toLocaleString('he-IL')} המכרזים הפעילים, כולל התאמה אישית לעסק שלכם.</div>
+                  <div style={{fontWeight:800,color:'#b02a1e',fontSize:15}}>כדי לראות מכרזים עדכניים נדרשת התחברות</div>
+                  <div style={{fontSize:13,color:'#7a3a33',marginTop:3}}>ללא התחברות מוצג ארכיון בלבד — מכרזים שמועד ההגשה שלהם עבר. התחברות חינם פותחת את כל {counts.active.toLocaleString('he-IL')} המכרזים הפעילים.</div>
                 </div>
-                <a href="/signup" style={{background:'#1e5aa8',color:'#fff',borderRadius:8,padding:'9px 18px',fontSize:13.5,fontWeight:700,textDecoration:'none',whiteSpace:'nowrap'}}>הרשמה חינם ←</a>
+                <div style={{display:'flex',gap:8}}>
+                  <a href="/signin" style={{background:'#b02a1e',color:'#fff',borderRadius:8,padding:'9px 18px',fontSize:13.5,fontWeight:700,textDecoration:'none',whiteSpace:'nowrap'}}>התחברות</a>
+                  <a href="/signup" style={{background:'#fff',color:'#b02a1e',border:'1px solid #b02a1e',borderRadius:8,padding:'9px 18px',fontSize:13.5,fontWeight:700,textDecoration:'none',whiteSpace:'nowrap'}}>הרשמה חינם</a>
+                </div>
               </div>
             )}
+            {!session&&view?(
+              <div style={{background:'#fff',border:`1px solid ${BORDER}`,borderRadius:10,padding:'46px 24px',textAlign:'center'}}>
+                <div style={{fontSize:34,marginBottom:10}}>🔒</div>
+                <div style={{fontWeight:800,color:'#b02a1e',fontSize:16.5}}>קטגוריה זו זמינה למשתמשים מחוברים בלבד</div>
+                <div style={{fontSize:13.5,color:'#5f6c7a',marginTop:6,maxWidth:420,marginInline:'auto'}}>כדי לראות מכרזים עדכניים — {intentView?'הודעות כוונה להתקשרות':exemptView?'מכרזים פטורים':'העדפה לעסקים קטנים'} — נדרשת התחברות. ההרשמה חינם.</div>
+                <div style={{display:'flex',gap:10,justifyContent:'center',marginTop:16}}>
+                  <a href="/signin" style={{background:'#b02a1e',color:'#fff',borderRadius:8,padding:'10px 22px',fontSize:14,fontWeight:700,textDecoration:'none'}}>התחברות</a>
+                  <a href="/signup" style={{background:'#fff',color:'#b02a1e',border:'1px solid #b02a1e',borderRadius:8,padding:'10px 22px',fontSize:14,fontWeight:700,textDecoration:'none'}}>הרשמה חינם</a>
+                </div>
+              </div>
+            ):(
             <div role="table" aria-label="רשימת מכרזים" aria-busy={loading} style={{background:'#fff',border:`1px solid ${BORDER}`,borderRadius:10,overflow:'hidden',opacity:loading&&rows.length?.55:1,transition:'opacity .15s'}}>
               {!isMobile && (<div role="row" style={{display:'grid',gridTemplateColumns:'70px 1fr 232px 156px 150px',padding:'12px 18px',background:'#f7f9fb',borderBottom:`1px solid ${BORDER}`,fontSize:12,fontWeight:700,color:'#5f6c7a'}}>
                 <span role="columnheader">ציון</span><span role="columnheader">נושא המכרז</span><span role="columnheader">סטטוס</span><span role="columnheader">מועד הגשה</span><span role="columnheader" aria-label="פעולות"></span>
@@ -456,6 +470,7 @@ export default function Dashboard(){
                 );
               })}
             </div>
+            )}
 
             {/* pagination */}
             {!loading&&tp>1&&(
