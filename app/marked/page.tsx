@@ -115,9 +115,10 @@ export default function MarkedPage() {
                 <button onClick={() => setTab('closing')} style={{ border: '1px solid ' + (tab === 'closing' ? '#b04a34' : BORDER), background: tab === 'closing' ? '#fbe9e7' : '#fff', color: '#b04a34', borderRadius: 999, padding: '7px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>נסגרים בקרוב · {closing.length}</button>
       </div>
 
-      <div style={{ background: '#fff', border: '1px solid ' + BORDER, borderRadius: 12, overflow: 'hidden' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '70px 1fr 232px 150px 120px', padding: '12px 16px', fontSize: 12, fontWeight: 600, color: '#7a8794', borderBottom: '1px solid ' + BORDER, background: '#f6f8fa' }}>
-          <span>ציון</span><span>נושא</span><span>סטטוס</span><span>מועד</span><span>פעולות</span>
+      {/* a11y (re-QA): טבלה סמנטית כמו בדשבורד — role=table/row/cell */}
+      <div role="table" aria-label="מכרזים מסומנים" style={{ background: '#fff', border: '1px solid ' + BORDER, borderRadius: 12, overflow: 'hidden' }}>
+        <div role="row" style={{ display: 'grid', gridTemplateColumns: '70px 1fr 232px 150px 120px', padding: '12px 16px', fontSize: 12, fontWeight: 600, color: '#7a8794', borderBottom: '1px solid ' + BORDER, background: '#f6f8fa' }}>
+          <span role="columnheader">ציון</span><span role="columnheader">נושא</span><span role="columnheader">סטטוס</span><span role="columnheader">מועד</span><span role="columnheader">פעולות</span>
         </div>
         {error && !loading && shown.length > 0 && (
           // כשל חלקי: חלק מהמנות נטענו — באנר, לא מסך ריק.
@@ -142,23 +143,23 @@ export default function MarkedPage() {
             const score = scoreOf(t);
             const tags = statusTags(t.status || '', d, t.publisher);
             return (
-              <div key={t.id} style={{ display: 'grid', gridTemplateColumns: '70px 1fr 232px 150px 120px', padding: '14px 16px', alignItems: 'center', borderBottom: '1px solid ' + BORDER }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+              <div role="row" key={t.id} style={{ display: 'grid', gridTemplateColumns: '70px 1fr 232px 150px 120px', padding: '14px 16px', alignItems: 'center', borderBottom: '1px solid ' + BORDER }}>
+                <div role="cell" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                   <span style={{ fontSize: 20, fontWeight: 700, color: DARK, lineHeight: 1 }}>{score}</span>
                   <span style={{ width: 26, height: 3, borderRadius: 2, background: bandColor(score) }} />
                 </div>
-                <div style={{ paddingInlineEnd: 10 }}>
+                <div role="cell" style={{ paddingInlineEnd: 10 }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: DARK, lineHeight: 1.4 }}>{t.title || 'ללא כותרת'}</div>
                                     <div style={{ fontSize: 12, color: '#7a8794', marginTop: 3 }}>{t.publisher || 'לא ידוע'} · פורסם {fmtDate(t.publishDate || '')}</div>
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                <div role="cell" style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
                   {tags.slice(0, 3).map((g, gi) => (<span key={gi} style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 6, background: g.bg, color: g.fg, border: '1px solid ' + g.bd }}>{g.label}</span>))}
                 </div>
-                <div style={{ fontSize: 13 }}>
+                <div role="cell" style={{ fontSize: 13 }}>
                   <div style={{ color: DARK, fontWeight: 600 }}>{fmtDate(t.deadline || '')}</div>
                   {d !== null && d >= 0 && <div style={{ color: d <= 7 ? '#b04a34' : '#7a8794', fontSize: 12 }}>נותרו {d} ימים</div>}
                 </div>
-                <div style={{ display: 'flex', gap: 12, fontSize: 13 }}>
+                <div role="cell" style={{ display: 'flex', gap: 12, fontSize: 13 }}>
                   <a href={'/tender/' + t.id} style={{ color: '#2b6fc4', fontWeight: 600, textDecoration: 'none' }}>פרטים</a>
                   <button onClick={() => remove(t.id)} style={{ color: '#b04a34', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}>הסר</button>
                 </div>
