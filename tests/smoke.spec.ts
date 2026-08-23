@@ -187,8 +187,8 @@ test('ציון זהה גם בדף "מסומנים"', async ({ page }) => {
   const detailScore = (await page.locator('[aria-label^="ציון התאמה"] span').first().textContent())?.trim();
   await page.getByRole('button', { name: /שמירה למעקב/ }).click();
   await page.goto('/marked');
-  const row = page.locator('[role=row]', { hasText: t.title.slice(0, 30) }).first();
-  // דף המסומנים טוען את כל המאגר — נדרשת המתנה ארוכה יותר בסביבת CI
+  // איתור לפי מזהה (קישור "פרטים") — הכותרת עשויה להיות מקודדת שונה בין המקורות
+  const row = page.locator('[role=row]', { has: page.locator(`a[href="/tender/${t.id}"]`) }).first();
   await expect(row).toBeVisible({ timeout: 30_000 });
   await expect(row).toContainText(detailScore!);
 });
