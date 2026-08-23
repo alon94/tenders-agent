@@ -127,20 +127,24 @@ const PAGE = 1000;
 const MAX_PAGES = 12;
 let refreshing: Promise<TenderRecord[]> | null = null;
 
+// מסע הלקוח: המאגר כולל ארכיון של מכרזים שנסגרו ב-120 הימים האחרונים —
+// זה מה שאורח רואה. הפתוחים בלבד מוגשים לרשומים (tenderQuery/audience).
+const ARCHIVE_DAYS = 120;
+
 async function loadCorpus(): Promise<TenderRecord[]> {
-  const today = new Date().toISOString().split('T')[0];
+  const cutoff = new Date(Date.now() - ARCHIVE_DAYS * 86400000).toISOString().split('T')[0];
   let rows: TenderRecord[] = [];
   try {
     // עמוד ראשון קובע אם יש עוד; שאר העמודים במקביל
-    const first = await getTenders({ offset: 0, limit: PAGE, activeOnly: true, columns: CORPUS_COLUMNS });
+    const first = await getTenders({ offset: 0, limit: PAGE, archiveDays: ARCHIVE_DAYS, columns: CORPUS_COLUMNS });
     rows = first;
     if (first.length === PAGE) {
       const rest = await Promise.all(
-        Array.from({ length: MAX_PAGES - 1 }, (_, i) => getTenders({ offset: (i + 1) * PAGE, limit: PAGE, activeOnly: true, columns: CORPUS_COLUMNS }).catch(() => [] as TenderRecord[]))
+        Array.from({ length: MAX_PAGES - 1 }, (_, i) => getTenders({ offset: (i + 1) * PAGE, limit: PAGE, archiveDays: ARCHIVE_DAYS, columns: CORPUS_COLUMNS }).catch(() => [] as TenderRecord[]))
       );
       for (const page of rest) { if (page.length === 0) break; rows.push(...page); }
     }
-    rows = rows.filter((t) => t.title && (!t.deadline || String(t.deadline).split('T')[0] >= today));
+    rows = rows.filter((t) => t.title && (!t.deadline || String(t.deadline).split('T')[0] >= cutoff));
     rows = sanitizeRows(rows);
   } catch {
     rows = [];

@@ -185,6 +185,9 @@ export function queryTenders(
   // QA #05: מספרי התחומים בתפריט נספרים על אותה קבוצה שמוצגת (ללא סינון התחום עצמו),
   // כך שבחירת "ניקיון (191)" באמת מחזירה 191.
   const { domains, uncategorized } = cachedDomainCounts(all, filters, now);
+  // המונים הגלובליים (סיידבר/KPI) סופרים את המאגר *הפתוח* בלבד — המאגר
+  // עצמו כולל מעכשיו גם ארכיון של 120 יום עבור אורחים.
+  const open = all.filter((t) => { const d = daysTo(t.deadline, now); return d === null || d >= 0; });
   return {
     tenders: shown.slice((page - 1) * perPage, page * perPage),
     total: shown.length,
@@ -192,10 +195,10 @@ export function queryTenders(
       base: base.length,
       closing: selectTab(base, 'closing', now).length,
       new: selectTab(base, 'new', now).length,
-      smallBiz: all.filter(isSmallBiz).length,
-      active: all.filter((t) => !isIntent(t.type || '', t.title)).length,
-      exempt: all.filter((t) => isExempt(t.type || '', t.title) && !isIntent(t.type || '', t.title)).length,
-      intent: all.filter((t) => isIntent(t.type || '', t.title)).length,
+      smallBiz: open.filter(isSmallBiz).length,
+      active: open.filter((t) => !isIntent(t.type || '', t.title)).length,
+      exempt: open.filter((t) => isExempt(t.type || '', t.title) && !isIntent(t.type || '', t.title)).length,
+      intent: open.filter((t) => isIntent(t.type || '', t.title)).length,
     },
     domains, uncategorized,
   };

@@ -11,7 +11,9 @@ export const dynamic = "force-dynamic";
 // בדיוק כמו /api/tenders/search.
 export async function GET() {
   try {
-    const rows = await fetchActiveTenders();
+    // המאגר כולל גם ארכיון (120 יום) לאורחים — המונים סופרים פתוחים בלבד
+    const today = new Date().toISOString().split("T")[0];
+    const rows = (await fetchActiveTenders()).filter((r) => !r.deadline || String(r.deadline).split("T")[0] >= today);
     // "כוונה להתקשרות" נספרת בנפרד ואינה נכללת בפעילים/פטורים
     const intent = rows.filter((r) => isIntent(r.type || "", r.title)).length;
     const active = rows.length - intent;

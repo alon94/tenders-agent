@@ -120,8 +120,8 @@ export async function upsertTenders(tenders: TenderRecord[]): Promise<{ count: n
 }
 
 // Reads tenders from the DB with optional search + pagination.
-export async function getTenders(opts: { search?: string; offset?: number; limit?: number; activeOnly?: boolean; ids?: string[]; columns?: string } = {}): Promise<TenderRecord[]> {
-    const { search, offset = 0, limit = 1000, activeOnly = false, ids, columns } = opts;
+export async function getTenders(opts: { search?: string; offset?: number; limit?: number; activeOnly?: boolean; archiveDays?: number; ids?: string[]; columns?: string } = {}): Promise<TenderRecord[]> {
+    const { search, offset = 0, limit = 1000, activeOnly = false, archiveDays, ids, columns } = opts;
 
   const params = new URLSearchParams();
     // QA/H-1: `select=*` משך כל עמודה, כולל שני שדות טקסט כבדים שאינם
@@ -140,7 +140,12 @@ export async function getTenders(opts: { search?: string; offset?: number; limit
       // בסגנון SQL. הכפלה גררה שגיאת פרסור 400 והפילה את כל הבקשה.
       params.set("id", `in.(${ids.map((v) => `"${String(v).replace(/([\\"])/g, "\\$1")}"`).join(",")})`);
     }
-    if (activeOnly) {
+    if (archiveDays != null) {
+      // מסע הלקוח: המאגר כולל גם ארכיון — מכרזים שנסגרו ב-N הימים האחרונים
+      // (מוגש לאורחים). הגייטינג פתוח/סגור נאכף ב-tenderQuery לפי audience.
+      const cutoff = new Date(Date.now() - archiveDays * 86400000).toISOString().split("T")[0];
+      params.set("and", `(or(deadline.gte.${cutoff},deadline.is.null))`);
+    } else if (activeOnly) {
       // חגורת ביטחון שרת-צד: מכרזים שמועד הגשתם עבר לא נשלחים ללקוח
       // כלל — מחסן גם דפדפנים שמריצים bundle ישן מהמטמון. עטוף ב-and
       // כדי לא להתנגש עם פרמטר ה-or של החיפוש.
