@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdmin, listRegisteredUsers, deleteRegisteredUser } from "@/app/lib/ops";
+import { requireAdmin, listRegisteredUsersDiag, deleteRegisteredUser } from "@/app/lib/ops";
 
 export const dynamic = "force-dynamic";
 
@@ -7,9 +7,14 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   const admin = await requireAdmin(req);
   if (!admin) return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  const users = await listRegisteredUsers();
-  users.sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
-  return NextResponse.json({ users, count: users.length });
+  try {
+    const { users, notes } = await listRegisteredUsersDiag();
+    users.sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
+    return NextResponse.json({ users, count: users.length, notes });
+  } catch (e) {
+    // כשל לא צפוי לא מוחזר כ-500 אטום — האדמין מציג את הסיבה
+    return NextResponse.json({ users: [], count: 0, notes: ["שגיאה: " + String((e as Error)?.message || e).slice(0, 200)] });
+  }
 }
 
 // DELETE /api/admin/users?id=<uuid> — מחיקת משתמש רשום

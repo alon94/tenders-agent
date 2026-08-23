@@ -432,15 +432,27 @@ export interface RegisteredUser {
 
 /** רשימת המשתמשים הרשומים דרך Supabase Auth Admin API (service key). */
 export async function listRegisteredUsers(): Promise<RegisteredUser[]> {
-  try { const viaSql = await authUsersViaSql(); if (viaSql.length) return viaSql; } catch (e) { console.error('ops.listRegisteredUsers via postgres failed:', e); }
-  if (!SUPABASE_URL || !SERVICE_KEY) return [];
+  const { users } = await listRegisteredUsersDiag();
+  return users;
+}
+
+// אבחון: אותה שליפה, עם פירוט לכל מסלול — מוצג במסך האדמין כשאין תוצאות,
+// כדי שכשל שקט (env חסר, הרשאה, רשת) יהיה גלוי במקום טבלה ריקה.
+export async function listRegisteredUsersDiag(): Promise<{ users: RegisteredUser[]; notes: string[] }> {
+  const notes: string[] = [];
+  try {
+    const viaSql = await authUsersViaSql();
+    if (viaSql.length) return { users: viaSql, notes };
+    notes.push(process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL ? 'postgres: 0 שורות מ-auth.users' : 'postgres: אין POSTGRES_URL — מדלגים');
+  } catch (e) { notes.push('postgres: ' + String((e as Error)?.message || e).slice(0, 160)); }
+  if (!SUPABASE_URL || !SERVICE_KEY) { notes.push('auth admin API: חסר SUPABASE_URL או SUPABASE_SERVICE_ROLE_KEY ב-env'); return { users: [], notes }; }
   const out: RegisteredUser[] = [];
   for (let page = 1; page <= 20; page++) {
     const res = await fetch(`${SUPABASE_URL}/auth/v1/admin/users?page=${page}&per_page=100`, {
       headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
       cache: 'no-store',
     });
-    if (!res.ok) { console.error('ops.listRegisteredUsers admin API failed:', res.status); break; }
+    if (!res.ok) { notes.push(`auth admin API: HTTP ${res.status} — ${(await res.text().catch(() => '')).slice(0, 120)}`); break; }
     const data = await res.json().catch(() => null);
     const users = (data?.users || data || []) as Record<string, unknown>[];
     if (!Array.isArray(users) || users.length === 0) break;
@@ -455,7 +467,8 @@ export async function listRegisteredUsers(): Promise<RegisteredUser[]> {
     }
     if (users.length < 100) break;
   }
-  return out;
+  if (!out.length) notes.push('auth admin API: 0 משתמשים הוחזרו');
+  return { users: out, notes };
 }
 
 // שליפה ישירה של auth.users דרך Postgres - אותו חיבור שמשמש את המיגרציה העצמית.

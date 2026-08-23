@@ -71,6 +71,7 @@ export default function AdminPage() {
   const [toD, setToD] = useState('');
   const [analytics, setAnalytics] = useState<{ tenders: SeriesPt[]; logins: SeriesPt[]; runs: SeriesPt[] } | null>(null);
   const [users, setUsers] = useState<UserRow[] | null>(null);
+  const [usersNotes, setUsersNotes] = useState<string[]>([]);
   const [slides, setSlides] = useState<SlideRow[]>([]);
   const [draft, setDraft] = useState<SlideRow>({ title: '', subtitle: '', badge: '', cta_label: '', cta_href: '/dashboard', sort_order: 0, active: true });
   const [slideBusy, setSlideBusy] = useState(false);
@@ -109,8 +110,10 @@ export default function AdminPage() {
     const b = adminToken(); if (!b) return;
     try {
       const r = await fetch('/api/admin/users', { headers: { Authorization: `Bearer ${b}` } });
-      if (r.ok) setUsers((await r.json()).users);
-    } catch { /* ignore */ }
+      const d = await r.json().catch(() => null);
+      if (r.ok && d) { setUsers(d.users); setUsersNotes(d.notes || []); }
+      else setUsersNotes([`הבקשה נכשלה: HTTP ${r.status}`]);
+    } catch (e) { setUsersNotes(['שגיאת תקשורת: ' + String(e).slice(0, 120)]); }
   }, [adminToken]);
 
   useEffect(() => { if (state === 'ready') { loadAnalytics(); } }, [state, loadAnalytics]);
@@ -462,6 +465,11 @@ export default function AdminPage() {
               </tr>
             ))}
             {users && users.length === 0 && <tr><td colSpan={5} style={{ padding: 20, textAlign: 'center', color: MUTED }}>אין משתמשים</td></tr>}
+            {(!users || users.length === 0) && usersNotes.length > 0 && (
+              <tr><td colSpan={5} style={{ padding: '10px 14px', color: '#b04a34', fontSize: 12.5, background: '#fdf6f4' }}>
+                אבחון: {usersNotes.join(' · ')}
+              </td></tr>
+            )}
           </tbody>
         </table>
       </div>
