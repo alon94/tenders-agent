@@ -312,6 +312,21 @@ export const NEW_SOURCES: NewSource[] = [
   genericSource("mekorot", "מקורות — חברת המים", "מקורות חברת מים בע\"מ", [
     proxied("https://www.mekorot.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/"),
   ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "חוסמת בוטים — דרך IL_PROXY_URL" }),
+  // ---------- גל שלישי: שלטון מקומי מרכזי וקולות קוראים ממשלתיים ----------
+  // מש"מ — מרכז השלטון המקומי: ~50 מכרזים וקולות קוראים לרשויות, רשימה
+  // מרונדרת-שרת בעמוד אחד (אומת 23.08.2026). קישורי פריט: /bids/?id=NN
+  genericSource("masham", 'מש"מ — מרכז השלטון המקומי', "מרכז השלטון המקומי", [
+    "https://masham.org.il/bids/",
+  ], { hrefMatch: /bids\/?\?id=/i }),
+  // פורטל רשויות ובעלויות חינוך — קולות קוראים של משרד החינוך (SharePoint)
+  genericSource("edu-pob", "משרד החינוך — קולות קוראים לרשויות", "משרד החינוך", [
+    "https://pob.education.gov.il/kolotkorim/kolkore/",
+    "https://pob.education.gov.il/kolotkorim/pages/kolkore.aspx",
+  ], { match: /קול קורא|קו"ק|מכרז/, hrefMatch: /kolkore|KolKore|kolotkorim/i }),
+  // קק"ל — מכרזים והתקשרויות (דף האב מנווט לרשימות משנה)
+  genericSource("kkl", 'קק"ל — מכרזים', "קרן קימת לישראל", [
+    "https://www.kkl.org.il/about-us/tenders/",
+  ], { hrefMatch: /tender|מכרז/i, note: "דף אב — אם הרשימות בתתי-עמודים בלבד, להרחיב כתובות" }),
 ];
 
 export interface SourceRunReport {
