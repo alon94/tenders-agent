@@ -278,7 +278,7 @@ export const NEW_SOURCES: NewSource[] = [
   ], { enabled: false, note: "WAF מחזיר 403 גם עם כותרות דפדפן — נדרש IL_PROXY_URL" }),
   genericSource("ayalon", "נתיבי איילון", "נתיבי איילון", [
     proxied("https://www.ayalonhw.co.il/tenders/tenders-lobby/"),
-  ], { enabled: false, hrefMatch: /tender/i, note: "WAF מחזיר 403 גם עם כותרות דפדפן — נדרש IL_PROXY_URL" }),
+  ], { enabled: true, hrefMatch: /tender/i, note: "נטען ישירות משרת חו\"ל (אומת 25.08.2026) — proxied() משמש כ-passthrough כשאין IL_PROXY_URL" }),
   // ---------- גל שני: תחבורה, תעופה, אקדמיה, פיתוח עירוני ----------
   genericSource("rail", "רכבת ישראל", "רכבת ישראל", [
     proxied("https://www.rail.co.il/?page=GeneralAuctions&lan=he"),
@@ -286,7 +286,7 @@ export const NEW_SOURCES: NewSource[] = [
   ], { enabled: false, note: "WAF מחזיר 403 לשרתי חו\"ל — נדרש IL_PROXY_URL" }),
   genericSource("nta", 'נת"ע — מטרו וקווי רכבת קלה', 'נת"ע נתיבי תחבורה עירוניים', [
     proxied("https://www.nta.co.il/tenders/"),
-  ], { enabled: false, hrefMatch: /tender/i, note: "WAF מחזיר 403 לשרתי חו\"ל — נדרש IL_PROXY_URL" }),
+  ], { enabled: true, hrefMatch: /tender/i, note: "נטען ישירות משרת חו\"ל (אומת 25.08.2026) — proxied() משמש כ-passthrough כשאין IL_PROXY_URL" }),
   genericSource("iaa", "רשות שדות התעופה", "רשות שדות התעופה", [
     // מבנה האתר החדש: הגרסה העברית ללא קידומת /he
     "https://www.iaa.gov.il/tenders-and-contracts/active-tenders/",
