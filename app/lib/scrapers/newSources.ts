@@ -327,6 +327,143 @@ export const NEW_SOURCES: NewSource[] = [
   genericSource("kkl", 'קק"ל — מכרזים', "קרן קימת לישראל", [
     "https://www.kkl.org.il/about-us/tenders/",
   ], { hrefMatch: /tender|מכרז/i, note: "דף אב — אם הרשימות בתתי-עמודים בלבד, להרחיב כתובות" }),
+
+  // ============================================================
+  //  גל רביעי — הרחבה רוחבית: בריאות, תשתיות, אקדמיה, תאגידים
+  //  עירוניים ותעשיות ביטחוניות. סיווג enabled/disabled נקבע לפי
+  //  בדיקת נגישות בפועל (WebFetch משרת חו"ל): מקורות server-html
+  //  שנטענים ישירות = enabled; חסומי WAF/גיאו = disabled + proxied()
+  //  (ידרשו IL_PROXY_URL); אתרי JS/SPA = disabled + הערה שנדרש API.
+  // ============================================================
+
+  // ---------- בריאות: קופות חולים ותאגידי בריאות של בתי חולים ----------
+  // שירותי בריאות כללית — אין רשימה מאוחדת אחת; ועדות נפרדות בתתי-עמודים.
+  genericSource("clalit", "שירותי בריאות כללית — מכרזים", "שירותי בריאות כללית", [
+    "https://www.clalit.co.il/he/info/tenders/Pages/michraz_michshuv.aspx",
+    "https://www.clalit.co.il/he/info/tenders/Pages/mkomi_hospital.aspx",
+    "https://www.clalit.co.il/he/info/tenders/Pages/mkomi_mhozot.aspx",
+    "https://www.clalit.co.il/he/info/tenders/Pages/general_matters.aspx",
+    "https://www.clalit.co.il/he/info/tenders/Pages/kol-kore.aspx",
+  ], { hrefMatch: /tender|michraz|Pages/i, note: "SharePoint — מכרזים מרונדרי-שרת בתתי-עמודים לפי ועדה" }),
+  genericSource("leumit", "קופת חולים לאומית — מכרזים", "קופת חולים לאומית", [
+    "https://www.leumit.co.il/bids/publictenders/",
+  ], { hrefMatch: /bids|tender|publictenders/i }),
+  genericSource("ichilov", "איכילוב — תאגיד הבריאות (סוראסקי)", "המרכז הרפואי תל אביב סוראסקי", [
+    "https://www.tasmc.org.il/all/michrazim-health-corp/",
+  ], { hrefMatch: /michraz|tender/i }),
+  genericSource("hadassah", "הדסה — ועדת התקשרויות", "הדסה", [
+    "https://he.hadassah.org.il/center/vaadat-itkashruyot/",
+  ], { hrefMatch: /center\/michrazim|itkashr/i }),
+  genericSource("rambam", 'רמב"ם — מכרזים פומביים', 'רמב"ם — הקריה הרפואית', [
+    "https://www.rambam.org.il/departmentsandclinics/purchasing-department/public-tenders/",
+  ], { hrefMatch: /tender|public-tenders/i }),
+  genericSource("shamir", "שמיר (אסף הרופא) — מכרזים", "המרכז הרפואי שמיר", [
+    "https://www.shamir.org/he/about/tenders/",
+  ], { hrefMatch: /media|tender/i, note: "מכרזים כקובצי PDF — כותרות קצרות (מספר/שנה)" }),
+  // בית חולים שיבא — הרשימה נטענת ב-JS; מכרזיו הפומביים מתפרסמים ממילא
+  // בפורטל הרכש הממשלתי (mr.gov.il) שכבר במאגר. מושבת עד למיפוי ה-API.
+  { id: "sheba", name: "שיבא תל השומר — מכרזים", publisher: "המרכז הרפואי שיבא", enabled: false,
+    note: "אתר JS/SPA — הרשימה אינה ב-HTML הגולמי; מכוסה חלקית דרך פורטל הרכש הממשלתי", run: async () => [] },
+
+  // ---------- תשתיות, אנרגיה, מים וחברות ממשלתיות ----------
+  genericSource("ingl", 'נתג"ז — נתיבי הגז הטבעי', "נתיבי הגז הטבעי לישראל", [
+    "https://www.ingl.co.il/tenders/",
+  ], { hrefMatch: /tender/i, note: "רשימה מובנית היטב — מכרזים פתוחים/סגורים עם קבצים מצורפים" }),
+  genericSource("ashdod-port", "נמל אשדוד — מכרזים", "חברת נמל אשדוד", [
+    "https://www.ashdodport.co.il/about/opportunities/pages/tenders.aspx",
+  ], { hrefMatch: /tender|opportunit/i }),
+  genericSource("israports", 'חברת נמלי ישראל — חנ"י', "חברת נמלי ישראל", [
+    "https://www.israports.co.il/he/TendersRegistration/Pages/default.aspx",
+  ], { hrefMatch: /TenderPage|no=|Tenders/i }),
+  genericSource("amigour", "עמיגור — מכרזים ופרסומים", "עמיגור ניהול נכסים", [
+    "https://www.amigour.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%95%D7%A4%D7%A8%D7%A1%D7%95%D7%9E%D7%99%D7%9D",
+  ], { hrefMatch: /\.pdf|prdFiles/i, note: "מכרזים כ-PDF תחת /prdFiles/" }),
+  // חסומי WAF/גיאו לשרת חו"ל — ידרשו IL_PROXY_URL
+  genericSource("haifa-port", "נמל חיפה — מכרזים", "חברת נמל חיפה", [
+    proxied("https://www.haifaport.co.il/tenders/"),
+  ], { enabled: false, hrefMatch: /tender/i, note: "WAF מחזיר 403 לשרת חו\"ל — נדרש IL_PROXY_URL" }),
+  genericSource("transisrael", "חוצה ישראל (כביש 6) — מכרזים", "חוצה ישראל", [
+    proxied("https://www.transisrael.co.il/Tenders"),
+  ], { enabled: false, hrefMatch: /tender/i, note: "WAF מחזיר 403 לשרת חו\"ל — נדרש IL_PROXY_URL" }),
+  genericSource("amidar", "עמידר — מכרזים", "עמידר החברה הלאומית לשיכון", [
+    proxied("https://www.amidar.co.il/wps/portal/amidar/service/tenders"),
+  ], { enabled: false, hrefMatch: /tender/i, note: "WebSphere Portal + WAF (471) — נדרש IL_PROXY_URL וייתכן רינדור" }),
+  // קצא"א (EAPC) — אתר WordPress בטעינת JS; מכרזים כעמודי /hpirsum/ נפרדים.
+  { id: "eapc", name: 'קצא"א — מכרזים', publisher: "קצא\"א (EAPC)", enabled: false,
+    note: "אתר JS — הרשימה אינה ב-HTML הגולמי; פרסומים תחת /hpirsum/ ו-PDF", run: async () => [] },
+  // דואר ישראל — מערכת Domino ישנה בתהליך מעבר ל-SPA; כניסה מפנה ל-SPA.
+  { id: "israelpost", name: "דואר ישראל — מכרזים", publisher: "חברת דואר ישראל", enabled: false,
+    note: "מעבר ל-SPA — נדרשת כתובת ה-view הישירה של mihrazim.nsf או ה-API החדש", run: async () => [] },
+
+  // ---------- מוסדות להשכלה גבוהה ----------
+  genericSource("huji", "האוניברסיטה העברית — מכרזים", "האוניברסיטה העברית בירושלים", [
+    "https://tenders.huji.ac.il/bids/",
+  ], { hrefMatch: /bids|tender/i }),
+  genericSource("technion", "הטכניון — מכרזים", "הטכניון — מכון טכנולוגי לישראל", [
+    "https://michrazim.technion.ac.il/tenders-list/",
+  ], { hrefMatch: /tender/i }),
+  genericSource("biu", 'בר-אילן — מכרזים', "אוניברסיטת בר-אילן", [
+    "https://tiful.biu.ac.il/michrazim",
+  ], { hrefMatch: /michrazim|node/i }),
+  genericSource("bgu", 'בן-גוריון — מכרזים פומביים', "אוניברסיטת בן-גוריון בנגב", [
+    "https://w3.bgu.ac.il/bengurionbids/bidsList.aspx?dep=100",
+  ], { hrefMatch: /bid|Details/i }),
+  genericSource("haifa-univ", "אוניברסיטת חיפה — מכרזים", "אוניברסיטת חיפה", [
+    "https://tender.haifa.ac.il/index.php?option=com_content&view=category&id=12&Itemid=12",
+  ], { hrefMatch: /com_content|Itemid|article/i }),
+  genericSource("weizmann", "מכון ויצמן — מכרזים", "מכון ויצמן למדע", [
+    "https://www.weizmann.ac.il/michrazim/public-tenders",
+  ], { hrefMatch: /tender-details|michrazim/i }),
+  genericSource("openu", "האוניברסיטה הפתוחה — מכרזים", "האוניברסיטה הפתוחה", [
+    "https://www.openu.ac.il/bid/",
+  ], { hrefMatch: /bid|michraz|shlifa/i, note: "דף נחיתה סטטי המקשר למערכת Oracle ישנה" }),
+  genericSource("ariel", "אוניברסיטת אריאל — מכרזים", "אוניברסיטת אריאל בשומרון", [
+    "https://www.ariel.ac.il/wp/auctions-and-decisions/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/",
+  ], { hrefMatch: /auctions|tender|michraz/i, note: "WordPress — ייתכן אנטי-בוט; אם ריק יש להפעיל דרך proxy" }),
+
+  // ---------- תאגידים עירוניים, מים וחברות כלכליות ----------
+  genericSource("mei-avivim", "מי אביבים — מכרזים פומביים", "מי אביבים", [
+    "https://www.mei-avivim.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%A4%D7%95%D7%9E%D7%91%D7%99%D7%99%D7%9D/",
+  ], { hrefMatch: /\/tender\//i }),
+  genericSource("mei-carmel", "מי כרמל — מכרזים פתוחים", "מי כרמל", [
+    "https://www.mei-carmel.co.il/category/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%A4%D7%AA%D7%95%D7%97%D7%99%D7%9D/",
+  ], { hrefMatch: /tender|michraz/i }),
+  genericSource("ezra-bitzaron", "עזרה וביצרון — מכרזים", "עזרה וביצרון", [
+    "https://www.e-b.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/",
+  ], { hrefMatch: /\.pdf|tender|michraz/i }),
+  genericSource("ahuzot-hahof", "אחוזות החוף — מכרזים", "אחוזות החוף", [
+    "https://www.ahuzot.co.il/tenders/",
+  ], { hrefMatch: /tender/i, note: "ASP.NET — חלק מהקישורים postback; ייתכן קציר חלקי" }),
+  genericSource("atarim", "אתרים — מכרזים", "חברת אתרים", [
+    "https://www.atarim.gov.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/",
+  ], { hrefMatch: /tender|michraz/i }),
+  genericSource("yefenof", "יפה נוף — מכרזים", "יפה נוף תחבורה תשתיות ובנייה", [
+    "https://www.yefenof.co.il/tenders",
+  ], { hrefMatch: /Tender\?tenderID|tender/i }),
+  genericSource("hagihon", "הגיחון — מכרזים פעילים", "תאגיד המים הגיחון", [
+    proxied("https://www.hagihon.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%95%D7%A1%D7%A4%D7%A7%D7%99%D7%9D/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%A4%D7%A2%D7%99%D7%9C%D7%99%D7%9D/"),
+  ], { enabled: false, hrefMatch: /tender|michraz/i, note: "WAF מחזיר 471 לשרת חו\"ל — נדרש IL_PROXY_URL" }),
+  genericSource("halat", 'ח.ל.ת נתניה — מכרזים', "ח.ל.ת החברה לפיתוח ותיירות נתניה", [
+    proxied("https://www.halat.co.il/html5/?_id=12157&did=2300&g=12157"),
+  ], { enabled: false, note: "CMS ישן חוסם בוטים — נדרש IL_PROXY_URL" }),
+  // מניב ראשון — SharePoint (List13) ללא עמוד אינדקס נקי; מושבת עד למיפוי.
+  { id: "meniv", name: "מניב ראשון — מכרזים", publisher: "מניב ראשון לציון", enabled: false,
+    note: "SharePoint List13 ללא אינדקס ציבורי — נדרש מיפוי ישיר או אגרגטור", run: async () => [] },
+
+  // ---------- תעשיות ביטחוניות ומקורות ממשלתיים נוספים ----------
+  // סיב"ת — מִנהל הסחר החוץ-ביטחוני של משהב"ט (רשימה ציבורית מרונדרת-שרת)
+  genericSource("modsibat", 'משהב"ט — סחר חוץ (סיב"ת)', "משרד הביטחון — סיב\"ת", [
+    "https://www.online.mod.gov.il/Online2016/Pages/General/Sibat/TendersList.aspx?Reset=1",
+  ], { match: /מכרז|בל["״]?מ|הצעות|RFP|RFI/, hrefMatch: /Tender|Sibat/i }),
+  // התעשייה האווירית ורפאל — אין עמוד מכרזים פומבי; המכרזים רצים בפורטלים
+  // סגורים (SourcingVision / iai-auction) בהזמנה אישית. מתועד כמושבת.
+  { id: "iai", name: 'התעשייה האווירית — ספקים', publisher: "התעשייה האווירית לישראל", enabled: false,
+    note: "אין רשימת מכרזים פומבית — מכרזים בפורטלי מכרז הפוך סגורים (התחברות)", run: async () => [] },
+  { id: "rafael", name: "רפאל — ספקים", publisher: "רפאל מערכות לחימה מתקדמות", enabled: false,
+    note: "אין רשימת מכרזים פומבית — מתפרסמים בערוצים ממשלתיים/משהב\"ט", run: async () => [] },
+  // ילקוט הפרסומים / רשומות — Angular + PDF; נדרש רה-הנדוס של קריאת ה-collector
+  { id: "reshumot", name: "ילקוט הפרסומים (רשומות)", publisher: "רשומות — ילקוט הפרסומים", enabled: false,
+    note: "gov.il DynamicCollector (Angular) + PDF — נדרש מיפוי ה-API של האוסף", run: async () => [] },
 ];
 
 export interface SourceRunReport {
