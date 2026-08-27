@@ -259,7 +259,7 @@ export const NEW_SOURCES: NewSource[] = [
   ], { enabled: false, hrefMatch: /tender/i, note: "הגנת בוטים ברמת רשת — ללא IL_PROXY_URL הבקשה צפויה להיכשל" }),
   genericSource("pais", "מפעל הפיס", "מפעל הפיס", [
     proxied("https://www.pais.co.il/tenders/"),
-  ], { hrefMatch: /tender/i, note: "מוגן Imperva/Incapsula — ללא IL_PROXY_URL הבקשה צפויה להיכשל" }),
+  ], { enabled: false, hrefMatch: /tender/i, note: "Imperva — חסימת cloud ברמת רשת (reset/timeout גם דרך IL_PROXY_URL ב-Oracle IL, אומת 27.08.2026) — עובד רק מ-IP ביתי" }),
   genericSource("meuhedet", "קופת חולים מאוחדת", "קופת חולים מאוחדת", [
     "https://www.meuhedet.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%A4%D7%A2%D7%99%D7%9C%D7%99%D7%9D/",
   ], {
@@ -278,7 +278,7 @@ export const NEW_SOURCES: NewSource[] = [
   ], { enabled: false, note: "WAF מחזיר 403 גם עם כותרות דפדפן — נדרש IL_PROXY_URL" }),
   genericSource("ayalon", "נתיבי איילון", "נתיבי איילון", [
     proxied("https://www.ayalonhw.co.il/tenders/tenders-lobby/"),
-  ], { enabled: true, hrefMatch: /tender/i, note: "נטען ישירות משרת חו\"ל (אומת 25.08.2026) — proxied() משמש כ-passthrough כשאין IL_PROXY_URL" }),
+  ], { enabled: false, hrefMatch: /tender/i, note: "חסימת cloud ברמת רשת (reset/timeout גם דרך IL_PROXY_URL ב-Oracle IL, אומת 27.08.2026) — עובד רק מ-IP ביתי" }),
   // ---------- גל שני: תחבורה, תעופה, אקדמיה, פיתוח עירוני ----------
   genericSource("rail", "רכבת ישראל", "רכבת ישראל", [
     proxied("https://www.rail.co.il/?page=GeneralAuctions&lan=he"),
@@ -286,11 +286,11 @@ export const NEW_SOURCES: NewSource[] = [
   ], { enabled: false, note: "WAF מחזיר 403 לשרתי חו\"ל — נדרש IL_PROXY_URL" }),
   genericSource("nta", 'נת"ע — מטרו וקווי רכבת קלה', 'נת"ע נתיבי תחבורה עירוניים', [
     proxied("https://www.nta.co.il/tenders/"),
-  ], { enabled: true, hrefMatch: /tender/i, note: "נטען ישירות משרת חו\"ל (אומת 25.08.2026) — proxied() משמש כ-passthrough כשאין IL_PROXY_URL" }),
+  ], { enabled: false, hrefMatch: /tender/i, note: "WAF מחזיר 403 מכל מקור כולל IP ביתי (אומת 27.08.2026) — נדרש רינדור דפדפן" }),
   genericSource("iaa", "רשות שדות התעופה", "רשות שדות התעופה", [
     // מבנה האתר החדש: הגרסה העברית ללא קידומת /he
-    "https://www.iaa.gov.il/tenders-and-contracts/active-tenders/",
-    "https://www.iaa.gov.il/tenders-and-contracts/tenders-archive/",
+    proxied("https://www.iaa.gov.il/tenders-and-contracts/active-tenders/"),
+    proxied("https://www.iaa.gov.il/tenders-and-contracts/tenders-archive/"),
   ]),
   genericSource("tau", "אוניברסיטת תל אביב — מכרזים והתקשרויות", "אוניברסיטת תל אביב", [
     "https://tenders.tau.ac.il/tenders",
@@ -316,13 +316,13 @@ export const NEW_SOURCES: NewSource[] = [
   // מש"מ — מרכז השלטון המקומי: ~50 מכרזים וקולות קוראים לרשויות, רשימה
   // מרונדרת-שרת בעמוד אחד (אומת 23.08.2026). קישורי פריט: /bids/?id=NN
   genericSource("masham", 'מש"מ — מרכז השלטון המקומי', "מרכז השלטון המקומי", [
-    "https://masham.org.il/bids/",
-  ], { hrefMatch: /bids\/?\?id=/i }),
+    proxied("https://masham.org.il/bids/"),
+  ], { hrefMatch: /bids\/?\?id=/i, note: "נטען דרך IL_PROXY_URL (אומת 27.08.2026)" }),
   // פורטל רשויות ובעלויות חינוך — קולות קוראים של משרד החינוך (SharePoint)
   genericSource("edu-pob", "משרד החינוך — קולות קוראים לרשויות", "משרד החינוך", [
     "https://pob.education.gov.il/kolotkorim/kolkore/",
     "https://pob.education.gov.il/kolotkorim/pages/kolkore.aspx",
-  ], { match: /קול קורא|קו"ק|מכרז/, hrefMatch: /kolkore|KolKore|kolotkorim/i }),
+  ], { enabled: false, match: /קול קורא|קו"ק|מכרז/, hrefMatch: /kolkore|KolKore|kolotkorim/i, note: "SharePoint — חסימת cloud ברמת רשת (reset/timeout גם דרך IL_PROXY_URL ב-Oracle IL, אומת 27.08.2026) — עובד רק מ-IP ביתי" }),
   // קק"ל — מכרזים והתקשרויות (דף האב מנווט לרשימות משנה)
   genericSource("kkl", 'קק"ל — מכרזים', "קרן קימת לישראל", [
     "https://www.kkl.org.il/about-us/tenders/",
@@ -371,10 +371,10 @@ export const NEW_SOURCES: NewSource[] = [
   ], { hrefMatch: /tender/i, note: "רשימה מובנית היטב — מכרזים פתוחים/סגורים עם קבצים מצורפים" }),
   genericSource("ashdod-port", "נמל אשדוד — מכרזים", "חברת נמל אשדוד", [
     "https://www.ashdodport.co.il/about/opportunities/pages/tenders.aspx",
-  ], { hrefMatch: /tender|opportunit/i }),
+  ], { enabled: false, hrefMatch: /tender|opportunit/i, note: "חסימת cloud ברמת רשת (reset/timeout גם דרך IL_PROXY_URL ב-Oracle IL, אומת 27.08.2026) — עובד רק מ-IP ביתי" }),
   genericSource("israports", 'חברת נמלי ישראל — חנ"י', "חברת נמלי ישראל", [
     "https://www.israports.co.il/he/TendersRegistration/Pages/default.aspx",
-  ], { hrefMatch: /TenderPage|no=|Tenders/i }),
+  ], { enabled: false, hrefMatch: /TenderPage|no=|Tenders/i, note: "חסימת cloud ברמת רשת (reset/timeout גם דרך IL_PROXY_URL ב-Oracle IL, אומת 27.08.2026) — עובד רק מ-IP ביתי" }),
   genericSource("amigour", "עמיגור — מכרזים ופרסומים", "עמיגור ניהול נכסים", [
     proxied("https://www.amigour.co.il/tenders/"),
   ], { hrefMatch: /\.pdf|prdFiles/i, note: "מכרזים כ-PDF תחת /prdFiles/" }),
@@ -476,10 +476,10 @@ export const NEW_SOURCES: NewSource[] = [
   ], { hrefMatch: /Michrazim|TendersFiles|\.pdf/i, note: "ASP.NET — מכרזים כ-PDF תחת /Michrazim/TendersFiles" }),
   genericSource("rishon-muni", "עיריית ראשון לציון — מכרזים", "עיריית ראשון לציון", [
     proxied("https://www.rishonlezion.muni.il/Activities/Tenders/Pages/Contracting_tenders.aspx"),
-  ], { hrefMatch: /CustomDispForm|Tenders/i }),
+  ], { enabled: false, hrefMatch: /CustomDispForm|Tenders/i, note: "SharePoint — חסימת cloud ברמת רשת (reset/timeout גם דרך IL_PROXY_URL ב-Oracle IL, אומת 27.08.2026) — עובד רק מ-IP ביתי" }),
   genericSource("beersheva-muni", "עיריית באר שבע — מכרזים", "עיריית באר שבע", [
     proxied("https://www.beer-sheva.muni.il/City/FreeInfo/Rehesh/Pages/Bids.aspx"),
-  ], { hrefMatch: /CustomDispForm|Rehesh|Bids/i }),
+  ], { enabled: false, hrefMatch: /CustomDispForm|Rehesh|Bids/i, note: "SharePoint — חסימת cloud ברמת רשת (reset/timeout גם דרך IL_PROXY_URL ב-Oracle IL, אומת 27.08.2026) — עובד רק מ-IP ביתי" }),
   genericSource("holon-muni", "עיריית חולון — מכרזים", "עיריית חולון", [
     proxied("https://www.holon.muni.il/CityHall/Bids/Pages/default.aspx"),
   ], { hrefMatch: /CustomDispForm|Bids/i }),

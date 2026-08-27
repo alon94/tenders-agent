@@ -40,14 +40,20 @@ export async function GET(req: Request) {
   const startedAt = new Date().toISOString();
   const started = Date.now();
   const reports = await runNewSourceScrapers({ only, dry });
+  // מקורות מושבתים אינם כשלון — נספרים בנפרד כדי שהדשבורד ישקף רק תקלות אמיתיות
   const totals = reports.reduce(
-    (a, r) => ({ fetched: a.fetched + r.fetched, upserted: a.upserted + r.upserted, failed: a.failed + (r.ok ? 0 : 1) }),
-    { fetched: 0, upserted: 0, failed: 0 }
+    (a, r) => ({
+      fetched: a.fetched + r.fetched,
+      upserted: a.upserted + r.upserted,
+      failed: a.failed + (!r.ok && r.error !== "disabled" ? 1 : 0),
+      disabled: a.disabled + (r.error === "disabled" ? 1 : 0),
+    }),
+    { fetched: 0, upserted: 0, failed: 0, disabled: 0 }
   );
 
   // רישום הריצה ב-sync_runs כדי שתופיע בדשבורד האדמין (למעט dry-run)
   if (!dry) {
-    const failedIds = reports.filter((r) => !r.ok).map((r) => r.id);
+    const failedIds = reports.filter((r) => !r.ok && r.error !== "disabled").map((r) => r.id);
     await recordSyncRun({
       type: "sources",
       started_at: startedAt,
