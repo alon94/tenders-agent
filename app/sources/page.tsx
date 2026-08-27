@@ -207,7 +207,7 @@ const SOURCES: { name: string; desc: string; host: string; url: string; icon: st
   { name: 'נתג"ז — נתיבי הגז הטבעי', desc: "מכרזי תשתיות גז ואנרגיה — פרויקטים, צנרת, HSE ושירותים, עם מפרטים וקבצים מצורפים", host: 'ingl.co.il', url: 'https://www.ingl.co.il/tenders/', icon: '🔥', status: 'pilot' },
   { name: "נמל אשדוד", desc: "מכרזי רכש, תפעול ותשתיות של חברת נמל אשדוד", host: 'ashdodport.co.il', url: 'https://www.ashdodport.co.il/about/opportunities/pages/tenders.aspx', icon: '⚓', status: 'pilot' },
   { name: 'חברת נמלי ישראל — חנ"י', desc: "מכרזי פיתוח ותשתית של חברת הנמלים הממשלתית", host: 'israports.co.il', url: 'https://www.israports.co.il/he/TendersRegistration/Pages/default.aspx', icon: '🚢', status: 'pilot' },
-  { name: "עמיגור", desc: "מכרזי שיפוצים, בינוי, ניהול ותחזוקת דיור ציבורי", host: 'amigour.co.il', url: 'https://www.amigour.co.il/מכרזים-ופרסומים', icon: '🏗️', status: 'pilot' },
+  { name: "עמיגור", desc: "מכרזי שיפוצים, בינוי, ניהול ותחזוקת דיור ציבורי", host: 'amigour.co.il', url: 'https://www.amigour.co.il/tenders/', icon: '🏗️', status: 'pilot' },
   { name: "נמל חיפה", desc: "מכרזי חברת נמל חיפה — האתר חסום מחוץ לישראל, נדרש proxy ישראלי", host: 'haifaport.co.il', url: 'https://www.haifaport.co.il/tenders/', icon: '⚓', status: 'candidate' },
   { name: "חוצה ישראל (כביש 6)", desc: "מכרזי כבישי אגרה ותחבורה — האתר חסום מחוץ לישראל, נדרש proxy ישראלי", host: 'transisrael.co.il', url: 'https://www.transisrael.co.il/Tenders', icon: '🛣️', status: 'candidate' },
   { name: "עמידר", desc: "מכרזי דיור ציבורי, שיפוצים ותחזוקה — פורטל WebSphere חסום, נדרש proxy ישראלי", host: 'amidar.co.il', url: 'https://www.amidar.co.il/wps/portal/amidar/service/tenders', icon: '🏘️', status: 'candidate' },
@@ -240,6 +240,26 @@ const SOURCES: { name: string; desc: string; host: string; url: string; icon: st
   { name: "התעשייה האווירית (תע\"א)", desc: "אין רשימת מכרזים פומבית — מכרזים בפורטלי מכרז הפוך סגורים בהזמנה אישית", host: 'iai.co.il', url: 'https://www.iai.co.il/heb/suppliers', icon: '✈️', status: 'candidate' },
   { name: "רפאל", desc: "אין רשימת מכרזים פומבית — מתפרסמים בערוצים ממשלתיים/משהב\"ט", host: 'rafael.co.il', url: 'https://he.rafael.co.il/suppliers/', icon: '🛡️', status: 'candidate' },
   { name: "ילקוט הפרסומים (רשומות)", desc: "מכרזים משפטיים, פירוקים וכינוסי נכסים — Angular + PDF, נדרש מיפוי ה-collector", host: 'gov.il', url: 'https://www.gov.il/he/departments/dynamiccollectors/gazette-official', icon: '📜', status: 'candidate' },
+  // ---------- גל חמישי: עיריות ומוסדות נוספים ----------
+  { name: "עיריית חיפה", desc: "מכרזי רכש, שירותים ותשתיות של עיריית חיפה", host: 'haifa.muni.il', url: 'https://www2.haifa.muni.il/Michrazim/Default.aspx', icon: '🏙️', status: 'pilot' },
+  { name: "עיריית ראשון לציון", desc: "מכרזי רכש ועבודות קבלניות של עיריית ראשון לציון", host: 'rishonlezion.muni.il', url: 'https://www.rishonlezion.muni.il/Activities/Tenders/Pages/Contracting_tenders.aspx', icon: '🏙️', status: 'pilot' },
+  { name: "עיריית באר שבע", desc: "מכרזי רכש, בינוי ושירותים של עיריית באר שבע", host: 'beer-sheva.muni.il', url: 'https://www.beer-sheva.muni.il/City/FreeInfo/Rehesh/Pages/Bids.aspx', icon: '🏙️', status: 'pilot' },
+  { name: "עיריית חולון", desc: "מכרזי רכש, בינוי, שירותים וקולות קוראים של עיריית חולון", host: 'holon.muni.il', url: 'https://www.holon.muni.il/CityHall/Bids/Pages/default.aspx', icon: '🏙️', status: 'pilot' },
+  { name: "עיריית אשדוד", desc: "מכרזים פעילים של עיריית אשדוד", host: 'ashdod.muni.il', url: 'https://www.ashdod.muni.il/he-il/אתר-העיר/מכרזים/מכרזים-פעילים/', icon: '🏙️', status: 'pilot' },
+  { name: "עיריית תל אביב-יפו", desc: "מכרזי רכש, שירותים ועבודה קבלנית — נטען ב-JS מאחורי WAF, נדרש proxy", host: 'tel-aviv.gov.il', url: 'https://www.tel-aviv.gov.il/AuctionAndCareers/Pages/Service.aspx', icon: '🏙️', status: 'candidate' },
+  { name: "עיריית פתח תקווה", desc: "מכרזי רכש ושירותים — חסום ב-WAF, נדרש proxy ישראלי", host: 'petah-tikva.muni.il', url: 'https://www.petah-tikva.muni.il/city-and-municipality/bids/bids', icon: '🏙️', status: 'candidate' },
+  { name: "עיריית נתניה", desc: "מכרזי העירייה — הרשימה נטענת ב-JS, נדרש מיפוי", host: 'netanya.muni.il', url: 'https://www.netanya.muni.il/tenders/Pages/tenderLists.aspx', icon: '🏙️', status: 'candidate' },
+  { name: "המכללה האקדמית ספיר", desc: "מכרזי רכש, שירותים וספק יחיד של מכללת ספיר", host: 'sapir.ac.il', url: 'https://www.sapir.ac.il/tenders', icon: '🎓', status: 'pilot' },
+  { name: "שנקר", desc: "מכרזי שנקר — הנדסה, עיצוב ואמנות", host: 'shenkar.ac.il', url: 'https://www.shenkar.ac.il/he/pages/tenders-shenkar/', icon: '🎓', status: 'pilot' },
+  { name: "HIT חולון", desc: "מכרזי המכון הטכנולוגי חולון — רכש, שירותים ותשתיות", host: 'hit.ac.il', url: 'https://www.hit.ac.il/tenders/', icon: '🎓', status: 'pilot' },
+  { name: "המכללה האקדמית ת\"א-יפו", desc: "מכרזי רכש ושירותים של המכללה האקדמית תל אביב-יפו", host: 'mta.ac.il', url: 'https://www.mta.ac.il/tenders', icon: '🎓', status: 'pilot' },
+  { name: "אורט בראודה", desc: "מכרזי המכללה האקדמית להנדסה אורט בראודה (כרמיאל)", host: 'braude.ac.il', url: 'https://w3.braude.ac.il/about/tenders/', icon: '🎓', status: 'pilot' },
+  { name: "המכללה האקדמית עמק יזרעאל", desc: "מכרזים ופטורים של המכללה האקדמית עמק יזרעאל", host: 'yvc.ac.il', url: 'https://www.yvc.ac.il/tender/', icon: '🎓', status: 'pilot' },
+  { name: "מכללת רופין", desc: "מכרזי רכש של המרכז האקדמי רופין — נטען ב-JS, נדרש מיפוי", host: 'ruppin.ac.il', url: 'https://www.ruppin.ac.il/tenders/', icon: '🎓', status: 'candidate' },
+  { name: "רשות הטבע והגנים", desc: "מכרזי פיתוח, תחזוקה ושירותים של רשות הטבע והגנים", host: 'parks.org.il', url: 'https://www.parks.org.il/tenders/', icon: '🌳', status: 'pilot' },
+  { name: "רמ\"י — מכרזי רכש", desc: "מכרזי רכש והתקשרות של רשות מקרקעי ישראל (נבדל ממכרזי הקרקע)", host: 'land.gov.il', url: 'https://land.gov.il/Pages/Tenders.aspx', icon: '🗺️', status: 'pilot' },
+  { name: "נמל אילת", desc: "מכרזי חברת נמל אילת — נפח נמוך", host: 'eilatport.co.il', url: 'https://eilatport.co.il/tenders/', icon: '⚓', status: 'pilot' },
+
 ];
 
 const ACTIVE = SOURCES.filter((s) => s.status === 'active');

@@ -339,11 +339,11 @@ export const NEW_SOURCES: NewSource[] = [
   // ---------- בריאות: קופות חולים ותאגידי בריאות של בתי חולים ----------
   // שירותי בריאות כללית — אין רשימה מאוחדת אחת; ועדות נפרדות בתתי-עמודים.
   genericSource("clalit", "שירותי בריאות כללית — מכרזים", "שירותי בריאות כללית", [
-    "https://www.clalit.co.il/he/info/tenders/Pages/michraz_michshuv.aspx",
-    "https://www.clalit.co.il/he/info/tenders/Pages/mkomi_hospital.aspx",
-    "https://www.clalit.co.il/he/info/tenders/Pages/mkomi_mhozot.aspx",
-    "https://www.clalit.co.il/he/info/tenders/Pages/general_matters.aspx",
-    "https://www.clalit.co.il/he/info/tenders/Pages/kol-kore.aspx",
+    proxied("https://www.clalit.co.il/he/info/tenders/Pages/michraz_michshuv.aspx"),
+    proxied("https://www.clalit.co.il/he/info/tenders/Pages/mkomi_hospital.aspx"),
+    proxied("https://www.clalit.co.il/he/info/tenders/Pages/mkomi_mhozot.aspx"),
+    proxied("https://www.clalit.co.il/he/info/tenders/Pages/general_matters.aspx"),
+    proxied("https://www.clalit.co.il/he/info/tenders/Pages/kol-kore.aspx"),
   ], { hrefMatch: /tender|michraz|Pages/i, note: "SharePoint — מכרזים מרונדרי-שרת בתתי-עמודים לפי ועדה" }),
   genericSource("leumit", "קופת חולים לאומית — מכרזים", "קופת חולים לאומית", [
     "https://www.leumit.co.il/bids/publictenders/",
@@ -352,7 +352,7 @@ export const NEW_SOURCES: NewSource[] = [
     "https://www.tasmc.org.il/all/michrazim-health-corp/",
   ], { hrefMatch: /michraz|tender/i }),
   genericSource("hadassah", "הדסה — ועדת התקשרויות", "הדסה", [
-    "https://he.hadassah.org.il/center/vaadat-itkashruyot/",
+    proxied("https://he.hadassah.org.il/center/vaadat-itkashruyot/"),
   ], { hrefMatch: /center\/michrazim|itkashr/i }),
   genericSource("rambam", 'רמב"ם — מכרזים פומביים', 'רמב"ם — הקריה הרפואית', [
     "https://www.rambam.org.il/departmentsandclinics/purchasing-department/public-tenders/",
@@ -376,7 +376,7 @@ export const NEW_SOURCES: NewSource[] = [
     "https://www.israports.co.il/he/TendersRegistration/Pages/default.aspx",
   ], { hrefMatch: /TenderPage|no=|Tenders/i }),
   genericSource("amigour", "עמיגור — מכרזים ופרסומים", "עמיגור ניהול נכסים", [
-    "https://www.amigour.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%95%D7%A4%D7%A8%D7%A1%D7%95%D7%9E%D7%99%D7%9D",
+    proxied("https://www.amigour.co.il/tenders/"),
   ], { hrefMatch: /\.pdf|prdFiles/i, note: "מכרזים כ-PDF תחת /prdFiles/" }),
   // חסומי WAF/גיאו לשרת חו"ל — ידרשו IL_PROXY_URL
   genericSource("haifa-port", "נמל חיפה — מכרזים", "חברת נמל חיפה", [
@@ -464,6 +464,72 @@ export const NEW_SOURCES: NewSource[] = [
   // ילקוט הפרסומים / רשומות — Angular + PDF; נדרש רה-הנדוס של קריאת ה-collector
   { id: "reshumot", name: "ילקוט הפרסומים (רשומות)", publisher: "רשומות — ילקוט הפרסומים", enabled: false,
     note: "gov.il DynamicCollector (Angular) + PDF — נדרש מיפוי ה-API של האוסף", run: async () => [] },
+  // ============================================================
+  //  גל חמישי — עיריות גדולות, מכללות ומוסדות ציבור נוספים.
+  //  עיריות/גופי ציבור עטופים ב-proxied() (מוגני WAF נפוצים);
+  //  אקדמיה נטענת ישירות. server-html = enabled; JS/WAF = disabled.
+  // ============================================================
+
+  // ---------- עיריות גדולות ----------
+  genericSource("haifa-muni", "עיריית חיפה — מכרזים", "עיריית חיפה", [
+    proxied("https://www2.haifa.muni.il/Michrazim/Default.aspx"),
+  ], { hrefMatch: /Michrazim|TendersFiles|\.pdf/i, note: "ASP.NET — מכרזים כ-PDF תחת /Michrazim/TendersFiles" }),
+  genericSource("rishon-muni", "עיריית ראשון לציון — מכרזים", "עיריית ראשון לציון", [
+    proxied("https://www.rishonlezion.muni.il/Activities/Tenders/Pages/Contracting_tenders.aspx"),
+  ], { hrefMatch: /CustomDispForm|Tenders/i }),
+  genericSource("beersheva-muni", "עיריית באר שבע — מכרזים", "עיריית באר שבע", [
+    proxied("https://www.beer-sheva.muni.il/City/FreeInfo/Rehesh/Pages/Bids.aspx"),
+  ], { hrefMatch: /CustomDispForm|Rehesh|Bids/i }),
+  genericSource("holon-muni", "עיריית חולון — מכרזים", "עיריית חולון", [
+    proxied("https://www.holon.muni.il/CityHall/Bids/Pages/default.aspx"),
+  ], { hrefMatch: /CustomDispForm|Bids/i }),
+  genericSource("ashdod-muni", "עיריית אשדוד — מכרזים פעילים", "עיריית אשדוד", [
+    proxied("https://www.ashdod.muni.il/he-il/%D7%90%D7%AA%D7%A8-%D7%94%D7%A2%D7%99%D7%A8/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%A4%D7%A2%D7%99%D7%9C%D7%99%D7%9D/"),
+  ], { hrefMatch: /tender|michraz/i, note: "טבלת מכרזים פעילים — ייתכן קציר חלקי אם התאים אינם עוגנים" }),
+  genericSource("telaviv-muni", "עיריית תל אביב-יפו — מכרזים", "עיריית תל אביב-יפו", [
+    proxied("https://www.tel-aviv.gov.il/AuctionAndCareers/Pages/Service.aspx"),
+  ], { enabled: false, note: "Angular/JS + WAF (472) — נדרש IL_PROXY_URL ורינדור; מסמכים כ-PDF" }),
+  genericSource("petahtikva-muni", "עיריית פתח תקווה — מכרזים", "עיריית פתח תקווה", [
+    proxied("https://www.petah-tikva.muni.il/city-and-municipality/bids/bids"),
+  ], { enabled: false, note: "F5 WAF חוסם — נדרש IL_PROXY_URL" }),
+  genericSource("netanya-muni", "עיריית נתניה — מכרזים", "עיריית נתניה", [
+    proxied("https://www.netanya.muni.il/tenders/Pages/tenderLists.aspx"),
+  ], { enabled: false, note: "רשימה נטענת ב-JS — נדרש מיפוי/רינדור" }),
+
+  // ---------- מכללות ואוניברסיטאות נוספות ----------
+  genericSource("sapir", "המכללה האקדמית ספיר — מכרזים", "המכללה האקדמית ספיר", [
+    "https://www.sapir.ac.il/tenders",
+  ], { hrefMatch: /tenders|sourcingvision/i }),
+  genericSource("shenkar", "שנקר — מכרזים", "שנקר — הנדסה עיצוב אמנות", [
+    "https://www.shenkar.ac.il/he/pages/tenders-shenkar/",
+  ], { hrefMatch: /\.pdf|uploads|drive\.google/i, note: "מכרזים כ-PDF (חלק ב-Google Drive)" }),
+  genericSource("hit", "HIT מכון טכנולוגי חולון — מכרזים", "מכון טכנולוגי חולון", [
+    "https://www.hit.ac.il/tenders/",
+  ], { hrefMatch: /\.pdf|tender/i }),
+  genericSource("mta-college", "המכללה האקדמית ת\"א-יפו — מכרזים", "המכללה האקדמית תל אביב-יפו", [
+    "https://www.mta.ac.il/tenders",
+  ], { hrefMatch: /tender_|tenders|sourcingvision/i }),
+  genericSource("braude", "אורט בראודה — מכרזים", "המכללה האקדמית להנדסה אורט בראודה", [
+    "https://w3.braude.ac.il/about/tenders/",
+  ], { hrefMatch: /\.pdf|tender/i, note: "אקורדיון — ייתכן קציר חלקי" }),
+  genericSource("yvc", "המכללה האקדמית עמק יזרעאל — מכרזים", "המכללה האקדמית עמק יזרעאל", [
+    "https://www.yvc.ac.il/tender/",
+  ], { hrefMatch: /\/tender\//i }),
+  genericSource("ruppin", "מכללת רופין — מכרזים", "המרכז האקדמי רופין", [
+    "https://www.ruppin.ac.il/tenders/",
+  ], { enabled: false, note: "Umbraco SPA — הרשימה נטענת ב-JS; נדרש רינדור" }),
+
+  // ---------- גופי ממשלה וציבור נוספים ----------
+  genericSource("parks", "רשות הטבע והגנים — מכרזים", "רשות הטבע והגנים", [
+    proxied("https://www.parks.org.il/tender/"),
+  ], { hrefMatch: /\/tender\//i, note: "ארכיון WordPress מרונדר-שרת (חלופה ל-SPA ב-/tenders/)" }),
+  genericSource("rmi-rechesh", "רמ\"י — מכרזי רכש והתקשרות", "רשות מקרקעי ישראל", [
+    proxied("https://land.gov.il/Pages/Tenders.aspx"),
+  ], { hrefMatch: /DispForm|Tenders/i, note: "מכרזי רכש (נבדל ממכרזי הקרקע)" }),
+  genericSource("eilat-port", "נמל אילת — מכרזים", "חברת נמל אילת", [
+    "https://eilatport.co.il/tenders/",
+  ], { hrefMatch: /\.pdf|tender/i, note: "נפח נמוך, מכרזים כ-PDF" }),
+
 ];
 
 export interface SourceRunReport {
