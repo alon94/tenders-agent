@@ -124,7 +124,11 @@ async function fetchObudgetFallback(offset: number): Promise<TenderRecord[]> {
 //     דקות, וכל lambda חדשה) עצר את המשתמש ל-3+ שניות.
 const CORPUS_COLUMNS = 'id,title,publisher,publisher_unit,publish_date,deadline,status,url,type,source,publication_id,small_biz,small_biz_confidence';
 const PAGE = 1000;
-const MAX_PAGES = 12;
+// עמודים נמשכים באצוות מקבילות עד שמתקבל עמוד חלקי (סוף הנתונים).
+// לפני כן MAX_PAGES=12 היה תקרה קשיחה: המאגר עבר 12,000 שורות ב-27.08.2026
+// והעודף פשוט לא נטען לקורפוס. HARD_MAX הוא חגורת ביטחון בלבד.
+const BATCH_PAGES = 12;
+const HARD_MAX_PAGES = 60;
 let refreshing: Promise<TenderRecord[]> | null = null;
 
 // מסע הלקוח: המאגר כולל ארכיון של מכרזים שנסגרו ב-120 הימים האחרונים —
@@ -138,11 +142,18 @@ async function loadCorpus(): Promise<TenderRecord[]> {
     // עמוד ראשון קובע אם יש עוד; שאר העמודים במקביל
     const first = await getTenders({ offset: 0, limit: PAGE, archiveDays: ARCHIVE_DAYS, columns: CORPUS_COLUMNS });
     rows = first;
-    if (first.length === PAGE) {
-      const rest = await Promise.all(
-        Array.from({ length: MAX_PAGES - 1 }, (_, i) => getTenders({ offset: (i + 1) * PAGE, limit: PAGE, archiveDays: ARCHIVE_DAYS, columns: CORPUS_COLUMNS }).catch(() => [] as TenderRecord[]))
+    let next = 1;
+    let done = first.length < PAGE;
+    while (!done && next < HARD_MAX_PAGES) {
+      const count = Math.min(BATCH_PAGES, HARD_MAX_PAGES - next);
+      const batch = await Promise.all(
+        Array.from({ length: count }, (_, i) => getTenders({ offset: (next + i) * PAGE, limit: PAGE, archiveDays: ARCHIVE_DAYS, columns: CORPUS_COLUMNS }).catch(() => [] as TenderRecord[]))
       );
-      for (const page of rest) { if (page.length === 0) break; rows.push(...page); }
+      for (const page of batch) {
+        rows.push(...page);
+        if (page.length < PAGE) { done = true; break; }
+      }
+      next += count;
     }
     rows = rows.filter((t) => t.title && (!t.deadline || String(t.deadline).split('T')[0] >= cutoff));
     rows = sanitizeRows(rows);
