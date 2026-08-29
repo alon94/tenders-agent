@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getTenders, getLastSyncAt } from "@/app/lib/db";
+import { sanitizeRows } from "@/app/lib/corpusHygiene";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -44,7 +45,10 @@ export async function GET(req: Request) {
         columns: LIST_COLUMNS,
       });
 
-      const tenders = rows.map((row, i) => ({
+      // QA 29.08.2026: היגיינת הרשומות רצה רק על הקורפוס של הסוכן, ולכן
+      // רשומות בדיקה הופיעו בטיקר בדף הבית, בחיפוש בדשבורד וכאן ב-API.
+      // אותו סינון בדיוק חל עכשיו גם על נתיב הרשימה.
+      const tenders = sanitizeRows(rows).map((row, i) => ({
               id: String(row.id ?? `${offset}_${i}`),
               title: String(row.title ?? ""),
               publisher: [row.publisher, row.publisher_unit].filter(Boolean).join(" - "),

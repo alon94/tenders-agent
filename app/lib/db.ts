@@ -4,6 +4,8 @@
 // (API routes) - it uses the SUPABASE_SERVICE_ROLE_KEY which must never be
 // exposed to the browser.
 
+import { isJunkTitle } from "./corpusHygiene";
+
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -400,7 +402,9 @@ export async function syncTendersFromSources(): Promise<{
         fetched += rows.length;
 
       for (const row of rows) {
-              if (row.description === "מכרז ללא כותרת") continue;
+              // QA 29.08.2026: רשומות בדיקה של mr.gov.il ("בדיקה אתגר RFI")
+              // נשמרו למאגר. חסימה בכתיבה, בנוסף לסינון בקריאה.
+              if (isJunkTitle(row.description)) continue;
               const rec = rowToRecord(row);
               byId.set(rec.id, rec);
       }
