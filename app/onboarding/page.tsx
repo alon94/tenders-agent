@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSession } from '../lib/authClient';
-import { saveMyProfile } from '../lib/profileApi';
+import { fetchMyProfile, saveMyProfile } from '../lib/profileApi';
 import { CATEGORY_OPTIONS } from '../lib/domains';
 
 const DARK = '#1a2330';
@@ -64,6 +64,15 @@ export default function OnboardingPage() {
   const [categories, setCategories] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  // QA 29.08.2026: המסך נפתח תמיד ריק ושמר region/publisher_type קשיחים
+  // ('all'), ולכן כניסה חוזרת ל-/onboarding דרסה פרופיל קיים — האזור חזר
+  // ל"כל הארץ", נותרה קטגוריה אחת וציוני ההתאמה השתנו. עכשיו המסך נטען
+  // מהפרופיל השמור, ושדות שאינו עורך נשמרים כפי שהם.
+  const [existing, setExisting] = useState<{
+    region: string;
+    publisher_type: string;
+    category_other: string | null;
+  } | null>(null);
 
   useEffect(() => {
     const session = getSession();
@@ -71,7 +80,24 @@ export default function OnboardingPage() {
       router.replace('/signin');
       return;
     }
-    setChecked(true);
+    let alive = true;
+    // הטופס נחשף רק אחרי שהפרופיל הקיים נטען (או שנקבע שאין כזה), כדי
+    // שלחיצה מהירה על "המשך" לא תשמור מצב ריק על פרופיל קיים.
+    fetchMyProfile()
+      .then((profile) => {
+        if (!alive) return;
+        if (profile) {
+          setCategories(profile.categories || []);
+          setExisting({
+            region: profile.region || 'all',
+            publisher_type: profile.publisher_type || 'all',
+            category_other: profile.category_other ?? null,
+          });
+        }
+      })
+      .catch(() => { /* אין פרופיל / שגיאת רשת — ממשיכים כאונבורדינג חדש */ })
+      .finally(() => { if (alive) setChecked(true); });
+    return () => { alive = false; };
   }, [router]);
 
   function toggle(value: string) {
@@ -84,13 +110,13 @@ export default function OnboardingPage() {
     try {
       await saveMyProfile({
         categories,
-        category_other: null,
-        region: 'all',
-        publisher_type: 'all',
+        category_other: existing?.category_other ?? null,
+        region: existing?.region ?? 'all',
+        publisher_type: existing?.publisher_type ?? 'all',
       });
       setStep(3);
-    } catch (err: any) {
-      setError(err?.message || 'שמירת הפרופיל נכשלה');
+    } catch (err) {
+      setError(err instanceof Error && err.message ? err.message : 'שמירת הפרופיל נכשלה');
     } finally {
       setSaving(false);
     }
@@ -134,7 +160,9 @@ export default function OnboardingPage() {
               במה העסק שלכם עוסק?
             </div>
             <div style={{ fontSize: 13, color: MUTED, textAlign: 'center', marginBottom: 22 }}>
-              בחרו קטגוריה אחת או יותר — נתאים לכם מכרזים וציוני התאמה
+              {existing
+                ? 'טענו את הפרופיל השמור שלכם — אפשר לעדכן את הבחירה'
+                : 'בחרו קטגוריה אחת או יותר — נתאים לכם מכרזים וציוני התאמה'}
             </div>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 9, marginBottom: 20 }}>
