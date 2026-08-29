@@ -198,6 +198,11 @@ export async function GET(req: Request) {
           } catch (syncErr) {
                     dbSync = { error: String(syncErr) };
           }
+          // שגיאת הסנכרון עצמו היא הדבר היחיד שהופך את הריצה לכושלת:
+          // getLastSyncAt סופר רק ריצות sync ללא error, ולכן כל דבר אחר
+          // שנרשם כאן (מייל, אפס התאמות) הקפיא את "עודכן לאחרונה" באתר.
+          const syncErrors = dbSync as { error?: string; muniError?: string; mrGovError?: string };
+          const syncError = syncErrors.error || syncErrors.muniError || syncErrors.mrGovError || null;
     
     // Default profile (used when no localStorage profile available server-side)
     // Can be overridden via query params in the future
@@ -246,7 +251,7 @@ export async function GET(req: Request) {
     console.log('Cron: matched tenders =', tenders.length, 'dbSync =', JSON.stringify(dbSync))
 
     if (tenders.length === 0) {
-      await finishSyncRun(runId, { type: 'sync', started_at: runStartedAt, duration_ms: Date.now() - runT0, trigger: runTrigger, counts: { ...dbSync, matched: 0 }, error: 'no matching tenders' })
+      await finishSyncRun(runId, { type: 'sync', started_at: runStartedAt, duration_ms: Date.now() - runT0, trigger: runTrigger, counts: { ...dbSync, matched: 0, note: 'no matching tenders' }, error: syncError })
       return NextResponse.json({ message: 'No matching tenders found, email not sent', dbSync })
     }
 
@@ -265,15 +270,25 @@ export async function GET(req: Request) {
 
     const html = buildEmailHTML(tenders, profile, dateStr)
 
-    const mailInfo = await transporter.sendMail({
-      from: `"שווה מכרזים 📋" <${process.env.GMAIL_USER}>`,
-      to: TO_EMAIL,
-      subject: `📋 ${tenders.length} מכרזים מותאמים לפרופיל שלך · ${new Date().toLocaleDateString('he-IL')}`,
-      html,
-    })
-
-    console.log('Cron: email sent, messageId =', mailInfo.messageId, 'response =', mailInfo.response)
-    await recordEmail({ recipient: TO_EMAIL, type: 'daily', tender_count: tenders.length, status: 'sent', message_id: String(mailInfo.messageId || '') })
+    // כשל מייל אינו כשל סנכרון. קודם ה-sendMail הזה לא היה עטוף, ולכן
+    // 451 זמני של Gmail (27.08.2026) הפיל את כל הריצה: הנתונים כבר היו
+    // ב-DB אבל הריצה נרשמה כשגיאה עם counts ריק, שאר הנמענים לא קיבלו
+    // דוח, והאתר הציג "עודכן" של יומיים קודם.
+    let mailError: string | null = null
+    try {
+      const mailInfo = await transporter.sendMail({
+        from: `"שווה מכרזים 📋" <${process.env.GMAIL_USER}>`,
+        to: TO_EMAIL,
+        subject: `📋 ${tenders.length} מכרזים מותאמים לפרופיל שלך · ${new Date().toLocaleDateString('he-IL')}`,
+        html,
+      })
+      console.log('Cron: email sent, messageId =', mailInfo.messageId, 'response =', mailInfo.response)
+      await recordEmail({ recipient: TO_EMAIL, type: 'daily', tender_count: tenders.length, status: 'sent', message_id: String(mailInfo.messageId || '') })
+    } catch (mailErr) {
+      mailError = String(mailErr)
+      console.error('Cron: admin daily mail failed:', mailErr)
+      await recordEmail({ recipient: TO_EMAIL, type: 'daily', tender_count: tenders.length, status: 'failed' })
+    }
     // --- דיוור יומי לשאר המשתמשים הרשומים, לפי הפרופיל העסקי שלהם ---
     let extraSent = 0
     try {
@@ -342,27 +357,34 @@ export async function GET(req: Request) {
     </div>
   </div>
 </body></html>`
-      await transporter.sendMail({
-        from: `"שווה מכרזים 🔔" <${process.env.GMAIL_USER}>`,
-        to: TO_EMAIL,
-        subject: `🔔 ${hotNew.length} מכרזים חדשים בהתאמה גבוהה לפרופיל שלך`,
-        html: alertHtml,
-      })
-      alertSent = hotNew.length
-      console.log('Cron: hot-new alert sent,', hotNew.length, 'tenders')
-      await recordEmail({ recipient: TO_EMAIL, type: 'alert', tender_count: hotNew.length, status: 'sent' })
+      try {
+        await transporter.sendMail({
+          from: `"שווה מכרזים 🔔" <${process.env.GMAIL_USER}>`,
+          to: TO_EMAIL,
+          subject: `🔔 ${hotNew.length} מכרזים חדשים בהתאמה גבוהה לפרופיל שלך`,
+          html: alertHtml,
+        })
+        alertSent = hotNew.length
+        console.log('Cron: hot-new alert sent,', hotNew.length, 'tenders')
+        await recordEmail({ recipient: TO_EMAIL, type: 'alert', tender_count: hotNew.length, status: 'sent' })
+      } catch (alertErr) {
+        mailError = mailError || String(alertErr)
+        console.error('Cron: hot-new alert failed:', alertErr)
+        await recordEmail({ recipient: TO_EMAIL, type: 'alert', tender_count: hotNew.length, status: 'failed' })
+      }
     }
 
     await finishSyncRun(runId, {
       type: 'sync', started_at: runStartedAt, duration_ms: Date.now() - runT0, trigger: runTrigger,
-      counts: { ...dbSync, matched: tenders.length, alert: alertSent, extra_sent: extraSent },
-      error: (dbSync as any).error || (dbSync as any).muniError || (dbSync as any).mrGovError || null,
+      counts: { ...dbSync, matched: tenders.length, alert: alertSent, extra_sent: extraSent, ...(mailError ? { mail_error: mailError.slice(0, 300) } : {}) },
+      error: syncError,
     })
 
     return NextResponse.json({
       success: true,
       matched: tenders.length,
       hot_new_alert: alertSent,
+      mail_error: mailError,
       sent_to: TO_EMAIL,
       date: dateStr,
       dbSync,
