@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import Script from 'next/script'
 import FloatingTenders from './components/FloatingTenders'
+import SiteFooter from './components/SiteFooter'
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || 'https://tenders-agent.vercel.app'
 
@@ -40,6 +41,7 @@ export default function RootLayout({
             <body>
                 <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_JSONLD) }} />
                 {children}
+                <SiteFooter />
                 <FloatingTenders />
                 {/* NagishLi — תוסף נגישות חינמי (nagish.li, מאת Localize).
                     הקובץ נטען מ-public/nagishli.js יחד עם תיקיית nl-files/;
@@ -75,6 +77,9 @@ export default function RootLayout({
     }
     .nav-row {
         display: none !important;
+    }
+    .site-footer {
+        margin-bottom: 64px;
     }
 }
 `}</style>

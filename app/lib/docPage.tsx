@@ -1,6 +1,7 @@
 // עמוד מסמך ציבורי משותף — /privacy, /terms, /accessibility.
 // נטען שרת-צד מהמאגר; כשאין עדיין תוכן שמור מוצג טקסט ביניים בעברית
 // (בלי המילה placeholder — ממצא QA 29.08.2026).
+import Link from 'next/link';
 import { getDocument, DOCUMENT_TITLES } from './ops';
 import { renderDocMarkdown } from './docMarkdown';
 
@@ -39,6 +40,9 @@ export async function DocPage({ slug }: { slug: 'privacy' | 'terms' | 'accessibi
           color: '#1a2330',
         }}
       >
+        <Link href="/" style={{ display: 'inline-block', fontSize: 12.5, color: '#1e5aa8', textDecoration: 'none', fontWeight: 600, marginBottom: 14 }}>
+          → חזרה לדף הבית
+        </Link>
         <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>{title}</h1>
         {updated && !isNaN(updated.getTime()) && (
           <div style={{ fontSize: 12, color: '#8a97a3', marginBottom: 18 }}>
