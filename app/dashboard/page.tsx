@@ -324,7 +324,7 @@ export default function Dashboard(){
               {/* QA #16: מיון אמיתי — קודם כפתור "⇅ סינון" עם אייקון מיון ובלי אפשרות למיין */}
               <div style={selWrap}>
                 <select aria-label="מיון" className="filter-select" value={sort} onChange={e=>{setSort(e.target.value as any);setPg(1);}} style={selStyle}>
-                  <option value="">מיון: {bizProfile?'התאמה':session?'מועד הגשה':'תאריך פרסום'}</option>
+                  <option value="">מיון: מועד הגשה</option>
                   <option value="deadline">מועד הגשה (הקרוב קודם)</option>
                   <option value="score">ציון התאמה (הגבוה קודם)</option>
                   <option value="published">תאריך פרסום (החדש קודם)</option>

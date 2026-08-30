@@ -130,7 +130,10 @@ export function sortTenders(rows: QueryTender[], profile: QueryProfile | null, n
   // QA #03: קודם הציון ותאריכים פורסרו בתוך ה-comparator — O(n log n) קריאות
   // ל-scoreTender/parseHeDate על ~9,000 שורות = 3+ שניות לכל דפדוף.
   // עכשיו מחושבים פעם אחת לשורה (decorate-sort-undecorate).
-  const mode = sort || (profile ? 'score' : 'deadline');
+  // ברירת המחדל לכולם: מועד ההגשה הקרוב קודם. קודם משתמש עם פרופיל קיבל
+  // מיון לפי ציון התאמה — עודכן לבקשת בעל האתר (30.08.2026); מיון לפי
+  // התאמה עדיין זמין בבורר המיון בדשבורד.
+  const mode = sort || 'deadline';
   const needScore = mode === 'score' || mode === 'deadline';
   type Dec = { t: QueryTender; d: number; s: number; p: number };
   const dec: Dec[] = rows.map((t) => ({
