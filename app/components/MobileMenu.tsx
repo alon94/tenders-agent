@@ -139,6 +139,11 @@ export default function MobileMenu() {
             })}
 
             <div style={{ marginTop: 'auto', paddingTop: 14, borderTop: `1px solid ${BORDER}` }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 12px', marginBottom: 10, fontSize: 11.5 }}>
+                <a href="/terms" style={{ color: '#8a97a3', textDecoration: 'none' }}>תנאי שימוש</a>
+                <a href="/privacy" style={{ color: '#8a97a3', textDecoration: 'none' }}>פרטיות</a>
+                <a href="/accessibility" style={{ color: '#8a97a3', textDecoration: 'none' }}>נגישות</a>
+              </div>
               {session ? (
                 <div>
                   <div style={{ fontSize: 11.5, color: '#8a97a3', marginBottom: 8, wordBreak: 'break-all' }}>{session.user.email}</div>

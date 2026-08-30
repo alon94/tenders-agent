@@ -393,6 +393,7 @@ export default function Home() {
             <a href="/sources" style={{ color: "#93a9c1", textDecoration: "none" }}>מקורות</a>
             <a href="/terms" style={{ color: "#93a9c1", textDecoration: "none" }}>תנאי שימוש</a>
             <a href="/privacy" style={{ color: "#93a9c1", textDecoration: "none" }}>פרטיות</a>
+            <a href="/accessibility" style={{ color: "#93a9c1", textDecoration: "none" }}>נגישות</a>
           </div>
         </div>
       </footer>

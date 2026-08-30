@@ -164,6 +164,13 @@ export default function InternalShell({
           </div>
           {/* QA #14: קישור "פרופיל עסקי" הופיע פעמיים — נשאר רק ברשימת הניווט */}
           <div style={{ marginTop: 'auto', paddingTop: 14, borderTop: '1px solid #eef1f4' }}>
+            {/* QA 30.08.2026: מדיניות פרטיות ותנאי שימוש היו נגישים רק מדף
+                הבית ומטופס ההרשמה — משתמש בתוך האפליקציה לא ראה אותם כלל. */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 10px', padding: '0 12px 10px', fontSize: 11 }}>
+              <a href="/terms" style={{ color: '#8a97a3', textDecoration: 'none' }}>תנאי שימוש</a>
+              <a href="/privacy" style={{ color: '#8a97a3', textDecoration: 'none' }}>פרטיות</a>
+              <a href="/accessibility" style={{ color: '#8a97a3', textDecoration: 'none' }}>נגישות</a>
+            </div>
 
             {session ? (
               <div style={{ padding: '12px 12px 2px' }}>
