@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import Script from 'next/script'
 import FloatingTenders from './components/FloatingTenders'
+import NagishLiLoader from './components/NagishLiLoader'
 import SiteFooter from './components/SiteFooter'
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || 'https://tenders-agent.vercel.app'
@@ -44,10 +44,9 @@ export default function RootLayout({
                 <SiteFooter />
                 <FloatingTenders />
                 {/* NagishLi — תוסף נגישות חינמי (nagish.li, מאת Localize).
-                    הקובץ נטען מ-public/nagishli.js יחד עם תיקיית nl-files/;
-                    כל עוד הקבצים לא הועלו ל-public/ הסקריפט מחזיר 404 והאתר
-                    ממשיך לעבוד כרגיל, בלי כפתור נגישות. הוראות: docs/NAGISHLI.md */}
-                <Script src="/nagishli.js" strategy="lazyOnload" charSet="utf-8" />
+                    נטען דרך NagishLiLoader: jQuery (תלות של התוסף) ואז
+                    /nagishli.js, עם אתחול מפורש. הוראות: docs/NAGISHLI.md */}
+                <NagishLiLoader />
                 <style>{`
 @media (max-width: 768px) {
     [style*="flex: 0 0 238px"],
