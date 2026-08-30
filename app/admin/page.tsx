@@ -5,14 +5,16 @@
 //  גישה: משתמשים בטבלת admins בלבד; אחרים מקבלים "אין הרשאה".
 // ============================================================
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { getSession, type AuthSession } from '../lib/authClient';
+import { renderDocMarkdown } from '../lib/docMarkdown';
 
 const DARK = '#1a2330';
 const BLUE = '#2b6fc4';
 const BORDER = '#e6eaee';
 const MUTED = '#7a8794';
 
+interface DocRow { slug: string; title: string; content_md: string; updated_at?: string; updated_by?: string | null }
 interface SlideRow { id?: number; title: string; subtitle?: string | null; badge?: string | null; cta_label?: string | null; cta_href?: string | null; sort_order?: number; active?: boolean }
 interface SeriesPt { bucket: string; count: number }
 interface UserRow { id: string; email: string; created_at: string; last_sign_in_at: string | null; email_confirmed_at: string | null }
@@ -55,6 +57,8 @@ function fmtDur(ms: number | null): string {
   if (ms == null) return '—';
   return ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}ש׳`;
 }
+const DOC_LABELS: Record<string, string> = { privacy: 'מדיניות פרטיות', terms: 'תנאי שימוש', accessibility: 'הצהרת נגישות' };
+const DOC_PATHS: Record<string, string> = { privacy: '/privacy', terms: '/terms', accessibility: '/accessibility' };
 const TRIGGER_HE: Record<string, string> = { cron: 'מתוזמן', manual: 'ידני', chain: 'שרשור' };
 
 const inp: React.CSSProperties = { border: '1px solid #e6eaee', borderRadius: 8, padding: '8px 11px', fontSize: 13, fontFamily: 'inherit', direction: 'rtl' };
@@ -76,6 +80,16 @@ export default function AdminPage() {
   const [draft, setDraft] = useState<SlideRow>({ title: '', subtitle: '', badge: '', cta_label: '', cta_href: '/dashboard', sort_order: 0, active: true });
   const [slideBusy, setSlideBusy] = useState(false);
   const [pwErr, setPwErr] = useState('');
+  // מסמכי אתר (מדיניות/תנאים/נגישות) — עריכה + preview
+  const [docs, setDocs] = useState<DocRow[]>([]);
+  const [docSlug, setDocSlug] = useState('privacy');
+  const [docDraft, setDocDraft] = useState('');
+  const [docDirty, setDocDirty] = useState(false);
+  const [docBusy, setDocBusy] = useState(false);
+  // תיבות מתקפלות: ריצות/מיילים מציגות 3 אחרונים; הרחבה לפי דרישה
+  const [runsOpen, setRunsOpen] = useState(false);
+  const [mailsOpen, setMailsOpen] = useState(false);
+  const [openRunId, setOpenRunId] = useState<number | null>(null);
   const [pwBusy, setPwBusy] = useState(false);
   const [showPw, setShowPw] = useState(false);
 
@@ -142,6 +156,48 @@ export default function AdminPage() {
     } catch { /* ignore */ }
   }, [adminToken]);
   useEffect(() => { if (state === 'ready') loadSlides(); }, [state, loadSlides]);
+
+  const loadDocs = useCallback(async () => {
+    const b = adminToken(); if (!b) return;
+    try {
+      const r = await fetch('/api/admin/documents', { headers: { Authorization: `Bearer ${b}` } });
+      if (r.ok) {
+        const list: DocRow[] = (await r.json()).documents || [];
+        setDocs(list);
+        // הטיוטה נטענת רק כשאין עריכה פתוחה — רענון רקע לא דורס הקלדה
+        setDocDirty((dirty) => {
+          if (!dirty) setDocDraft(list.find((d) => d.slug === 'privacy')?.content_md ?? '');
+          return dirty;
+        });
+      }
+    } catch { /* ignore */ }
+  }, [adminToken]);
+  useEffect(() => { if (state === 'ready') loadDocs(); }, [state, loadDocs]);
+
+  function switchDoc(slug: string) {
+    if (docDirty && !confirm('יש שינויים שלא נשמרו במסמך הנוכחי. לעבור בלי לשמור?')) return;
+    setDocSlug(slug);
+    setDocDraft(docs.find((d) => d.slug === slug)?.content_md ?? '');
+    setDocDirty(false);
+  }
+
+  async function saveDoc() {
+    const b = adminToken(); if (!b || docBusy) return;
+    setDocBusy(true);
+    try {
+      const r = await fetch('/api/admin/documents', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${b}` },
+        body: JSON.stringify({ slug: docSlug, content_md: docDraft }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (r.ok && d.ok) {
+        setToast('✓ המסמך פורסם לאתר');
+        setDocDirty(false);
+        setDocs((prev) => prev.map((x) => x.slug === docSlug ? { ...x, content_md: docDraft, updated_at: new Date().toISOString() } : x));
+      } else setToast(`שגיאה: ${d.error || 'השמירה נכשלה'}`);
+    } catch { setToast('שגיאת תקשורת'); }
+    setDocBusy(false);
+  }
 
   async function saveSlide(sl: SlideRow) {
     const b = adminToken(); if (!b || slideBusy) return;
@@ -363,35 +419,64 @@ export default function AdminPage() {
       </div>
       {toast && <div style={{ background: '#e8f1fb', border: '1px solid #cfe0f4', color: '#1e5aa8', borderRadius: 8, padding: '9px 14px', fontSize: 13, marginBottom: 8 }}>{toast}</div>}
 
-      {/* ריצות */}
-      <div style={{ fontSize: 15.5, fontWeight: 700, margin: '18px 0 10px' }}>ריצות אחרונות</div>
+      {/* ריצות — ברירת מחדל: 3 אחרונות; לחיצה על שורה פותחת את הדוח המלא */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '18px 0 10px' }}>
+        <div style={{ fontSize: 15.5, fontWeight: 700 }}>ריצות אחרונות</div>
+        {data.runs.length > 3 && (
+          <button onClick={() => setRunsOpen(!runsOpen)}
+            style={{ background: 'transparent', border: 'none', color: '#1e5aa8', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+            {runsOpen ? '▲ הצג 3 אחרונות בלבד' : `▼ הצג הכל (${data.runs.length})`}
+          </button>
+        )}
+      </div>
       <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, overflow: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 640 }}>
           <thead><tr><th style={th}>זמן</th><th style={th}>סוג</th><th style={th}>משך</th><th style={th}>טריגר</th><th style={th}>נתונים</th><th style={th}>שגיאה</th></tr></thead>
           <tbody>
             {data.runs.length === 0 && <tr><td style={td} colSpan={6}><span style={{ color: MUTED }}>אין ריצות מתועדות עדיין — הריצה הבאה של כל צינור תופיע כאן.</span></td></tr>}
-            {data.runs.map((r) => (
-              <tr key={r.id}>
-                <td style={td}>{fmtTime(r.started_at)}</td>
-                <td style={td}>{r.type === 'sync' ? 'סנכרון' : r.type === 'sources' ? 'מקורות חדשים' : 'עסקים קטנים'}</td>
-                <td style={td}>{fmtDur(r.duration_ms)}</td>
-                <td style={td}>{TRIGGER_HE[r.trigger || ''] || r.trigger || '—'}</td>
-                <td style={{ ...td, fontFamily: 'monospace', fontSize: 11, direction: 'ltr', textAlign: 'left' }}>{JSON.stringify(r.counts_json || {}).slice(0, 80)}</td>
-                <td style={{ ...td, color: r.error ? '#b04a34' : MUTED }}>{r.error ? String(r.error).slice(0, 60) : '—'}</td>
-              </tr>
+            {(runsOpen ? data.runs : data.runs.slice(0, 3)).map((r) => (
+              <React.Fragment key={r.id}>
+                <tr onClick={() => setOpenRunId(openRunId === r.id ? null : r.id)} style={{ cursor: 'pointer', background: openRunId === r.id ? '#f4f8fc' : undefined }}
+                  title={openRunId === r.id ? 'סגירת הדוח' : 'פתיחת הדוח המלא'}>
+                  <td style={td}>{openRunId === r.id ? '▾ ' : '▸ '}{fmtTime(r.started_at)}</td>
+                  <td style={td}>{r.type === 'sync' ? 'סנכרון' : r.type === 'sources' ? 'מקורות חדשים' : 'עסקים קטנים'}</td>
+                  <td style={td}>{fmtDur(r.duration_ms)}</td>
+                  <td style={td}>{TRIGGER_HE[r.trigger || ''] || r.trigger || '—'}</td>
+                  <td style={{ ...td, fontFamily: 'monospace', fontSize: 11, direction: 'ltr', textAlign: 'left' }}>{JSON.stringify(r.counts_json || {}).slice(0, 80)}</td>
+                  <td style={{ ...td, color: r.error ? '#b04a34' : MUTED }}>{r.error ? String(r.error).slice(0, 60) : '—'}</td>
+                </tr>
+                {openRunId === r.id && (
+                  <tr>
+                    <td colSpan={6} style={{ padding: '10px 14px', background: '#f8fafc', borderBottom: `1px solid ${BORDER}` }}>
+                      {r.error && <div style={{ color: '#b04a34', fontSize: 12.5, marginBottom: 8, direction: 'ltr', textAlign: 'left' }}>{r.error}</div>}
+                      <pre style={{ margin: 0, fontFamily: 'monospace', fontSize: 11.5, direction: 'ltr', textAlign: 'left', whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxHeight: 320, overflow: 'auto' }}>
+                        {JSON.stringify(r.counts_json || {}, null, 2)}
+                      </pre>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
             ))}
           </tbody>
         </table>
       </div>
 
-      {/* דיוור */}
-      <div style={{ fontSize: 15.5, fontWeight: 700, margin: '22px 0 10px' }}>מיילים אחרונים</div>
+      {/* דיוור — ברירת מחדל: 3 משלוחים אחרונים */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '22px 0 10px' }}>
+        <div style={{ fontSize: 15.5, fontWeight: 700 }}>מיילים אחרונים</div>
+        {groupEmails(data.emails).length > 3 && (
+          <button onClick={() => setMailsOpen(!mailsOpen)}
+            style={{ background: 'transparent', border: 'none', color: '#1e5aa8', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+            {mailsOpen ? '▲ הצג 3 אחרונים בלבד' : `▼ הצג הכל (${groupEmails(data.emails).length})`}
+          </button>
+        )}
+      </div>
       <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, overflow: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 560 }}>
           <thead><tr><th style={th}>זמן</th><th style={th}>סוג</th><th style={th}>נמענים</th><th style={th}>נשלחו</th><th style={th}>מכרזים</th><th style={th}>סטטוס</th></tr></thead>
           <tbody>
             {data.emails.length === 0 && <tr><td style={td} colSpan={6}><span style={{ color: MUTED }}>אין משלוחים מתועדים עדיין.</span></td></tr>}
-            {groupEmails(data.emails).map((b) => (
+            {(mailsOpen ? groupEmails(data.emails) : groupEmails(data.emails).slice(0, 3)).map((b) => (
               <tr key={b.key}>
                 <td style={td}>{fmtTime(b.at)}</td>
                 <td style={td}>{b.type === 'daily' ? 'דוח יומי' : b.type === 'alert' ? 'התראה חמה' : b.type}</td>
@@ -403,6 +488,53 @@ export default function AdminPage() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* מסמכי האתר — עריכה + preview חי */}
+      <h2 style={{ fontSize: 15.5, fontWeight: 700, margin: '22px 0 10px' }}>מסמכי האתר</h2>
+      <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, padding: 16, marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+          {['privacy', 'terms', 'accessibility'].map((slug) => (
+            <button key={slug} onClick={() => switchDoc(slug)}
+              style={{
+                background: docSlug === slug ? '#e8f1fb' : '#f6f8fa',
+                color: docSlug === slug ? '#1e5aa8' : MUTED,
+                border: docSlug === slug ? '1.5px solid ' + BLUE : `1px solid ${BORDER}`,
+                borderRadius: 999, padding: '7px 15px', fontSize: 13, fontWeight: docSlug === slug ? 700 : 600,
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}>
+              {DOC_LABELS[slug]}
+            </button>
+          ))}
+          <div style={{ flex: 1 }} />
+          <a href={DOC_PATHS[docSlug]} target="_blank" rel="noopener noreferrer"
+            style={{ fontSize: 12.5, color: '#1e5aa8', fontWeight: 600 }}>פתיחת העמוד באתר ←</a>
+        </div>
+        <div style={{ fontSize: 12, color: MUTED, marginBottom: 10 }}>
+          עיצוב: <code dir="ltr"># כותרת</code>, <code dir="ltr">## כותרת משנה</code>, <code dir="ltr">**מודגש**</code>, <code dir="ltr">- פריט רשימה</code>, <code dir="ltr">[טקסט](קישור)</code>. ה-preview מימין מציג בדיוק את מה שיפורסם.
+          {(() => { const d = docs.find((x) => x.slug === docSlug); return d?.updated_at ? <> · עודכן {fmtTime(d.updated_at)}{d.updated_by ? ` ע"י ${d.updated_by}` : ''}</> : null; })()}
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', gap: 14 }}>
+          <textarea
+            value={docDraft}
+            onChange={(e) => { setDocDraft(e.target.value); setDocDirty(true); }}
+            placeholder={'# ' + DOC_LABELS[docSlug] + '\n\nכתבו כאן את תוכן המסמך…'}
+            style={{ ...inp, width: '100%', minHeight: 380, resize: 'vertical', lineHeight: 1.7, fontSize: 13.5, boxSizing: 'border-box' }}
+          />
+          <div style={{ border: `1px solid ${BORDER}`, borderRadius: 10, padding: '18px 20px', minHeight: 380, maxHeight: 560, overflow: 'auto', background: '#fbfcfd' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, letterSpacing: 0.5, marginBottom: 10 }}>PREVIEW — כך ייראה העמוד</div>
+            {docDraft.trim()
+              ? renderDocMarkdown(docDraft)
+              : <div style={{ fontSize: 13, color: MUTED }}>המסמך ריק — העמוד באתר יציג טקסט ביניים עד שיפורסם תוכן.</div>}
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12 }}>
+          <button onClick={saveDoc} disabled={docBusy || !docDirty}
+            style={{ background: docDirty ? BLUE : '#9db8d8', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 22px', fontSize: 13.5, fontWeight: 600, cursor: docDirty ? 'pointer' : 'default', fontFamily: 'inherit' }}>
+            {docBusy ? 'מפרסם…' : 'פרסום לאתר'}
+          </button>
+          {docDirty && <span style={{ fontSize: 12.5, color: '#c98a12', fontWeight: 600 }}>יש שינויים שטרם פורסמו</span>}
+        </div>
       </div>
 
       <h2 style={{ fontSize: 15.5, fontWeight: 700, margin: '22px 0 10px' }}>סליידר שיווקי בדף הבית</h2>
