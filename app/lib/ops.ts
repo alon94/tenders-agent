@@ -81,6 +81,13 @@ export async function ensureOpsTables(): Promise<void> {
         status text,
         message_id text
       );
+      create table if not exists site_documents (
+        slug text primary key,
+        title text not null,
+        content_md text not null default '',
+        updated_at timestamptz not null default now(),
+        updated_by text
+      );
       insert into admins (email, role) values ('${SEED_SUPER_ADMIN}', 'super')
         on conflict (email) do nothing;
     `);
@@ -617,4 +624,66 @@ export async function deleteRegisteredUser(userId: string): Promise<{ ok: boolea
     return { ok: false, error: `auth delete failed (${res.status})` };
   }
   return { ok: true };
+}
+
+// --- מסמכי אתר (מדיניות פרטיות, תנאי שימוש, הצהרת נגישות) ---
+// נערכים ב-/admin ומוגשים לציבור ב-/privacy, /terms, /accessibility.
+export interface SiteDocument {
+  slug: string;
+  title: string;
+  content_md: string;
+  updated_at?: string;
+  updated_by?: string | null;
+}
+
+// רשימה סגורה — slug מגיע מנתיב ציבורי, ואסור לתת לו לבחור שורה שרירותית.
+export const DOCUMENT_SLUGS = ['privacy', 'terms', 'accessibility'] as const;
+export const DOCUMENT_TITLES: Record<string, string> = {
+  privacy: 'מדיניות פרטיות',
+  terms: 'תנאי שימוש',
+  accessibility: 'הצהרת נגישות',
+};
+
+export async function getDocument(slug: string): Promise<SiteDocument | null> {
+  if (!(DOCUMENT_SLUGS as readonly string[]).includes(slug)) return null;
+  try {
+    await ensureOpsTables();
+    const res = await fetch(restUrl(`/site_documents?slug=eq.${slug}&limit=1`), {
+      headers: svcHeaders(), cache: 'no-store',
+    });
+    if (!res.ok) return null;
+    const rows = (await res.json().catch(() => [])) as SiteDocument[];
+    return rows[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function listDocuments(): Promise<SiteDocument[]> {
+  await ensureOpsTables();
+  const res = await fetch(restUrl('/site_documents?order=slug.asc'), {
+    headers: svcHeaders(), cache: 'no-store',
+  });
+  const rows: SiteDocument[] = res.ok ? await res.json().catch(() => []) : [];
+  // מסמך שטרם נשמר מוחזר כשלד ריק, כדי שהעורך תמיד יציג את שלושתם
+  return DOCUMENT_SLUGS.map((slug) =>
+    rows.find((r) => r.slug === slug) ?? { slug, title: DOCUMENT_TITLES[slug], content_md: '' }
+  );
+}
+
+export async function saveDocument(doc: { slug: string; title?: string; content_md: string }, updatedBy: string): Promise<boolean> {
+  if (!(DOCUMENT_SLUGS as readonly string[]).includes(doc.slug)) return false;
+  await ensureOpsTables();
+  const res = await fetch(restUrl('/site_documents?on_conflict=slug'), {
+    method: 'POST',
+    headers: svcHeaders({ Prefer: 'resolution=merge-duplicates,return=minimal' }),
+    body: JSON.stringify({
+      slug: doc.slug,
+      title: doc.title?.trim() || DOCUMENT_TITLES[doc.slug],
+      content_md: doc.content_md,
+      updated_at: new Date().toISOString(),
+      updated_by: updatedBy,
+    }),
+  });
+  return res.ok;
 }
