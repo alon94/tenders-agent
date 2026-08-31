@@ -18,7 +18,7 @@ const inputStyle = {
   border: '1px solid #e2e7ec',
   background: '#f4f6f8',
   color: DARK,
-  fontSize: 13.5,
+  fontSize: '0.84375rem',
   fontFamily: 'inherit',
   boxSizing: 'border-box' as const,
 };
@@ -81,7 +81,7 @@ export default function SigninPage() {
   return (
     <div
       style={{
-        minHeight: '100vh',
+        minHeight: 'calc(100vh - 48px)',
         background: '#f6f8fa',
         backgroundImage: 'linear-gradient(180deg, #e8f1fb, transparent 180px)',
         direction: 'rtl',
@@ -114,16 +114,16 @@ export default function SigninPage() {
               alignItems: 'center',
               justifyContent: 'center',
               fontWeight: 800,
-              fontSize: 18,
+              fontSize: '1.125rem',
               marginBottom: 14,
             }}
           >
             ש
           </div>
-          <h1 style={{ fontSize: 20, fontWeight: 800, color: DARK, textAlign: 'center', margin: 0 }}>
+          <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: DARK, textAlign: 'center', margin: 0 }}>
             התחברות לשווה מכרזים
           </h1>
-          <div style={{ fontSize: 13, color: MUTED, marginTop: 6, textAlign: 'center' }}>
+          <div style={{ fontSize: '0.8125rem', color: MUTED, marginTop: 6, textAlign: 'center' }}>
             מועדון עסקים 360 · גילוי מכרזים מותאם אישית
           </div>
         </div>
@@ -138,7 +138,7 @@ export default function SigninPage() {
             border: '1px solid #e2e7ec',
             background: '#fff',
             color: DARK,
-            fontSize: 14,
+            fontSize: '0.875rem',
             fontWeight: 600,
             cursor: 'pointer',
             display: 'flex',
@@ -153,13 +153,13 @@ export default function SigninPage() {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '18px 0' }}>
           <div style={{ flex: 1, height: 1, background: '#eef1f4' }} />
-          <div style={{ fontSize: 12, color: MUTED }}>או עם אימייל</div>
+          <div style={{ fontSize: '0.75rem', color: MUTED }}>או עם אימייל</div>
           <div style={{ flex: 1, height: 1, background: '#eef1f4' }} />
         </div>
 
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: 14 }}>
-            <label htmlFor="signin-email" style={{ display: 'block', fontSize: 12.5, fontWeight: 600, color: '#5b6b7a', marginBottom: 6 }}>
+            <label htmlFor="signin-email" style={{ display: 'block', fontSize: '0.78125rem', fontWeight: 600, color: '#5b6b7a', marginBottom: 6 }}>
               אימייל
             </label>
             <input
@@ -177,7 +177,7 @@ export default function SigninPage() {
 
           <div style={{ marginBottom: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-              <label htmlFor="signin-password" style={{ fontSize: 12.5, fontWeight: 600, color: '#5b6b7a' }}>סיסמה</label>
+              <label htmlFor="signin-password" style={{ fontSize: '0.78125rem', fontWeight: 600, color: '#5b6b7a' }}>סיסמה</label>
               <button
                 type="button"
                 onClick={handleForgotPassword}
@@ -187,7 +187,7 @@ export default function SigninPage() {
                   border: 'none',
                   padding: 0,
                   color: BLUE,
-                  fontSize: 12,
+                  fontSize: '0.75rem',
                   fontWeight: 600,
                   cursor: recovering ? 'default' : 'pointer',
                 }}
@@ -206,15 +206,15 @@ export default function SigninPage() {
               placeholder="הסיסמה שלכם"
               style={inputStyle}
             />
-            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: MUTED, marginBottom: 16, cursor: 'pointer' }}><input type="checkbox" checked={showPw} onChange={(e) => setShowPw(e.target.checked)} />👁 הצג סיסמה</label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.78125rem', color: MUTED, marginBottom: 16, cursor: 'pointer' }}><input type="checkbox" checked={showPw} onChange={(e) => setShowPw(e.target.checked)} />👁 הצג סיסמה</label>
           </div>
 
-          {error && <div style={{ color: ERROR, fontSize: 12.5, marginBottom: 14 }}>{error}</div>}
+          {error && <div style={{ color: ERROR, fontSize: '0.78125rem', marginBottom: 14 }}>{error}</div>}
           {info && (
             <div
               style={{
                 color: '#1e5aa8',
-                fontSize: 13,
+                fontSize: '0.8125rem',
                 marginBottom: 14,
                 background: '#e8f1fb',
                 border: '1px solid #cfe0f4',
@@ -236,7 +236,7 @@ export default function SigninPage() {
               border: 'none',
               background: BLUE,
               color: '#fff',
-              fontSize: 14.5,
+              fontSize: '0.90625rem',
               fontWeight: 700,
               cursor: loading ? 'default' : 'pointer',
               opacity: loading ? 0.7 : 1,
@@ -246,7 +246,7 @@ export default function SigninPage() {
           </button>
         </form>
 
-        <div style={{ marginTop: 18, fontSize: 13, color: MUTED, textAlign: 'center' }}>
+        <div style={{ marginTop: 18, fontSize: '0.8125rem', color: MUTED, textAlign: 'center' }}>
           אין לכם חשבון?{' '}
           <Link href="/signup" style={{ color: BLUE, fontWeight: 700, textDecoration: 'none' }}>
             להרשמה

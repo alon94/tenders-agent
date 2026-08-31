@@ -17,14 +17,14 @@ const inputStyle = {
   border: '1px solid #e2e7ec',
   background: '#f4f6f8',
   color: DARK,
-  fontSize: 13.5,
+  fontSize: '0.84375rem',
   fontFamily: 'inherit',
   boxSizing: 'border-box' as const,
 };
 
 const labelStyle = {
   display: 'block',
-  fontSize: 12.5,
+  fontSize: '0.78125rem',
   fontWeight: 600 as const,
   color: '#5b6b7a',
   marginBottom: 6,
@@ -86,7 +86,7 @@ export default function SignupPage() {
   return (
     <div
       style={{
-        minHeight: '100vh',
+        minHeight: 'calc(100vh - 48px)',
         background: '#f6f8fa',
         backgroundImage: 'linear-gradient(180deg, #e8f1fb, transparent 180px)',
         direction: 'rtl',
@@ -119,14 +119,14 @@ export default function SignupPage() {
               alignItems: 'center',
               justifyContent: 'center',
               fontWeight: 800,
-              fontSize: 18,
+              fontSize: '1.125rem',
               marginBottom: 14,
             }}
           >
             ש
           </div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: DARK, textAlign: 'center' }}>יצירת חשבון חדש</div>
-          <div style={{ fontSize: 13, color: MUTED, marginTop: 6, textAlign: 'center' }}>
+          <div style={{ fontSize: '1.25rem', fontWeight: 800, color: DARK, textAlign: 'center' }}>יצירת חשבון חדש</div>
+          <div style={{ fontSize: '0.8125rem', color: MUTED, marginTop: 6, textAlign: 'center' }}>
             קבלו מכרזים מותאמים לעסק שלכם עם ציון התאמה וסוכן חכם
           </div>
         </div>
@@ -141,7 +141,7 @@ export default function SignupPage() {
             border: '1px solid #e2e7ec',
             background: '#fff',
             color: DARK,
-            fontSize: 14,
+            fontSize: '0.875rem',
             fontWeight: 600,
             cursor: 'pointer',
             display: 'flex',
@@ -156,7 +156,7 @@ export default function SignupPage() {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '18px 0' }}>
           <div style={{ flex: 1, height: 1, background: '#eef1f4' }} />
-          <div style={{ fontSize: 12, color: MUTED }}>או עם אימייל</div>
+          <div style={{ fontSize: '0.75rem', color: MUTED }}>או עם אימייל</div>
           <div style={{ flex: 1, height: 1, background: '#eef1f4' }} />
         </div>
 
@@ -208,7 +208,7 @@ export default function SignupPage() {
               placeholder="8 תווים לפחות"
               style={inputStyle}
             />
-            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: MUTED, marginBottom: 16, cursor: 'pointer' }}><input type="checkbox" checked={showPw} onChange={(e) => setShowPw(e.target.checked)} />👁 הצג סיסמה</label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.78125rem', color: MUTED, marginBottom: 16, cursor: 'pointer' }}><input type="checkbox" checked={showPw} onChange={(e) => setShowPw(e.target.checked)} />👁 הצג סיסמה</label>
           </div>
 
           <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 18, cursor: 'pointer' }}>
@@ -218,7 +218,7 @@ export default function SignupPage() {
               onChange={(e) => setAgree(e.target.checked)}
               style={{ width: 16, height: 16, marginTop: 2, accentColor: BLUE }}
             />
-            <span style={{ fontSize: 12, color: '#5b6b7a', lineHeight: 1.5 }}>
+            <span style={{ fontSize: '0.75rem', color: '#5b6b7a', lineHeight: 1.5 }}>
               מסכים/ה ל
               <Link href="/terms" style={{ color: BLUE, fontWeight: 600, textDecoration: 'none' }}>
                 תנאי השימוש
@@ -230,12 +230,12 @@ export default function SignupPage() {
             </span>
           </label>
 
-          {error && <div style={{ color: ERROR, fontSize: 12.5, marginBottom: 14 }}>{error}</div>}
+          {error && <div style={{ color: ERROR, fontSize: '0.78125rem', marginBottom: 14 }}>{error}</div>}
           {info && (
             <div
               style={{
                 color: '#1e5aa8',
-                fontSize: 13,
+                fontSize: '0.8125rem',
                 marginBottom: 14,
                 background: '#e8f1fb',
                 border: '1px solid #cfe0f4',
@@ -257,7 +257,7 @@ export default function SignupPage() {
               border: 'none',
               background: BLUE,
               color: '#fff',
-              fontSize: 14.5,
+              fontSize: '0.90625rem',
               fontWeight: 700,
               cursor: loading ? 'default' : 'pointer',
               opacity: loading ? 0.7 : 1,
@@ -267,7 +267,7 @@ export default function SignupPage() {
           </button>
         </form>
 
-        <div style={{ marginTop: 18, fontSize: 13, color: MUTED, textAlign: 'center' }}>
+        <div style={{ marginTop: 18, fontSize: '0.8125rem', color: MUTED, textAlign: 'center' }}>
           כבר יש לכם חשבון?{' '}
           <Link href="/signin" style={{ color: BLUE, fontWeight: 700, textDecoration: 'none' }}>
             להתחברות

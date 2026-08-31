@@ -36,7 +36,7 @@ const selStyle = {
   border: '1px solid #e2e7ec',
   background: '#f4f6f8',
   color: DARK,
-  fontSize: 13.5,
+  fontSize: '0.84375rem',
   appearance: 'none' as const,
   WebkitAppearance: 'none' as const,
   fontFamily: 'inherit',
@@ -154,7 +154,7 @@ export default function ProfilePage() {
             border: 'none',
             background: BLUE,
             color: '#fff',
-            fontSize: 13.5,
+            fontSize: '0.84375rem',
             fontWeight: 600,
             cursor: dirty ? 'pointer' : 'default',
             opacity: dirty || saved ? 1 : 0.6,
@@ -166,8 +166,8 @@ export default function ProfilePage() {
     >
       <div style={{ maxWidth: 920, margin: '0 auto', padding: '24px 26px 32px', background: '#f6f8fa' }}>
         <div style={{ background: '#fff', border: '1px solid #e6eaee', borderRadius: 12, padding: 20, marginBottom: 18 }}>
-          <div style={{ fontSize: 15.5, fontWeight: 700, color: DARK, marginBottom: 4 }}>סוג העסק שלי</div>
-          <div style={{ fontSize: 12.5, color: MUTED, marginBottom: 16 }}>
+          <div style={{ fontSize: '0.96875rem', fontWeight: 700, color: DARK, marginBottom: 4 }}>סוג העסק שלי</div>
+          <div style={{ fontSize: '0.78125rem', color: MUTED, marginBottom: 16 }}>
             בחרו קטגוריה אחת או יותר — היא תקבע אילו מכרזים יוצגו לכם
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
@@ -184,7 +184,7 @@ export default function ProfilePage() {
                     background: active ? '#e8f1fb' : '#fff',
                     color: active ? '#1e5aa8' : '#5b6b7a',
                     fontWeight: active ? 700 : 600,
-                    fontSize: 13.5,
+                    fontSize: '0.84375rem',
                     cursor: 'pointer',
                   }}
                 >
@@ -212,7 +212,7 @@ export default function ProfilePage() {
                   border: '1px solid #e2e7ec',
                   background: '#f4f6f8',
                   color: DARK,
-                  fontSize: 13.5,
+                  fontSize: '0.84375rem',
                   fontFamily: 'inherit',
                 }}
               />
@@ -226,11 +226,11 @@ export default function ProfilePage() {
           <div style={{ marginTop: 22, paddingTop: 20, borderTop: '1px solid #eef2f5' }}>
             <label
               htmlFor="kw-input"
-              style={{ display: 'block', fontWeight: 700, fontSize: 14, color: DARK, marginBottom: 5 }}
+              style={{ display: 'block', fontWeight: 700, fontSize: '0.875rem', color: DARK, marginBottom: 5 }}
             >
               מילות מפתח
             </label>
-            <div style={{ fontSize: 12.5, color: '#6b7a88', marginBottom: 10, lineHeight: 1.6, maxWidth: 520 }}>
+            <div style={{ fontSize: '0.78125rem', color: '#6b7a88', marginBottom: 10, lineHeight: 1.6, maxWidth: 520 }}>
               המילים שמאפיינות בדיוק את מה שאתם מחפשים, מופרדות בפסיקים.
               זהו הגורם המשפיע ביותר על דירוג ההתאמה — הרבה מעבר לקטגוריות.
             </div>
@@ -251,11 +251,11 @@ export default function ProfilePage() {
                 border: '1px solid #e2e7ec',
                 background: '#f4f6f8',
                 color: DARK,
-                fontSize: 13.5,
+                fontSize: '0.84375rem',
                 fontFamily: 'inherit',
               }}
             />
-            <div style={{ fontSize: 12, color: keywords.trim() ? '#1b6b45' : '#a8500f', marginTop: 8, fontWeight: 600 }}>
+            <div style={{ fontSize: '0.75rem', color: keywords.trim() ? '#1b6b45' : '#a8500f', marginTop: 8, fontWeight: 600 }}>
               {keywords.trim()
                 ? `✓ ${keywords.split(',').map((k) => k.trim()).filter(Boolean).length} מילות מפתח — ההתאמה תדייק לפיהן`
                 : '⚠ בלי מילות מפתח הדירוג מתבסס על הקטגוריות בלבד, ואף מכרז לא יגיע להתאמה גבוהה'}
@@ -273,7 +273,7 @@ export default function ProfilePage() {
               background: statusBg,
               color: statusFg,
               border: '1px solid ' + statusBorder,
-              fontSize: 12.5,
+              fontSize: '0.78125rem',
               fontWeight: 600,
             }}
           >
@@ -284,8 +284,8 @@ export default function ProfilePage() {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 18 }}>
           <div style={{ background: '#fff', border: '1px solid #e6eaee', borderRadius: 12, padding: 20 }}>
-            <div style={{ fontSize: 15.5, fontWeight: 700, color: DARK, marginBottom: 4 }}>אזור גאוגרפי</div>
-            <div style={{ fontSize: 12.5, color: MUTED, marginBottom: 14 }}>פילטר משני — מצמצם לפי מיקום הפעילות</div>
+            <div style={{ fontSize: '0.96875rem', fontWeight: 700, color: DARK, marginBottom: 4 }}>אזור גאוגרפי</div>
+            <div style={{ fontSize: '0.78125rem', color: MUTED, marginBottom: 14 }}>פילטר משני — מצמצם לפי מיקום הפעילות</div>
             <div style={{ position: 'relative' }}>
               <select
                 value={reg}
@@ -301,14 +301,14 @@ export default function ProfilePage() {
                   </option>
                 ))}
               </select>
-              <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 11, color: '#9aa6b2', pointerEvents: 'none' }}>
+              <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: '0.6875rem', color: '#9aa6b2', pointerEvents: 'none' }}>
                 ▾
               </span>
             </div>
           </div>
           <div style={{ background: '#fff', border: '1px solid #e6eaee', borderRadius: 12, padding: 20 }}>
-            <div style={{ fontSize: 15.5, fontWeight: 700, color: DARK, marginBottom: 4 }}>סוג מפרסם</div>
-            <div style={{ fontSize: 12.5, color: MUTED, marginBottom: 14 }}>פילטר משני — משרדי ממשלה, רשויות, חברות</div>
+            <div style={{ fontSize: '0.96875rem', fontWeight: 700, color: DARK, marginBottom: 4 }}>סוג מפרסם</div>
+            <div style={{ fontSize: '0.78125rem', color: MUTED, marginBottom: 14 }}>פילטר משני — משרדי ממשלה, רשויות, חברות</div>
             <div style={{ position: 'relative' }}>
               <select
                 value={pub}
@@ -324,7 +324,7 @@ export default function ProfilePage() {
                   </option>
                 ))}
               </select>
-              <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 11, color: '#9aa6b2', pointerEvents: 'none' }}>
+              <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: '0.6875rem', color: '#9aa6b2', pointerEvents: 'none' }}>
                 ▾
               </span>
             </div>
@@ -332,7 +332,7 @@ export default function ProfilePage() {
         </div>
 
         {error && (
-          <div style={{ color: '#b04a34', fontSize: 13, marginBottom: 16 }}>{error}</div>
+          <div style={{ color: '#b04a34', fontSize: '0.8125rem', marginBottom: 16 }}>{error}</div>
         )}
 
         <div
@@ -356,13 +356,13 @@ export default function ProfilePage() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: 15,
+              fontSize: '0.9375rem',
               flexShrink: 0,
             }}
           >
             ✦
           </div>
-          <div style={{ fontSize: 13, color: DARK, lineHeight: 1.5 }}>
+          <div style={{ fontSize: '0.8125rem', color: DARK, lineHeight: 1.5 }}>
             הסוכן החכם משתמש בפרופיל העסקי הזה כדי להתאים אישית את המכרזים המוצגים לכם, לדרג אותם לפי רלוונטיות ולחשב ציון התאמה לכל מכרז.
           </div>
         </div>

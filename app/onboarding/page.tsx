@@ -36,7 +36,7 @@ function Stepper({ step }: { step: number }) {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: 13,
+                  fontSize: '0.8125rem',
                   fontWeight: 700,
                   background: done ? '#e8f1fb' : active ? BLUE : '#fff',
                   color: done ? '#1e5aa8' : active ? '#fff' : '#8a97a3',
@@ -45,7 +45,7 @@ function Stepper({ step }: { step: number }) {
               >
                 {done ? '✓' : s.n}
               </div>
-              <div style={{ fontSize: 11.5, fontWeight: active ? 700 : 500, color: active ? DARK : MUTED }}>
+              <div style={{ fontSize: '0.71875rem', fontWeight: active ? 700 : 500, color: active ? DARK : MUTED }}>
                 {s.label}
               </div>
             </div>
@@ -131,7 +131,7 @@ export default function OnboardingPage() {
   return (
     <div
       style={{
-        minHeight: '100vh',
+        minHeight: 'calc(100vh - 48px)',
         background: '#f6f8fa',
         backgroundImage: 'linear-gradient(180deg, #e8f1fb, transparent 180px)',
         direction: 'rtl',
@@ -156,10 +156,10 @@ export default function OnboardingPage() {
 
         {step === 2 && (
           <>
-            <div style={{ fontSize: 20, fontWeight: 800, color: DARK, textAlign: 'center', marginBottom: 6 }}>
+            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: DARK, textAlign: 'center', marginBottom: 6 }}>
               במה העסק שלכם עוסק?
             </div>
-            <div style={{ fontSize: 13, color: MUTED, textAlign: 'center', marginBottom: 22 }}>
+            <div style={{ fontSize: '0.8125rem', color: MUTED, textAlign: 'center', marginBottom: 22 }}>
               {existing
                 ? 'טענו את הפרופיל השמור שלכם — אפשר לעדכן את הבחירה'
                 : 'בחרו קטגוריה אחת או יותר — נתאים לכם מכרזים וציוני התאמה'}
@@ -180,7 +180,7 @@ export default function OnboardingPage() {
                       background: active ? '#e8f1fb' : '#fff',
                       color: active ? '#1e5aa8' : '#5b6b7a',
                       fontWeight: active ? 700 : 600,
-                      fontSize: 13.5,
+                      fontSize: '0.84375rem',
                       cursor: 'pointer',
                     }}
                   >
@@ -213,24 +213,24 @@ export default function OnboardingPage() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: 14,
+                  fontSize: '0.875rem',
                   flexShrink: 0,
                 }}
               >
                 ✦
               </div>
-              <div style={{ fontSize: 12.5, color: DARK, lineHeight: 1.5 }}>
+              <div style={{ fontSize: '0.78125rem', color: DARK, lineHeight: 1.5 }}>
                 הסוכן החכם ישתמש בבחירה כדי לחשב ציון התאמה לכל מכרז — אפשר לשנות בכל רגע בפרופיל העסקי.
               </div>
             </div>
 
-            {error && <div style={{ color: '#b04a34', fontSize: 12.5, marginBottom: 14, textAlign: 'center' }}>{error}</div>}
+            {error && <div style={{ color: '#b04a34', fontSize: '0.78125rem', marginBottom: 14, textAlign: 'center' }}>{error}</div>}
 
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <button
                 type="button"
                 onClick={handleSkip}
-                style={{ background: 'none', border: 'none', color: MUTED, fontSize: 13, cursor: 'pointer', padding: 0 }}
+                style={{ background: 'none', border: 'none', color: MUTED, fontSize: '0.8125rem', cursor: 'pointer', padding: 0 }}
               >
                 דלגו בינתיים
               </button>
@@ -245,7 +245,7 @@ export default function OnboardingPage() {
                   border: 'none',
                   background: BLUE,
                   color: '#fff',
-                  fontSize: 14,
+                  fontSize: '0.875rem',
                   fontWeight: 700,
                   cursor: saving ? 'default' : 'pointer',
                   opacity: saving ? 0.7 : 1,
@@ -269,14 +269,14 @@ export default function OnboardingPage() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: 26,
+                fontSize: '1.625rem',
                 margin: '0 auto 18px',
               }}
             >
               ✓
             </div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: DARK, marginBottom: 10 }}>הפרופיל נשמר בהצלחה!</div>
-            <div style={{ fontSize: 13.5, color: MUTED, marginBottom: 26, lineHeight: 1.6 }}>
+            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: DARK, marginBottom: 10 }}>הפרופיל נשמר בהצלחה!</div>
+            <div style={{ fontSize: '0.84375rem', color: MUTED, marginBottom: 26, lineHeight: 1.6 }}>
               מעכשיו הסוכן החכם יתאים אישית את המכרזים המוצגים לכם ויחשב ציון התאמה לכל מכרז, על סמך תחום העיסוק שבחרתם.
             </div>
             <button
@@ -288,7 +288,7 @@ export default function OnboardingPage() {
                 border: 'none',
                 background: BLUE,
                 color: '#fff',
-                fontSize: 14.5,
+                fontSize: '0.90625rem',
                 fontWeight: 700,
                 cursor: 'pointer',
               }}

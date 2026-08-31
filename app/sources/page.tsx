@@ -303,8 +303,8 @@ export default function SourcesPage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', background: '#fff', border: '1px solid ' + BORDER, borderRadius: 10, overflow: 'hidden', marginBottom: 20 }}>
         {kpiCells.map((k, i) => (
           <div key={i} style={{ padding: '16px 18px', borderInlineEnd: i < kpiCells.length - 1 ? '1px solid ' + BORDER : 'none' }}>
-            <div style={{ fontSize: 22, fontWeight: 700, color: k.c, minHeight: 28, display: 'flex', alignItems: 'center' }}>{k.v}</div>
-            <div style={{ fontSize: 12, color: MUTED, marginTop: 3 }}>{k.l}</div>
+            <div style={{ fontSize: '1.375rem', fontWeight: 700, color: k.c, minHeight: 28, display: 'flex', alignItems: 'center' }}>{k.v}</div>
+            <div style={{ fontSize: '0.75rem', color: MUTED, marginTop: 3 }}>{k.l}</div>
           </div>
         ))}
       </div>
@@ -312,14 +312,14 @@ export default function SourcesPage() {
       <div style={{ display: 'grid', gap: 14 }}>
         {SOURCES.map((s, i) => (
           <div key={i} style={{ background: '#fff', border: '1px solid ' + BORDER, borderRadius: 10, padding: '18px 20px', display: 'flex', alignItems: 'flex-start', gap: 16 }}>
-            <div style={{ fontSize: 26, lineHeight: 1 }}>{s.icon}</div>
+            <div style={{ fontSize: '1.625rem', lineHeight: 1 }}>{s.icon}</div>
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                <span style={{ fontSize: 15.5, fontWeight: 700, color: DARK }}>{s.name}</span>
-                <span style={{ fontSize: 11.5, fontWeight: 600, color: s.status === 'active' ? '#1e7d45' : s.status === 'pilot' ? '#8a5db8' : '#a06a1b', background: s.status === 'active' ? '#e7f6ec' : s.status === 'pilot' ? '#f3ecfb' : '#fdf3e3', borderRadius: 6, padding: '2px 8px' }}>{s.status === 'active' ? "פעיל" : s.status === 'pilot' ? "בהרצה" : "מועמד לאינטגרציה"}</span>
+                <span style={{ fontSize: '0.96875rem', fontWeight: 700, color: DARK }}>{s.name}</span>
+                <span style={{ fontSize: '0.71875rem', fontWeight: 600, color: s.status === 'active' ? '#1e7d45' : s.status === 'pilot' ? '#8a5db8' : '#a06a1b', background: s.status === 'active' ? '#e7f6ec' : s.status === 'pilot' ? '#f3ecfb' : '#fdf3e3', borderRadius: 6, padding: '2px 8px' }}>{s.status === 'active' ? "פעיל" : s.status === 'pilot' ? "בהרצה" : "מועמד לאינטגרציה"}</span>
               </div>
-              <div style={{ fontSize: 13.5, color: MUTED, marginBottom: 10, lineHeight: 1.5 }}>{s.desc}</div>
-              <a href={s.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, fontWeight: 600, color: BLUE, textDecoration: 'none' }}>{"לצפייה במקור"} ← {s.host}</a>
+              <div style={{ fontSize: '0.84375rem', color: MUTED, marginBottom: 10, lineHeight: 1.5 }}>{s.desc}</div>
+              <a href={s.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.8125rem', fontWeight: 600, color: BLUE, textDecoration: 'none' }}>{"לצפייה במקור"} ← {s.host}</a>
             </div>
           </div>
         ))}

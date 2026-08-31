@@ -108,21 +108,21 @@ export default function MarkedPage() {
       subtitle={rows.length + ' מכרזים שמורים למעקב'}
       // מייצא את כל המסומנים (rows) ולא רק את הטאב הפעיל — הכפתור יושב
       // בכותרת ליד "N מכרזים שמורים למעקב", ולכן זו הציפייה הסבירה.
-      action={<button onClick={() => exportCsv(rows)} disabled={rows.length === 0} style={{ background: '#fff', color: rows.length ? '#1e5aa8' : '#9aa6b2', border: '1px solid ' + BORDER, borderRadius: 10, padding: '9px 14px', fontSize: 13, fontWeight: 600, cursor: rows.length ? 'pointer' : 'not-allowed' }}>ייצוא ל-Excel ↓</button>}
+      action={<button onClick={() => exportCsv(rows)} disabled={rows.length === 0} style={{ background: '#fff', color: rows.length ? '#1e5aa8' : '#9aa6b2', border: '1px solid ' + BORDER, borderRadius: 10, padding: '9px 14px', fontSize: '0.8125rem', fontWeight: 600, cursor: rows.length ? 'pointer' : 'not-allowed' }}>ייצוא ל-Excel ↓</button>}
     >
       <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-                <button onClick={() => setTab('all')} style={{ border: '1px solid ' + (tab === 'all' ? DARK : BORDER), background: tab === 'all' ? DARK : '#fff', color: tab === 'all' ? '#fff' : '#5b6b7a', borderRadius: 999, padding: '7px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>הכל · {rows.length}</button>
-                <button onClick={() => setTab('closing')} style={{ border: '1px solid ' + (tab === 'closing' ? '#b04a34' : BORDER), background: tab === 'closing' ? '#fbe9e7' : '#fff', color: '#b04a34', borderRadius: 999, padding: '7px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>נסגרים בקרוב · {closing.length}</button>
+                <button onClick={() => setTab('all')} style={{ border: '1px solid ' + (tab === 'all' ? DARK : BORDER), background: tab === 'all' ? DARK : '#fff', color: tab === 'all' ? '#fff' : '#5b6b7a', borderRadius: 999, padding: '7px 14px', fontSize: '0.8125rem', fontWeight: 600, cursor: 'pointer' }}>הכל · {rows.length}</button>
+                <button onClick={() => setTab('closing')} style={{ border: '1px solid ' + (tab === 'closing' ? '#b04a34' : BORDER), background: tab === 'closing' ? '#fbe9e7' : '#fff', color: '#b04a34', borderRadius: 999, padding: '7px 14px', fontSize: '0.8125rem', fontWeight: 600, cursor: 'pointer' }}>נסגרים בקרוב · {closing.length}</button>
       </div>
 
       {/* a11y (re-QA): טבלה סמנטית כמו בדשבורד — role=table/row/cell */}
       <div role="table" aria-label="מכרזים מסומנים" style={{ background: '#fff', border: '1px solid ' + BORDER, borderRadius: 12, overflow: 'hidden' }}>
-        <div role="row" style={{ display: 'grid', gridTemplateColumns: '70px 1fr 232px 150px 120px', padding: '12px 16px', fontSize: 12, fontWeight: 600, color: '#7a8794', borderBottom: '1px solid ' + BORDER, background: '#f6f8fa' }}>
+        <div role="row" style={{ display: 'grid', gridTemplateColumns: '70px 1fr 232px 150px 120px', padding: '12px 16px', fontSize: '0.75rem', fontWeight: 600, color: '#7a8794', borderBottom: '1px solid ' + BORDER, background: '#f6f8fa' }}>
           <span role="columnheader">ציון</span><span role="columnheader">נושא</span><span role="columnheader">סטטוס</span><span role="columnheader">מועד</span><span role="columnheader">פעולות</span>
         </div>
         {error && !loading && shown.length > 0 && (
           // כשל חלקי: חלק מהמנות נטענו — באנר, לא מסך ריק.
-          <div style={{ padding: '10px 16px', background: '#fdf1e5', borderBottom: '1px solid ' + BORDER, color: '#a8500f', fontSize: 13, fontWeight: 600 }}>
+          <div style={{ padding: '10px 16px', background: '#fdf1e5', borderBottom: '1px solid ' + BORDER, color: '#a8500f', fontSize: '0.8125rem', fontWeight: 600 }}>
             חלק מהמכרזים המסומנים לא נטענו. הרשימה חלקית — נסו לרענן.
           </div>
         )}
@@ -132,8 +132,8 @@ export default function MarkedPage() {
                     // QA/H-3: כשל טעינה חייב להיראות אחרת מ"אין סימונים".
                     <div style={{ padding: 24, textAlign: 'center' }}>
                       <div style={{ color: '#b04a34', fontWeight: 600, marginBottom: 8 }}>לא הצלחנו לטעון את המכרזים המסומנים</div>
-                      <div style={{ color: '#7a8794', fontSize: 13, marginBottom: 12 }}>הסימונים שלכם נשמרו ולא אבדו. נסו לרענן.</div>
-                      <button onClick={() => window.location.reload()} style={{ background: DARK, color: '#fff', border: 'none', borderRadius: 8, padding: '8px 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>רענון</button>
+                      <div style={{ color: '#7a8794', fontSize: '0.8125rem', marginBottom: 12 }}>הסימונים שלכם נשמרו ולא אבדו. נסו לרענן.</div>
+                      <button onClick={() => window.location.reload()} style={{ background: DARK, color: '#fff', border: 'none', borderRadius: 8, padding: '8px 18px', fontSize: '0.8125rem', fontWeight: 600, cursor: 'pointer' }}>רענון</button>
                     </div>
         ) : shown.length === 0 ? (
                     <div style={{ padding: 24, color: '#7a8794', textAlign: 'center' }}>אין מכרזים מסומנים עדיין. סמנו מכרזים ☆ מדף הגילוי.</div>
@@ -145,21 +145,21 @@ export default function MarkedPage() {
             return (
               <div role="row" key={t.id} style={{ display: 'grid', gridTemplateColumns: '70px 1fr 232px 150px 120px', padding: '14px 16px', alignItems: 'center', borderBottom: '1px solid ' + BORDER }}>
                 <div role="cell" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                  <span style={{ fontSize: 20, fontWeight: 700, color: DARK, lineHeight: 1 }}>{score}</span>
+                  <span style={{ fontSize: '1.25rem', fontWeight: 700, color: DARK, lineHeight: 1 }}>{score}</span>
                   <span style={{ width: 26, height: 3, borderRadius: 2, background: bandColor(score) }} />
                 </div>
                 <div role="cell" style={{ paddingInlineEnd: 10 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: DARK, lineHeight: 1.4 }}>{t.title || 'ללא כותרת'}</div>
-                                    <div style={{ fontSize: 12, color: '#7a8794', marginTop: 3 }}>{t.publisher || 'לא ידוע'} · פורסם {fmtDate(t.publishDate || '')}</div>
+                  <div style={{ fontSize: '0.875rem', fontWeight: 700, color: DARK, lineHeight: 1.4 }}>{t.title || 'ללא כותרת'}</div>
+                                    <div style={{ fontSize: '0.75rem', color: '#7a8794', marginTop: 3 }}>{t.publisher || 'לא ידוע'} · פורסם {fmtDate(t.publishDate || '')}</div>
                 </div>
                 <div role="cell" style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-                  {tags.slice(0, 3).map((g, gi) => (<span key={gi} style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 6, background: g.bg, color: g.fg, border: '1px solid ' + g.bd }}>{g.label}</span>))}
+                  {tags.slice(0, 3).map((g, gi) => (<span key={gi} style={{ fontSize: '0.6875rem', fontWeight: 600, padding: '3px 8px', borderRadius: 6, background: g.bg, color: g.fg, border: '1px solid ' + g.bd }}>{g.label}</span>))}
                 </div>
-                <div role="cell" style={{ fontSize: 13 }}>
+                <div role="cell" style={{ fontSize: '0.8125rem' }}>
                   <div style={{ color: DARK, fontWeight: 600 }}>{fmtDate(t.deadline || '')}</div>
-                  {d !== null && d >= 0 && <div style={{ color: d <= 7 ? '#b04a34' : '#7a8794', fontSize: 12 }}>נותרו {d} ימים</div>}
+                  {d !== null && d >= 0 && <div style={{ color: d <= 7 ? '#b04a34' : '#7a8794', fontSize: '0.75rem' }}>נותרו {d} ימים</div>}
                 </div>
-                <div role="cell" style={{ display: 'flex', gap: 12, fontSize: 13 }}>
+                <div role="cell" style={{ display: 'flex', gap: 12, fontSize: '0.8125rem' }}>
                   <a href={'/tender/' + t.id} style={{ color: '#2b6fc4', fontWeight: 600, textDecoration: 'none' }}>פרטים</a>
                   <button onClick={() => remove(t.id)} style={{ color: '#b04a34', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}>הסר</button>
                 </div>

@@ -20,6 +20,8 @@ const ACTIVE_BG = '#e8f1fb';
 const ACTIVE_FG = '#1e5aa8';
 
 const NAV: { icon: string; label: string; href: string; countKey?: 'active' | 'exempt' | 'smallbiz' | 'intent' }[] = [
+  // QA 31.08.2026: קישור לדף הבית היה חסר בסרגל הצד (קיים ב-MobileMenu ובדשבורד)
+  { icon: '⌂', label: 'דף הבית', href: '/' },
   { icon: '◧', label: 'גילוי מכרזים', href: '/dashboard', countKey: 'active' },
   { icon: '⊘', label: 'מכרזים פטורים', href: '/dashboard?view=exempt', countKey: 'exempt' },
   { icon: '◎', label: 'כוונה להתקשרות', href: '/dashboard?view=intent', countKey: 'intent' },
@@ -73,7 +75,7 @@ export default function InternalShell({
     <div
       style={{
         display: 'flex',
-        minHeight: '100vh',
+        minHeight: 'calc(100vh - 48px)', // QA 31.08.2026: משאיר מקום לפוטר הגלובלי (48px) כך שייראה בלי גלילה
         background: '#eef1f4',
         direction: 'rtl',
         color: DARK,
@@ -113,20 +115,20 @@ export default function InternalShell({
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontWeight: 800,
-                fontSize: 15,
+                fontSize: '0.9375rem',
               }}
             >
               ש
             </div>
             <div style={{ lineHeight: 1.2 }}>
-              <div style={{ fontWeight: 800, fontSize: 14.5 }}>שווה מכרזים</div>
-              <div style={{ fontSize: 11, color: '#5f6c7a' }}>מועדון עסקים 360</div>
+              <div style={{ fontWeight: 800, fontSize: '0.90625rem' }}>שווה מכרזים</div>
+              <div style={{ fontSize: '0.6875rem', color: '#5f6c7a' }}>מועדון עסקים 360</div>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f4f6f8', border: `1.5px solid ${BLUE}33`, borderRadius: 10, padding: '9px 12px', marginBottom: 14 }}>
-            <span style={{ color: BLUE, fontSize: 15 }}>⌕</span>
+            <span style={{ color: BLUE, fontSize: '0.9375rem' }}>⌕</span>
             <input type="search" aria-label="חיפוש מכרזים" className="search-input" value={navQ} onChange={e => setNavQ(e.target.value)} onKeyDown={e => e.key === 'Enter' && goSearch()}
-              placeholder="חיפוש מכרזים…" style={{ flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'transparent', fontSize: 13, color: DARK, fontFamily: 'inherit' }} />
+              placeholder="חיפוש מכרזים…" style={{ flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'transparent', fontSize: '0.8125rem', color: DARK, fontFamily: 'inherit' }} />
           </div>
           <div>
             {NAV.map((item) => {
@@ -144,17 +146,17 @@ export default function InternalShell({
                     textDecoration: 'none',
                     padding: '10px 12px',
                     borderRadius: 10,
-                    fontSize: 13.5,
+                    fontSize: '0.84375rem',
                     fontWeight: active ? 700 : 500,
                     color: active ? ACTIVE_FG : '#5b6b7a',
                     background: active ? ACTIVE_BG : 'transparent',
                     borderInlineStart: active ? `3px solid ${BLUE}` : '3px solid transparent',
                   }}
                 >
-                  <span style={{ fontSize: 15 }}>{item.icon}</span>
+                  <span style={{ fontSize: '0.9375rem' }}>{item.icon}</span>
                   <span style={{ flex: 1 }}>{item.label}</span>
                   {item.countKey && counts[item.countKey] !== undefined && (
-                    <span style={{ fontSize: 11, fontWeight: 700, color: active ? ACTIVE_FG : '#5f6c7a', background: active ? '#fff' : '#eef1f4', borderRadius: 999, padding: '1px 8px' }}>
+                    <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: active ? ACTIVE_FG : '#5f6c7a', background: active ? '#fff' : '#eef1f4', borderRadius: 999, padding: '1px 8px' }}>
                       {counts[item.countKey]!.toLocaleString('he-IL')}
                     </span>
                   )}
@@ -166,7 +168,7 @@ export default function InternalShell({
           <div style={{ marginTop: 'auto', paddingTop: 14, borderTop: '1px solid #eef1f4' }}>
             {/* QA 30.08.2026: מדיניות פרטיות ותנאי שימוש היו נגישים רק מדף
                 הבית ומטופס ההרשמה — משתמש בתוך האפליקציה לא ראה אותם כלל. */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 10px', padding: '0 12px 10px', fontSize: 11 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 10px', padding: '0 12px 10px', fontSize: '0.6875rem' }}>
               <a href="/terms" style={{ color: '#8a97a3', textDecoration: 'none' }}>תנאי שימוש</a>
               <a href="/privacy" style={{ color: '#8a97a3', textDecoration: 'none' }}>פרטיות</a>
               <a href="/accessibility" style={{ color: '#8a97a3', textDecoration: 'none' }}>נגישות</a>
@@ -174,7 +176,7 @@ export default function InternalShell({
 
             {session ? (
               <div style={{ padding: '12px 12px 2px' }}>
-                <div style={{ fontSize: 11.5, color: '#5f6c7a', marginBottom: 8, wordBreak: 'break-all' }}>
+                <div style={{ fontSize: '0.71875rem', color: '#5f6c7a', marginBottom: 8, wordBreak: 'break-all' }}>
                   {session.user.email}
                 </div>
                 <button
@@ -187,7 +189,7 @@ export default function InternalShell({
                     border: '1px solid #e2e7ec',
                     background: '#fff',
                     color: '#5b6b7a',
-                    fontSize: 12.5,
+                    fontSize: '0.78125rem',
                     fontWeight: 600,
                     cursor: 'pointer',
                   }}
@@ -207,7 +209,7 @@ export default function InternalShell({
                     border: '1px solid #e2e7ec',
                     background: '#fff',
                     color: DARK,
-                    fontSize: 12.5,
+                    fontSize: '0.78125rem',
                     fontWeight: 600,
                     textDecoration: 'none',
                   }}
@@ -224,7 +226,7 @@ export default function InternalShell({
                     border: 'none',
                     background: BLUE,
                     color: '#fff',
-                    fontSize: 12.5,
+                    fontSize: '0.78125rem',
                     fontWeight: 700,
                     textDecoration: 'none',
                   }}
@@ -260,9 +262,9 @@ export default function InternalShell({
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {isMobile && <MobileMenu />}
             <div>
-              <h1 style={{ fontSize: 17, fontWeight: 700, margin: 0 }}>{title}</h1>
+              <h1 style={{ fontSize: '1.0625rem', fontWeight: 700, margin: 0 }}>{title}</h1>
               {subtitle && (
-                <div style={{ fontSize: 12.5, color: '#62707e', marginTop: 2 }}>{subtitle}</div>
+                <div style={{ fontSize: '0.78125rem', color: '#62707e', marginTop: 2 }}>{subtitle}</div>
               )}
             </div>
           </div>

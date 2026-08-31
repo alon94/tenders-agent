@@ -60,21 +60,21 @@ function TenderList({ tenders }: { tenders: TenderCard[] }) {
           >
             <span title="ציון התאמה" style={{
               flex: '0 0 auto', minWidth: 40, textAlign: 'center', padding: '4px 8px',
-              borderRadius: 8, background: sc.bg, color: sc.fg, fontSize: 13, fontWeight: 700,
+              borderRadius: 8, background: sc.bg, color: sc.fg, fontSize: '0.8125rem', fontWeight: 700,
             }}>{t.score}</span>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.4 }}>{t.title}</div>
-              <div style={{ fontSize: 11.5, color: '#62707e', marginTop: 4 }}>
+              <div style={{ fontSize: '0.8125rem', fontWeight: 600, lineHeight: 1.4 }}>{t.title}</div>
+              <div style={{ fontSize: '0.71875rem', color: '#62707e', marginTop: 4 }}>
                 {t.publisher || '—'}
                 {t.deadline ? ' · מועד אחרון: ' + fmtDate(t.deadline) : ''}
                 {t.score >= 80 ? ' · התאמה גבוהה' : t.score >= 65 ? ' · התאמה טובה' : ' · התאמה חלקית'}
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                <span style={{ fontSize: 11.5, fontWeight: 600, color: '#1e5aa8', background: '#e8f1fb', border: '1px solid #cfe0f4', borderRadius: 7, padding: '4px 10px' }}>פרטי המכרז ←</span>
+                <span style={{ fontSize: '0.71875rem', fontWeight: 600, color: '#1e5aa8', background: '#e8f1fb', border: '1px solid #cfe0f4', borderRadius: 7, padding: '4px 10px' }}>פרטי המכרז ←</span>
                 {t.url && (
                   <span
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(t.url, '_blank', 'noopener'); }}
-                    style={{ fontSize: 11.5, fontWeight: 600, color: '#5b6b7a', background: '#fff', border: '1px solid #e2e7ec', borderRadius: 7, padding: '4px 10px', cursor: 'pointer' }}
+                    style={{ fontSize: '0.71875rem', fontWeight: 600, color: '#5b6b7a', background: '#fff', border: '1px solid #e2e7ec', borderRadius: 7, padding: '4px 10px', cursor: 'pointer' }}
                   >עמוד המקור ↗</span>
                 )}
               </div>
@@ -166,12 +166,12 @@ export default function AgentPage() {
     return (
       <InternalShell title="הסוכן החכם" subtitle="זמין למשתמשים מחוברים">
         <div style={{ background: '#fff', border: '1px solid ' + BORDER, borderRadius: 14, padding: '46px 24px', textAlign: 'center', maxWidth: 760 }}>
-          <div style={{ fontSize: 34, marginBottom: 10 }}>🔒</div>
-          <div role="alert" style={{ fontWeight: 800, color: '#b02a1e', fontSize: 16.5 }}>כדי לראות מכרזים עדכניים נדרשת התחברות</div>
-          <div style={{ fontSize: 13.5, color: '#5f6c7a', marginTop: 6 }}>הסוכן החכם סורק את המכרזים הפתוחים ומדרג התאמה לעסק שלך — זמין למשתמשים מחוברים בלבד. ההרשמה חינם.</div>
+          <div style={{ fontSize: '2.125rem', marginBottom: 10 }}>🔒</div>
+          <div role="alert" style={{ fontWeight: 800, color: '#b02a1e', fontSize: '1.03125rem' }}>כדי לראות מכרזים עדכניים נדרשת התחברות</div>
+          <div style={{ fontSize: '0.84375rem', color: '#5f6c7a', marginTop: 6 }}>הסוכן החכם סורק את המכרזים הפתוחים ומדרג התאמה לעסק שלך — זמין למשתמשים מחוברים בלבד. ההרשמה חינם.</div>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 16 }}>
-            <a href="/signin" style={{ background: '#b02a1e', color: '#fff', borderRadius: 8, padding: '10px 22px', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>התחברות</a>
-            <a href="/signup" style={{ background: '#fff', color: '#b02a1e', border: '1px solid #b02a1e', borderRadius: 8, padding: '10px 22px', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>הרשמה חינם</a>
+            <a href="/signin" style={{ background: '#b02a1e', color: '#fff', borderRadius: 8, padding: '10px 22px', fontSize: '0.875rem', fontWeight: 700, textDecoration: 'none' }}>התחברות</a>
+            <a href="/signup" style={{ background: '#fff', color: '#b02a1e', border: '1px solid #b02a1e', borderRadius: 8, padding: '10px 22px', fontSize: '0.875rem', fontWeight: 700, textDecoration: 'none' }}>הרשמה חינם</a>
           </div>
         </div>
       </InternalShell>
@@ -187,39 +187,39 @@ export default function AgentPage() {
         {/* המכרזים המובילים לפי הפרופיל העסקי */}
         <div style={{ background: '#fff', border: '1px solid ' + BORDER, borderRadius: 14, padding: 18, marginBottom: 18 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: DARK, flex: 1 }}>◈ המכרזים המתאימים ביותר לפרופיל שלך</div>
-            <a href="/profile" style={{ fontSize: 12, color: '#2b6fc4', textDecoration: 'none' }}>עריכת פרופיל ←</a>
+            <div style={{ fontSize: '0.875rem', fontWeight: 700, color: DARK, flex: 1 }}>◈ המכרזים המתאימים ביותר לפרופיל שלך</div>
+            <a href="/profile" style={{ fontSize: '0.75rem', color: '#2b6fc4', textDecoration: 'none' }}>עריכת פרופיל ←</a>
           </div>
           {hasProfile === false && (
-            <div style={{ fontSize: 13, color: '#62707e', padding: '6px 0' }}>
+            <div style={{ fontSize: '0.8125rem', color: '#62707e', padding: '6px 0' }}>
               טרם הוגדר פרופיל עסקי — ההתאמות כלליות. <a href="/profile" style={{ color: '#2b6fc4' }}>הגדר פרופיל</a> כדי שהסוכן ידרג לפי התחומים, האזור והגופים שלך.
             </div>
           )}
-          {matchedLoading && <div style={{ fontSize: 13, color: '#62707e' }}>מדרג מכרזים לפי הפרופיל…</div>}
+          {matchedLoading && <div style={{ fontSize: '0.8125rem', color: '#62707e' }}>מדרג מכרזים לפי הפרופיל…</div>}
           {!matchedLoading && matched.map((m, i) => (
             <a key={m.id} href={'/tender/' + m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '9px 0', borderTop: i ? '1px solid #eef1f4' : 'none', textDecoration: 'none' }}>
-              <span style={{ width: 34, height: 34, borderRadius: 9, background: '#e8f1fb', color: '#1e5aa8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, flex: '0 0 auto' }}>{m.score}</span>
+              <span style={{ width: 34, height: 34, borderRadius: 9, background: '#e8f1fb', color: '#1e5aa8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8125rem', fontWeight: 700, flex: '0 0 auto' }}>{m.score}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13.5, fontWeight: 600, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.title}</div>
-                <div style={{ fontSize: 12, color: '#62707e' }}>{m.publisher || '—'}{m.deadline ? ' · מועד: ' + fmtDate(m.deadline) : ''}</div>
+                <div style={{ fontSize: '0.84375rem', fontWeight: 600, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.title}</div>
+                <div style={{ fontSize: '0.75rem', color: '#62707e' }}>{m.publisher || '—'}{m.deadline ? ' · מועד: ' + fmtDate(m.deadline) : ''}</div>
               </div>
-              <span aria-hidden="true" style={{ color: '#5f6c7a', fontSize: 13 }}>‹</span>
+              <span aria-hidden="true" style={{ color: '#5f6c7a', fontSize: '0.8125rem' }}>‹</span>
             </a>
           ))}
-          {!matchedLoading && matched.length === 0 && <div style={{ fontSize: 13, color: '#62707e' }}>לא נמצאו מכרזים מתאימים כרגע.</div>}
+          {!matchedLoading && matched.length === 0 && <div style={{ fontSize: '0.8125rem', color: '#62707e' }}>לא נמצאו מכרזים מתאימים כרגע.</div>}
         </div>
 
         <div style={{ background: '#fff', border: '1px solid ' + BORDER, borderRadius: 14, padding: 18, marginBottom: 18 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14, color: DARK }}>⚙ תהליך העבודה של הסוכן</div>
-          {loading && <div style={{ fontSize: 13, color: '#62707e' }}>סורק מכרזים ומחשב התאמות…</div>}
+          <div style={{ fontSize: '0.875rem', fontWeight: 700, marginBottom: 14, color: DARK }}>⚙ תהליך העבודה של הסוכן</div>
+          {loading && <div style={{ fontSize: '0.8125rem', color: '#62707e' }}>סורק מכרזים ומחשב התאמות…</div>}
           {steps.map((s, i) => {
             const st = STEP_STYLE[s.state];
             return (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '9px 0', borderTop: i ? '1px solid #eef1f4' : 'none' }}>
-                <span style={{ width: 26, height: 26, borderRadius: 999, background: st.bg, color: st.fg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, flex: '0 0 auto' }}>{st.mark}</span>
+                <span style={{ width: 26, height: 26, borderRadius: 999, background: st.bg, color: st.fg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8125rem', fontWeight: 700, flex: '0 0 auto' }}>{st.mark}</span>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13.5, fontWeight: 600, color: DARK }}>{s.title}</div>
-                  <div style={{ fontSize: 12, color: '#62707e' }}>{s.sub}</div>
+                  <div style={{ fontSize: '0.84375rem', fontWeight: 600, color: DARK }}>{s.title}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#62707e' }}>{s.sub}</div>
                 </div>
               </div>
             );
@@ -230,7 +230,7 @@ export default function AgentPage() {
           {messages.map((m, i) => (
             <div key={i} style={{ display: 'flex', justifyContent: m.role === 'user' ? 'flex-start' : 'flex-end' }}>
               <div style={{
-                maxWidth: '85%', fontSize: 13.5, lineHeight: 1.5, padding: '11px 14px',
+                maxWidth: '85%', fontSize: '0.84375rem', lineHeight: 1.5, padding: '11px 14px',
                 background: m.role === 'user' ? '#2b6fc4' : '#f4f6f8',
                 color: m.role === 'user' ? '#fff' : DARK,
                 borderRadius: m.role === 'user' ? '12px 12px 4px 12px' : '12px 12px 12px 4px',
@@ -242,7 +242,7 @@ export default function AgentPage() {
           ))}
           {thinking && (
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <div style={{ fontSize: 13.5, padding: '11px 14px', background: '#f4f6f8', color: '#62707e', borderRadius: '12px 12px 12px 4px' }}>
+              <div style={{ fontSize: '0.84375rem', padding: '11px 14px', background: '#f4f6f8', color: '#62707e', borderRadius: '12px 12px 12px 4px' }}>
                 מנתח את המכרזים…
               </div>
             </div>
@@ -260,9 +260,9 @@ export default function AgentPage() {
             onKeyDown={(e) => { if (e.key === 'Enter') send(); }}
             placeholder='שאל את הסוכן — למשל "מה נסגר השבוע?"'
             disabled={loading}
-            style={{ flex: 1, padding: '12px 18px', borderRadius: 999, border: '1px solid ' + BORDER, fontSize: 14, outline: 'none', background: '#fff' }}
+            style={{ flex: 1, padding: '12px 18px', borderRadius: 999, border: '1px solid ' + BORDER, fontSize: '0.875rem', outline: 'none', background: '#fff' }}
           />
-          <button onClick={() => send()} aria-label="שלח" disabled={thinking} style={{ width: 44, height: 44, borderRadius: 999, background: thinking ? '#9db8d8' : '#2b6fc4', color: '#fff', border: 'none', fontSize: 18, cursor: thinking ? 'default' : 'pointer', flex: '0 0 auto' }}>↑</button>
+          <button onClick={() => send()} aria-label="שלח" disabled={thinking} style={{ width: 44, height: 44, borderRadius: 999, background: thinking ? '#9db8d8' : '#2b6fc4', color: '#fff', border: 'none', fontSize: '1.125rem', cursor: thinking ? 'default' : 'pointer', flex: '0 0 auto' }}>↑</button>
         </div>
 
         {/* שאלות מוצעות */}
@@ -281,7 +281,7 @@ export default function AgentPage() {
               disabled={thinking || loading}
               style={{
                 background: '#fff', border: '1px solid ' + BORDER, borderRadius: 999,
-                padding: '7px 14px', fontSize: 12.5, fontWeight: 600, color: '#3a4a5a',
+                padding: '7px 14px', fontSize: '0.78125rem', fontWeight: 600, color: '#3a4a5a',
                 cursor: thinking || loading ? 'default' : 'pointer', fontFamily: 'inherit',
                 opacity: thinking || loading ? .55 : 1,
               }}

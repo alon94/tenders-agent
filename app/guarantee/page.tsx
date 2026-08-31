@@ -41,19 +41,19 @@ export default function GuaranteePage() {
     <InternalShell
       title="ערבויות וליווי"
       subtitle="ניהול ערבויות ומעקב תוקף · הנתונים להלן הם אומדן לצורך הדגמה עד לחיבור מקור ערבויות"
-      action={<button style={{ background: '#2b6fc4', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 16px', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>+ בקשת ערבות חדשה</button>}
+      action={<button style={{ background: '#2b6fc4', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 16px', fontSize: '0.84375rem', fontWeight: 600, cursor: 'pointer' }}>+ בקשת ערבות חדשה</button>}
     >
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', background: '#fff', border: '1px solid ' + BORDER, borderRadius: 10, overflow: 'hidden', marginBottom: 20 }}>
         {kpiCells.map((k, i) => (
           <div key={i} style={{ padding: '16px 18px', borderInlineEnd: i < 3 ? '1px solid ' + BORDER : 'none' }}>
-            <div style={{ fontSize: 22, fontWeight: 700, color: k.c }}>{k.v}</div>
-            <div style={{ fontSize: 12, color: '#7a8794', marginTop: 3 }}>{k.l}</div>
+            <div style={{ fontSize: '1.375rem', fontWeight: 700, color: k.c }}>{k.v}</div>
+            <div style={{ fontSize: '0.75rem', color: '#7a8794', marginTop: 3 }}>{k.l}</div>
           </div>
         ))}
       </div>
 
       <div style={{ background: '#fff', border: '1px solid ' + BORDER, borderRadius: 12, overflow: 'hidden' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px 130px 150px 120px', padding: '12px 16px', fontSize: 12, fontWeight: 600, color: '#7a8794', borderBottom: '1px solid ' + BORDER, background: '#f6f8fa' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px 130px 150px 120px', padding: '12px 16px', fontSize: '0.75rem', fontWeight: 600, color: '#7a8794', borderBottom: '1px solid ' + BORDER, background: '#f6f8fa' }}>
           <span>מכרז</span><span>סוג ערבות</span><span>סכום</span><span>תוקף עד</span><span>סטטוס</span>
         </div>
         {loading ? (
@@ -64,15 +64,15 @@ export default function GuaranteePage() {
           items.map((g) => {
             const s = STATUS[g.status];
             return (
-              <div key={g.id} style={{ display: 'grid', gridTemplateColumns: '1fr 150px 130px 150px 120px', padding: '14px 16px', fontSize: 13.5, alignItems: 'center', borderBottom: '1px solid ' + BORDER }}>
+              <div key={g.id} style={{ display: 'grid', gridTemplateColumns: '1fr 150px 130px 150px 120px', padding: '14px 16px', fontSize: '0.84375rem', alignItems: 'center', borderBottom: '1px solid ' + BORDER }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, paddingInlineEnd: 10 }}>
                   <span style={{ fontWeight: 600, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.tenderTitle}</span>
-                  <a href={'/tender/' + g.id} style={{ flex: '0 0 auto', fontSize: 11.5, fontWeight: 600, color: '#1e5aa8', background: '#e8f1fb', border: '1px solid #cfe0f4', borderRadius: 7, padding: '3px 9px', textDecoration: 'none', whiteSpace: 'nowrap' }}>פרטים</a>
+                  <a href={'/tender/' + g.id} style={{ flex: '0 0 auto', fontSize: '0.71875rem', fontWeight: 600, color: '#1e5aa8', background: '#e8f1fb', border: '1px solid #cfe0f4', borderRadius: 7, padding: '3px 9px', textDecoration: 'none', whiteSpace: 'nowrap' }}>פרטים</a>
                 </span>
                 <span style={{ color: '#5b6b7a' }}>{g.type}</span>
                 <span style={{ fontWeight: 700, color: DARK }}>{shekel(g.amount)}</span>
                 <span style={{ color: '#5b6b7a' }}>{fmtDate(g.expiry)}</span>
-                <span><span style={{ fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 6, background: s.bg, color: s.fg, border: '1px solid ' + s.bd }}>{s.label}</span></span>
+                <span><span style={{ fontSize: '0.6875rem', fontWeight: 600, padding: '3px 9px', borderRadius: 6, background: s.bg, color: s.fg, border: '1px solid ' + s.bd }}>{s.label}</span></span>
               </div>
             );
           })

@@ -41,7 +41,7 @@ export function renderDocMarkdown(md: string): React.ReactNode {
   const flushPara = () => {
     if (!para.length) return;
     blocks.push(
-      <p key={key++} style={{ fontSize: 14, color: MUTED, lineHeight: 1.8, margin: '0 0 14px' }}>
+      <p key={key++} style={{ fontSize: '0.875rem', color: MUTED, lineHeight: 1.8, margin: '0 0 14px' }}>
         {renderInline(para.join(' '), `p${key}`)}
       </p>
     );
@@ -52,7 +52,7 @@ export function renderDocMarkdown(md: string): React.ReactNode {
     blocks.push(
       <ul key={key++} style={{ margin: '0 0 14px', paddingInlineStart: 22 }}>
         {list.map((item, j) => (
-          <li key={j} style={{ fontSize: 14, color: MUTED, lineHeight: 1.8, marginBottom: 4 }}>
+          <li key={j} style={{ fontSize: '0.875rem', color: MUTED, lineHeight: 1.8, marginBottom: 4 }}>
             {renderInline(item, `l${key}-${j}`)}
           </li>
         ))}
@@ -69,10 +69,10 @@ export function renderDocMarkdown(md: string): React.ReactNode {
       flushPara(); flushList();
       const level = h[1].length;
       const style: React.CSSProperties = level === 1
-        ? { fontSize: 20, fontWeight: 800, color: DARK, margin: '0 0 14px' }
+        ? { fontSize: '1.25rem', fontWeight: 800, color: DARK, margin: '0 0 14px' }
         : level === 2
-          ? { fontSize: 16, fontWeight: 700, color: DARK, margin: '20px 0 8px' }
-          : { fontSize: 14.5, fontWeight: 700, color: DARK, margin: '16px 0 6px' };
+          ? { fontSize: '1rem', fontWeight: 700, color: DARK, margin: '20px 0 8px' }
+          : { fontSize: '0.90625rem', fontWeight: 700, color: DARK, margin: '16px 0 6px' };
       blocks.push(React.createElement(`h${level}`, { key: key++, style }, renderInline(h[2], `h${key}`)));
     } else if (li) {
       flushPara();

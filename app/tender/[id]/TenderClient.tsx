@@ -95,16 +95,16 @@ export default function TenderClient({ id }: { id: string }) {
     setSummary(lines);
   }
 
-  const backLink = <a href="/dashboard" onClick={goBack} style={{ color: '#5b6b7a', textDecoration: 'none', fontSize: 13 }}>→ חזרה</a>;
+  const backLink = <a href="/dashboard" onClick={goBack} style={{ color: '#5b6b7a', textDecoration: 'none', fontSize: '0.8125rem' }}>→ חזרה</a>;
 
   if (loading) return <InternalShell title="פרטי מכרז" action={backLink}><div role="status" aria-live="polite" style={{ color: MUTED_TXT }}>{'טוען…'}</div></InternalShell>;
   if (notFound) return (
     <InternalShell title="פרטי מכרז" action={backLink}>
       <Card style={{ maxWidth: 560, textAlign: 'center', padding: 36 }}>
-        <div style={{ fontSize: 40, color: '#c2ccd6', lineHeight: 1 }}>404</div>
-        <h1 style={{ fontSize: 18, fontWeight: 700, color: DARK, margin: '12px 0 6px' }}>המכרז לא נמצא</h1>
-        <div style={{ fontSize: 13.5, color: MUTED_TXT, marginBottom: 18 }}>ייתכן שהמזהה <code dir="ltr">{id}</code> שגוי, או שהמכרז הוסר מהמקור.</div>
-        <a href="/dashboard" style={{ display: 'inline-block', background: DARK, color: '#fff', borderRadius: 9, padding: '9px 18px', fontSize: 13.5, fontWeight: 600, textDecoration: 'none' }}>חזרה לגילוי מכרזים</a>
+        <div style={{ fontSize: '2.5rem', color: '#c2ccd6', lineHeight: 1 }}>404</div>
+        <h1 style={{ fontSize: '1.125rem', fontWeight: 700, color: DARK, margin: '12px 0 6px' }}>המכרז לא נמצא</h1>
+        <div style={{ fontSize: '0.84375rem', color: MUTED_TXT, marginBottom: 18 }}>ייתכן שהמזהה <code dir="ltr">{id}</code> שגוי, או שהמכרז הוסר מהמקור.</div>
+        <a href="/dashboard" style={{ display: 'inline-block', background: DARK, color: '#fff', borderRadius: 9, padding: '9px 18px', fontSize: '0.84375rem', fontWeight: 600, textDecoration: 'none' }}>חזרה לגילוי מכרזים</a>
       </Card>
     </InternalShell>
   );
@@ -147,14 +147,14 @@ export default function TenderClient({ id }: { id: string }) {
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '14px 24px', marginTop: 16 }}>
         {meta.map(([k, v], i) => (
           <div key={i}>
-            <div style={{ fontSize: 11.5, color: LABEL_TXT, marginBottom: 2 }}>{k}</div>
-            <div style={{ fontSize: 13.5, color: k === 'מועד אחרון' ? '#b04a34' : DARK, fontWeight: 600 }}>{v}</div>
+            <div style={{ fontSize: '0.71875rem', color: LABEL_TXT, marginBottom: 2 }}>{k}</div>
+            <div style={{ fontSize: '0.84375rem', color: k === 'מועד אחרון' ? '#b04a34' : DARK, fontWeight: 600 }}>{v}</div>
           </div>
         ))}
       </div>
     );
     if (tab === 1) return (
-      <div style={{ marginTop: 16, fontSize: 13.5, color: DARK, lineHeight: 1.6 }}>
+      <div style={{ marginTop: 16, fontSize: '0.84375rem', color: DARK, lineHeight: 1.6 }}>
         <p style={{ margin: 0, color: MUTED_TXT }}>
           דרישות הסף המלאות (ניסיון, מחזור כספי, אישורים וערבויות) מופיעות בחוברת המכרז באתר המקור. המערכת מציגה כאן את מה שחולץ מהפרסום:
         </p>
@@ -170,15 +170,15 @@ export default function TenderClient({ id }: { id: string }) {
     if (tab === 2) return (
       <div style={{ marginTop: 16 }}>
         {docs.length === 0 ? (
-          <div style={{ fontSize: 13, color: MUTED_TXT }}>לא נמצאו מסמכים מצורפים בפרסום. המסמכים זמינים לרוב רק באתר המקור — <a href={t.url || '#'} target="_blank" rel="noreferrer" style={{ color: '#2b6fc4' }}>לעמוד המכרז ↗</a></div>
+          <div style={{ fontSize: '0.8125rem', color: MUTED_TXT }}>לא נמצאו מסמכים מצורפים בפרסום. המסמכים זמינים לרוב רק באתר המקור — <a href={t.url || '#'} target="_blank" rel="noreferrer" style={{ color: '#2b6fc4' }}>לעמוד המכרז ↗</a></div>
         ) : docs.map((doc, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderTop: i ? '1px solid #eef1f4' : 'none' }}>
-            <span aria-hidden="true" style={{ fontSize: 18, color: '#5b6b7a' }}>▤</span>
+            <span aria-hidden="true" style={{ fontSize: '1.125rem', color: '#5b6b7a' }}>▤</span>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 600, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.name || doc.title || 'מסמך'}</div>
-              <div style={{ fontSize: 11.5, color: LABEL_TXT }}>{[doc.description, doc.type, doc.date && fmtDate(doc.date)].filter(Boolean).join(' · ')}</div>
+              <div style={{ fontSize: '0.84375rem', fontWeight: 600, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.name || doc.title || 'מסמך'}</div>
+              <div style={{ fontSize: '0.71875rem', color: LABEL_TXT }}>{[doc.description, doc.type, doc.date && fmtDate(doc.date)].filter(Boolean).join(' · ')}</div>
             </div>
-            <a href={doc.url} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: '#2b6fc4', fontWeight: 600, textDecoration: 'none', flex: '0 0 auto' }}>הורדה ↓</a>
+            <a href={doc.url} target="_blank" rel="noreferrer" style={{ fontSize: '0.8125rem', color: '#2b6fc4', fontWeight: 600, textDecoration: 'none', flex: '0 0 auto' }}>הורדה ↓</a>
           </div>
         ))}
       </div>
@@ -190,9 +190,9 @@ export default function TenderClient({ id }: { id: string }) {
           return (
             <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '9px 0', borderTop: i ? '1px solid #eef1f4' : 'none' }}>
               <span aria-hidden="true" style={{ width: 10, height: 10, borderRadius: 999, background: c, flex: '0 0 auto' }} />
-              <span style={{ flex: 1, fontSize: 13.5, color: DARK, fontWeight: it.state === 'next' ? 700 : 500 }}>{it.label}</span>
-              <span style={{ fontSize: 13, color: it.state === 'none' ? LABEL_TXT : DARK, fontVariantNumeric: 'tabular-nums' }}>{it.state === 'none' ? 'לא פורסם' : fmtDate(it.date)}</span>
-              {it.state === 'next' && d !== null && d >= 0 && <span style={{ fontSize: 12, color: '#b04a34' }}>נותרו {d} ימים</span>}
+              <span style={{ flex: 1, fontSize: '0.84375rem', color: DARK, fontWeight: it.state === 'next' ? 700 : 500 }}>{it.label}</span>
+              <span style={{ fontSize: '0.8125rem', color: it.state === 'none' ? LABEL_TXT : DARK, fontVariantNumeric: 'tabular-nums' }}>{it.state === 'none' ? 'לא פורסם' : fmtDate(it.date)}</span>
+              {it.state === 'next' && d !== null && d >= 0 && <span style={{ fontSize: '0.75rem', color: '#b04a34' }}>נותרו {d} ימים</span>}
             </li>
           );
         })}
@@ -207,21 +207,21 @@ export default function TenderClient({ id }: { id: string }) {
           <Card>
             <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
               <div aria-label={`ציון התאמה ${score}`} style={{ width: 66, height: 66, borderRadius: 14, background: '#e8f1fb', border: '1px solid #cfe0f4', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
-                <span style={{ fontSize: 24, fontWeight: 700, color: '#1e5aa8', lineHeight: 1 }}>{score}</span>
-                <span style={{ fontSize: 9.5, color: '#1e5aa8' }}>ציון התאמה</span>
+                <span style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1e5aa8', lineHeight: 1 }}>{score}</span>
+                <span style={{ fontSize: '0.59375rem', color: '#1e5aa8' }}>ציון התאמה</span>
                 <span style={{ width: 30, height: 3, borderRadius: 2, background: bandColor(score), marginTop: 3 }} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
-                  {tags.map((g, gi) => (<span key={gi} style={{ fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 6, background: g.bg, color: g.fg, border: '1px solid ' + g.bd }}>{g.label}</span>))}
+                  {tags.map((g, gi) => (<span key={gi} style={{ fontSize: '0.6875rem', fontWeight: 600, padding: '3px 9px', borderRadius: 6, background: g.bg, color: g.fg, border: '1px solid ' + g.bd }}>{g.label}</span>))}
                 </div>
-                <h1 style={{ fontSize: 20, fontWeight: 700, color: DARK, lineHeight: 1.4, margin: 0 }}>{t.title || 'ללא כותרת'}</h1>
+                <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: DARK, lineHeight: 1.4, margin: 0 }}>{t.title || 'ללא כותרת'}</h1>
               </div>
             </div>
             <div role="tablist" aria-label="מידע על המכרז" style={{ display: 'flex', gap: 20, borderBottom: '1px solid ' + BORDER, marginTop: 16, overflowX: 'auto' }}>
               {TABS.map((tb, i) => (
                 <button key={i} role="tab" aria-selected={tab === i} id={`tab-${i}`} aria-controls={`panel-${i}`} onClick={() => setTab(i)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '10px 0', fontSize: 13.5, fontFamily: 'inherit', whiteSpace: 'nowrap', fontWeight: tab === i ? 700 : 500, color: tab === i ? '#1e5aa8' : MUTED_TXT, borderBottom: tab === i ? '2px solid #2b6fc4' : '2px solid transparent' }}>
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '10px 0', fontSize: '0.84375rem', fontFamily: 'inherit', whiteSpace: 'nowrap', fontWeight: tab === i ? 700 : 500, color: tab === i ? '#1e5aa8' : MUTED_TXT, borderBottom: tab === i ? '2px solid #2b6fc4' : '2px solid transparent' }}>
                   {tb}{i === 2 && docs.length > 0 ? ` (${docs.length})` : ''}
                 </button>
               ))}
@@ -231,8 +231,8 @@ export default function TenderClient({ id }: { id: string }) {
 
           {summary && (
             <Card style={{ background: '#f0f6fd', border: '1px solid #cfe0f4' }}>
-              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10, color: '#1e5aa8' }}>✦ סיכום החלטה</div>
-              <ul style={{ margin: 0, paddingInlineStart: 20, fontSize: 13.5, color: '#2a3a4c', lineHeight: 1.7 }}>
+              <div style={{ fontSize: '0.875rem', fontWeight: 700, marginBottom: 10, color: '#1e5aa8' }}>✦ סיכום החלטה</div>
+              <ul style={{ margin: 0, paddingInlineStart: 20, fontSize: '0.84375rem', color: '#2a3a4c', lineHeight: 1.7 }}>
                 {summary.map((l, i) => <li key={i}>{l}</li>)}
               </ul>
             </Card>
@@ -241,20 +241,20 @@ export default function TenderClient({ id }: { id: string }) {
 
         <div style={{ flex: isMobile ? '1 1 100%' : '0 0 300px', display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Card>
-            <div style={{ fontSize: 11.5, color: LABEL_TXT }}>מועד אחרון להגשה</div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: '#b04a34', margin: '4px 0 2px' }}>{exempt ? 'פטור / הודעת התקשרות' : fmtDate(t.deadline || '')}</div>
-            {d !== null && d >= 0 && !exempt && <div style={{ fontSize: 12.5, color: MUTED_TXT }}>נותרו {d} ימים</div>}
-            {d !== null && d < 0 && !exempt && <div style={{ fontSize: 12.5, color: '#b04a34' }}>מועד ההגשה חלף</div>}
-            <a href={t.submissionUrl || t.url || '#'} target="_blank" rel="noreferrer" style={{ display: 'block', textAlign: 'center', marginTop: 12, background: '#2b6fc4', color: '#fff', borderRadius: 10, padding: '11px', fontSize: 13.5, fontWeight: 600, textDecoration: 'none' }}>{exempt ? 'צפייה בהודעה במקור ↗' : 'הגשת הצעה ↗'}</a>
+            <div style={{ fontSize: '0.71875rem', color: LABEL_TXT }}>מועד אחרון להגשה</div>
+            <div style={{ fontSize: '1.375rem', fontWeight: 700, color: '#b04a34', margin: '4px 0 2px' }}>{exempt ? 'פטור / הודעת התקשרות' : fmtDate(t.deadline || '')}</div>
+            {d !== null && d >= 0 && !exempt && <div style={{ fontSize: '0.78125rem', color: MUTED_TXT }}>נותרו {d} ימים</div>}
+            {d !== null && d < 0 && !exempt && <div style={{ fontSize: '0.78125rem', color: '#b04a34' }}>מועד ההגשה חלף</div>}
+            <a href={t.submissionUrl || t.url || '#'} target="_blank" rel="noreferrer" style={{ display: 'block', textAlign: 'center', marginTop: 12, background: '#2b6fc4', color: '#fff', borderRadius: 10, padding: '11px', fontSize: '0.84375rem', fontWeight: 600, textDecoration: 'none' }}>{exempt ? 'צפייה בהודעה במקור ↗' : 'הגשת הצעה ↗'}</a>
             <button type="button" onClick={toggleMark} aria-pressed={marked}
-              style={{ display: 'block', width: '100%', marginTop: 8, background: marked ? '#fbf3d8' : '#fff', color: marked ? '#8a6d1f' : '#5b6b7a', border: '1px solid ' + (marked ? '#f0e3b0' : BORDER), borderRadius: 10, padding: '10px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+              style={{ display: 'block', width: '100%', marginTop: 8, background: marked ? '#fbf3d8' : '#fff', color: marked ? '#8a6d1f' : '#5b6b7a', border: '1px solid ' + (marked ? '#f0e3b0' : BORDER), borderRadius: 10, padding: '10px', fontSize: '0.8125rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
               {marked ? '★ במעקב — הסרה' : '☆ שמירה למעקב'}
             </button>
-            {toast && <div role="status" aria-live="polite" style={{ marginTop: 8, fontSize: 12.5, color: '#1e7d45', background: '#e7f6ec', border: '1px solid #c6ead2', borderRadius: 8, padding: '7px 10px' }}>{toast}</div>}
+            {toast && <div role="status" aria-live="polite" style={{ marginTop: 8, fontSize: '0.78125rem', color: '#1e7d45', background: '#e7f6ec', border: '1px solid #c6ead2', borderRadius: 8, padding: '7px 10px' }}>{toast}</div>}
           </Card>
           <Card style={{ background: '#f0f6fd', border: '1px solid #cfe0f4' }}>
-            <div style={{ fontSize: 13.5, fontWeight: 700, color: '#1e5aa8', marginBottom: 6 }}>✦ תובנת הסוכן החכם</div>
-            <div style={{ fontSize: 12.5, color: '#40566e', lineHeight: 1.5 }}>
+            <div style={{ fontSize: '0.84375rem', fontWeight: 700, color: '#1e5aa8', marginBottom: 6 }}>✦ תובנת הסוכן החכם</div>
+            <div style={{ fontSize: '0.78125rem', color: '#40566e', lineHeight: 1.5 }}>
               {exempt
                 ? 'זו הודעת התקשרות בפטור ממכרז. אין כאן הצעה להגיש, אבל אפשר ללמוד מי הספק ובאיזה היקף — מודיעין עסקי לקראת המכרז הבא.'
                 : d !== null && d >= 0 && d <= 7
@@ -263,7 +263,7 @@ export default function TenderClient({ id }: { id: string }) {
                     ? 'התאמה גבוהה לפי תחום, דחיפות וטריות. מומלץ לקרוא את חוברת המכרז ולבדוק תנאי ניסיון ומחזור.'
                     : 'ההתאמה מחושבת לפי תחום, דחיפות וטריות. הגדרת פרופיל עסקי (תחומים, אזור, מילות מפתח) תדייק את הציון.'}
             </div>
-            <button type="button" onClick={buildSummary} style={{ marginTop: 10, background: '#2b6fc4', color: '#fff', border: 'none', borderRadius: 9, padding: '9px 14px', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>✦ הפק סיכום החלטה</button>
+            <button type="button" onClick={buildSummary} style={{ marginTop: 10, background: '#2b6fc4', color: '#fff', border: 'none', borderRadius: 9, padding: '9px 14px', fontSize: '0.78125rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>✦ הפק סיכום החלטה</button>
           </Card>
         </div>
       </div>

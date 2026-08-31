@@ -33,7 +33,7 @@ export default function AuthCallbackPage() {
   return (
     <div
       style={{
-        minHeight: '100vh',
+        minHeight: 'calc(100vh - 48px)',
         background: '#f6f8fa',
         direction: 'rtl',
         fontFamily: "'Heebo', Arial, sans-serif",
@@ -56,13 +56,13 @@ export default function AuthCallbackPage() {
       >
         {error ? (
           <>
-            <div style={{ color: ERROR, fontSize: 14, marginBottom: 14 }}>{error}</div>
-            <a href="/signin" style={{ color: BLUE, fontWeight: 700, textDecoration: 'none', fontSize: 13.5 }}>
+            <div style={{ color: ERROR, fontSize: '0.875rem', marginBottom: 14 }}>{error}</div>
+            <a href="/signin" style={{ color: BLUE, fontWeight: 700, textDecoration: 'none', fontSize: '0.84375rem' }}>
               חזרה להתחברות
             </a>
           </>
         ) : (
-          <div style={{ color: MUTED, fontSize: 14 }}>מתחברים…</div>
+          <div style={{ color: MUTED, fontSize: '0.875rem' }}>מתחברים…</div>
         )}
       </div>
     </div>

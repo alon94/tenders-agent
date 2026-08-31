@@ -200,60 +200,60 @@ export default function Dashboard(){
     {value:smallBizCount,label:'⭐ העדפה לעסקים קטנים',dot:'#1e5aa8',onClick:()=>{window.location.href='/dashboard?view=smallbiz';}},
     {value:counts.base,label:'מוצגים כעת',dot:'#d9a520'},
   ] as {value:number,label:string,dot:string,onClick?:()=>void}[];
-  const chip:React.CSSProperties={background:'#fff',color:'#5b6b7a',fontWeight:600,fontSize:13,padding:'8px 15px',borderRadius:7,border:'1px solid #e2e7ec',cursor:'pointer'};
+  const chip:React.CSSProperties={background:'#fff',color:'#5b6b7a',fontWeight:600,fontSize: '0.8125rem',padding:'8px 15px',borderRadius:7,border:'1px solid #e2e7ec',cursor:'pointer'};
   const selWrap:React.CSSProperties={position:'relative'};
-  const selStyle:React.CSSProperties={background:'#fff',color:'#5b6b7a',fontWeight:600,fontSize:13,padding:'8px 30px 8px 15px',borderRadius:7,border:'1px solid #e2e7ec',cursor:'pointer',appearance:'none',WebkitAppearance:'none',fontFamily:'inherit'};
+  const selStyle:React.CSSProperties={background:'#fff',color:'#5b6b7a',fontWeight:600,fontSize: '0.8125rem',padding:'8px 30px 8px 15px',borderRadius:7,border:'1px solid #e2e7ec',cursor:'pointer',appearance:'none',WebkitAppearance:'none',fontFamily:'inherit'};
 
   // CI: React #418 — מצב הדף נגזר מ-URL (view/q/tab...) שהשרת לא מכיר, ולכן
   // ה-HTML של השרת נבדל מזה של הלקוח. עד ההידרציה מוצג שלד ניטרלי.
   if(!hydrated)return(
-    <main style={{minHeight:'100vh',background:'#f6f8fa',direction:'rtl',fontFamily:"'Assistant','Rubik',Arial,sans-serif",display:'flex',alignItems:'center',justifyContent:'center'}}>
-      <h1 style={{fontSize:16,fontWeight:600,color:'#5f6c7a'}}>טוען מכרזים…</h1>
+    <main style={{minHeight:'calc(100vh - 48px)',background:'#f6f8fa',direction:'rtl',fontFamily:"'Assistant','Rubik',Arial,sans-serif",display:'flex',alignItems:'center',justifyContent:'center'}}>
+      <h1 style={{fontSize: '1rem',fontWeight:600,color:'#5f6c7a'}}>טוען מכרזים…</h1>
     </main>
   );
   return(
-    <div style={{minHeight:'100vh',background:'#eef1f4',fontFamily:"'Assistant','Rubik',Arial,sans-serif",direction:'rtl',color:DARK,padding:'0'}}>
-      <div style={{display:'flex',minHeight:'100vh',background:'#f6f8fa'}}>
+    <div style={{minHeight:'calc(100vh - 48px)',background:'#eef1f4',fontFamily:"'Assistant','Rubik',Arial,sans-serif",direction:'rtl',color:DARK,padding:'0'}}>
+      <div style={{display:'flex',minHeight:'calc(100vh - 48px)',background:'#f6f8fa'}}>
 
         {/* ===== SIDEBAR ===== */}
         <nav aria-label="ניווט ראשי" style={{flex:'0 0 238px',background:'#fff',borderInlineEnd:`1px solid ${BORDER}`,padding:'22px 16px',display:isMobile?'none':'flex',flexDirection:'column',gap:3,position:'sticky',top:0,alignSelf:'flex-start',height:'100vh'}}>
           <a href="/dashboard" style={{display:'flex',alignItems:'center',gap:11,padding:'0 8px 20px',marginBottom:8,borderBottom:'1px solid #eef1f4',textDecoration:'none'}}>
-            <div style={{width:34,height:34,borderRadius:8,background:BLUE,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize:16,fontWeight:800}}>ש</div>
-            <div style={{lineHeight:1.15}}><div style={{fontWeight:700,fontSize:15.5,color:DARK}}>שווה מכרזים</div><div style={{fontSize:11,color:'#5f6c7a'}}>מועדון עסקים 360</div></div>
+            <div style={{width:34,height:34,borderRadius:8,background:BLUE,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize: '1rem',fontWeight:800}}>ש</div>
+            <div style={{lineHeight:1.15}}><div style={{fontWeight:700,fontSize: '0.96875rem',color:DARK}}>שווה מכרזים</div><div style={{fontSize: '0.6875rem',color:'#5f6c7a'}}>מועדון עסקים 360</div></div>
           </a>
           {sideNav.map(s=>(
-            <a key={s.label} href={s.href} aria-current={s.active?'page':undefined} style={{display:'flex',alignItems:'center',gap:11,padding:'11px 12px',borderRadius:9,fontSize:14.5,textDecoration:'none',
+            <a key={s.label} href={s.href} aria-current={s.active?'page':undefined} style={{display:'flex',alignItems:'center',gap:11,padding:'11px 12px',borderRadius:9,fontSize: '0.90625rem',textDecoration:'none',
               fontWeight:s.active?700:500,
               background:s.active?'#e8f1fb':'transparent',
               color:s.active?'#1e5aa8':'#5b6b7a',
               borderInlineStart:s.active?`3px solid ${BLUE}`:'3px solid transparent'}}>
-              <span style={{fontSize:16,opacity:s.active?1:.65}}>{s.icon}</span>
+              <span style={{fontSize: '1rem',opacity:s.active?1:.65}}>{s.icon}</span>
               <span style={{flex:1}}>{s.label}</span>
               {'count' in s&&(s as any).count>0&&(
-                <span style={{fontSize:11,fontWeight:700,color:s.active?'#1e5aa8':'#5f6c7a',background:s.active?'#fff':'#eef1f4',borderRadius:999,padding:'1px 8px'}}>
+                <span style={{fontSize: '0.6875rem',fontWeight:700,color:s.active?'#1e5aa8':'#5f6c7a',background:s.active?'#fff':'#eef1f4',borderRadius:999,padding:'1px 8px'}}>
                   {((s as any).count as number).toLocaleString('he-IL')}
                 </span>
               )}
             </a>
           ))}
           <div style={{marginTop:'auto',border:`1px solid ${BORDER}`,borderRadius:12,padding:16}}>
-            <div style={{fontWeight:700,fontSize:14,color:DARK}}>◈ הסוכן החכם</div>
-            <div style={{fontSize:12,color:MUTED,margin:'7px 0 12px',lineHeight:1.5}}>קבלו מכרזים מותאמים לפי הפרופיל העסקי שלכם</div>
+            <div style={{fontWeight:700,fontSize: '0.875rem',color:DARK}}>◈ הסוכן החכם</div>
+            <div style={{fontSize: '0.75rem',color:MUTED,margin:'7px 0 12px',lineHeight:1.5}}>קבלו מכרזים מותאמים לפי הפרופיל העסקי שלכם</div>
             {/* QA/M-19: הכיתוב היה "הפעלה", אבל אין בפרויקט שום state של
                 מופעל/כבוי — הסוכן תמיד רץ, ו-/api/agent מחשב התאמות מהפרופיל
                 בכל טעינה. כפתור שמבטיח הפעלה ולא משנה דבר נראה כתקלה. */}
-            <a href="/agent" style={{display:'block',background:DARK,color:'#fff',fontWeight:600,fontSize:13,textAlign:'center',padding:9,borderRadius:8,textDecoration:'none'}}>לסוכן החכם ←</a>
+            <a href="/agent" style={{display:'block',background:DARK,color:'#fff',fontWeight:600,fontSize: '0.8125rem',textAlign:'center',padding:9,borderRadius:8,textDecoration:'none'}}>לסוכן החכם ←</a>
           </div>
           <div style={{marginTop:14,paddingTop:14,borderTop:`1px solid ${BORDER}`}}>
             {session ? (
               <div>
-                <div style={{fontSize:11.5,color:'#5f6c7a',marginBottom:8,wordBreak:'break-all'}}>{session.user.email}</div>
-                <button type="button" onClick={handleSignOut} style={{width:'100%',padding:'8px 12px',borderRadius:9,border:'1px solid #e2e7ec',background:'#fff',color:'#5b6b7a',fontSize:12.5,fontWeight:600,cursor:'pointer'}}>התנתקות</button>
+                <div style={{fontSize: '0.71875rem',color:'#5f6c7a',marginBottom:8,wordBreak:'break-all'}}>{session.user.email}</div>
+                <button type="button" onClick={handleSignOut} style={{width:'100%',padding:'8px 12px',borderRadius:9,border:'1px solid #e2e7ec',background:'#fff',color:'#5b6b7a',fontSize: '0.78125rem',fontWeight:600,cursor:'pointer'}}>התנתקות</button>
               </div>
             ) : (
               <div style={{display:'flex',flexDirection:'column',gap:8}}>
-                <a href="/signin" style={{display:'block',textAlign:'center',padding:'9px 12px',borderRadius:9,border:'1px solid #e2e7ec',background:'#fff',color:DARK,fontSize:12.5,fontWeight:600,textDecoration:'none'}}>התחברות</a>
-                <a href="/signup" style={{display:'block',textAlign:'center',padding:'9px 12px',borderRadius:9,border:'none',background:BLUE,color:'#fff',fontSize:12.5,fontWeight:700,textDecoration:'none'}}>הרשמה</a>
+                <a href="/signin" style={{display:'block',textAlign:'center',padding:'9px 12px',borderRadius:9,border:'1px solid #e2e7ec',background:'#fff',color:DARK,fontSize: '0.78125rem',fontWeight:600,textDecoration:'none'}}>התחברות</a>
+                <a href="/signup" style={{display:'block',textAlign:'center',padding:'9px 12px',borderRadius:9,border:'none',background:BLUE,color:'#fff',fontSize: '0.78125rem',fontWeight:700,textDecoration:'none'}}>הרשמה</a>
               </div>
             )}
           </div>
@@ -264,26 +264,26 @@ export default function Dashboard(){
           {/* header */}
           <div style={{background:'#fff',borderBottom:`1px solid ${BORDER}`,padding:isMobile?'12px 14px':'15px 26px',display:'flex',alignItems:'center',gap:isMobile?10:18,position:'sticky',top:0,zIndex:5}}>
             {isMobile && <MobileMenu/>}
-            <h1 style={{fontWeight:700,fontSize:isMobile?16:20,color:DARK,flex:'0 0 auto',margin:0}}>{exemptView?'מכרזים פטורים':sbView?'העדפה לעסקים קטנים':intentView?'כוונה להתקשרות':'גילוי מכרזים'}</h1>
+            <h1 style={{fontWeight:700,fontSize:isMobile?'1rem':'1.25rem',color:DARK,flex:'0 0 auto',margin:0}}>{exemptView?'מכרזים פטורים':sbView?'העדפה לעסקים קטנים':intentView?'כוונה להתקשרות':'גילוי מכרזים'}</h1>
             <div style={{flex:1,minWidth:0,display:'flex',alignItems:'center',gap:10,background:'#fff',border:'1.5px solid '+BLUE,borderRadius:10,padding:'12px 16px',maxWidth:520,boxShadow:'0 2px 10px rgba(43,111,196,0.12)'}}>
-              <span style={{color:BLUE,fontSize:17,fontWeight:700}}>⌕</span>
-              <input type="search" aria-label="חיפוש מכרזים" value={q} onChange={e=>{setQ(e.target.value);setPg(1);}} placeholder="חיפוש: נושא, גוף מפרסם, מספר מכרז…" className="search-input" style={{flex:1,border:'none',background:'transparent',fontSize:14.5,color:DARK,fontFamily:'inherit'}}/>
-              {q&&<button type="button" aria-label="נקה חיפוש" onClick={()=>{setQ('');setPg(1);}} style={{color:'#5f6c7a',cursor:'pointer',fontSize:15,background:'none',border:'none',padding:0}}>✕</button>}
+              <span style={{color:BLUE,fontSize: '1.0625rem',fontWeight:700}}>⌕</span>
+              <input type="search" aria-label="חיפוש מכרזים" value={q} onChange={e=>{setQ(e.target.value);setPg(1);}} placeholder="חיפוש: נושא, גוף מפרסם, מספר מכרז…" className="search-input" style={{flex:1,border:'none',background:'transparent',fontSize: '0.90625rem',color:DARK,fontFamily:'inherit'}}/>
+              {q&&<button type="button" aria-label="נקה חיפוש" onClick={()=>{setQ('');setPg(1);}} style={{color:'#5f6c7a',cursor:'pointer',fontSize: '0.9375rem',background:'none',border:'none',padding:0}}>✕</button>}
             </div>
             {!isMobile && (<>
-<span style={{marginInlineStart:'auto',fontSize:12.5,color:'#62707e',display:'inline-flex',alignItems:'center',gap:7,flex:'0 0 auto'}}>
+<span style={{marginInlineStart:'auto',fontSize: '0.78125rem',color:'#62707e',display:'inline-flex',alignItems:'center',gap:7,flex:'0 0 auto'}}>
               <span style={{width:7,height:7,borderRadius:999,background:BLUE}}></span>
               {loading?(<><style>{`@keyframes dashSpin{to{transform:rotate(360deg);}}`}</style><span style={{display:'inline-flex',alignItems:'center',gap:6}}><span style={{width:9,height:9,border:'2px solid '+BORDER,borderTopColor:BLUE,borderRadius:'50%',display:'inline-block',animation:'dashSpin 0.7s linear infinite'}}/>טוען…</span></>):`${scannedLabel} · `}
               <a href="https://data.gov.il" target="_blank" rel="noopener noreferrer" style={{color:'#62707e'}}>data.gov.il</a>
             </span>
-            <a href="/agent" style={{background:BLUE,color:'#fff',fontWeight:600,fontSize:13,padding:'9px 16px',borderRadius:8,textDecoration:'none',flex:'0 0 auto'}}>✦ תובנות AI</a>
+            <a href="/agent" style={{background:BLUE,color:'#fff',fontWeight:600,fontSize: '0.8125rem',padding:'9px 16px',borderRadius:8,textDecoration:'none',flex:'0 0 auto'}}>✦ תובנות AI</a>
 </>)}
             {session
-              ?<a href="/profile" aria-label="פרופיל עסקי" title={session.user.email} style={{width:32,height:32,borderRadius:8,background:'#eef1f4',color:DARK,display:'inline-flex',alignItems:'center',justifyContent:'center',fontWeight:700,fontSize:13,textDecoration:'none',flex:'0 0 auto'}}>{(session.user.email||'א').slice(0,1).toUpperCase()}</a>
-              :(!isMobile&&<a href="/signin" style={{fontSize:13,fontWeight:600,color:DARK,textDecoration:'none',flex:'0 0 auto'}}>התחברות</a>)}
+              ?<a href="/profile" aria-label="פרופיל עסקי" title={session.user.email} style={{width:32,height:32,borderRadius:8,background:'#eef1f4',color:DARK,display:'inline-flex',alignItems:'center',justifyContent:'center',fontWeight:700,fontSize: '0.8125rem',textDecoration:'none',flex:'0 0 auto'}}>{(session.user.email||'א').slice(0,1).toUpperCase()}</a>
+              :(!isMobile&&<a href="/signin" style={{fontSize: '0.8125rem',fontWeight:600,color:DARK,textDecoration:'none',flex:'0 0 auto'}}>התחברות</a>)}
           </div>
           {isMobile && !loading && (
-            <div style={{background:'#fff',borderBottom:`1px solid ${BORDER}`,padding:'6px 14px',fontSize:11.5,color:'#62707e',display:'flex',alignItems:'center',gap:6}}>
+            <div style={{background:'#fff',borderBottom:`1px solid ${BORDER}`,padding:'6px 14px',fontSize: '0.71875rem',color:'#62707e',display:'flex',alignItems:'center',gap:6}}>
               <span style={{width:6,height:6,borderRadius:999,background:BLUE,display:'inline-block'}}></span>
               {scannedLabel}
             </div>
@@ -291,7 +291,7 @@ export default function Dashboard(){
 
           <div style={{padding:'22px 26px 30px',position:'relative'}}>
             {intentView&&(
-              <div role="note" style={{background:'#f0f6fd',border:'1px solid #cfe0f4',borderRadius:10,padding:'12px 16px',marginBottom:16,fontSize:13.5,color:'#2a3a4c',lineHeight:1.55}}>
+              <div role="note" style={{background:'#f0f6fd',border:'1px solid #cfe0f4',borderRadius:10,padding:'12px 16px',marginBottom:16,fontSize: '0.84375rem',color:'#2a3a4c',lineHeight:1.55}}>
                 <b>מה זה "כוונה להתקשרות"?</b> הודעה של גוף ציבורי על כוונה להתקשר עם ספק מסוים ללא מכרז (תקנה 3א לתקנות חובת המכרזים), וכן הקצאות קרקע של רמ"י. לא מגישים להן הצעה — אבל ספק שיכול לספק את אותו שירות רשאי להגיש השגה בתוך המועד שנקבע. התצוגה הזו נפרדת מ"גילוי מכרזים".
               </div>
             )}
@@ -299,8 +299,8 @@ export default function Dashboard(){
             <div style={{display:isMobile?'flex':'grid',gridTemplateColumns:isMobile?undefined:'repeat(5,1fr)',gap:isMobile?10:1,background:isMobile?'transparent':BORDER,border:isMobile?'none':`1px solid ${BORDER}`,borderRadius:10,overflow:isMobile?'auto':'hidden',overflowX:isMobile?'auto':undefined,marginBottom:22}}>
               {kpis.map(k=>(
                 <div key={k.label} onClick={k.onClick} style={{background:'#fff',padding:'16px 18px',cursor:k.onClick?'pointer':'default',...(isMobile?{minWidth:120,border:'1px solid #e6eaee',borderRadius:12}:{})}}>
-                  <div style={{display:'flex',alignItems:'center',gap:8}}><span style={{width:8,height:8,borderRadius:999,background:k.dot}}></span><span style={{fontSize:28,fontWeight:700,color:DARK,lineHeight:1}}>{loading?'…':k.value.toLocaleString()}</span></div>
-                       <div style={{fontSize:12.5,color:MUTED,marginTop:8}}>{k.label}</div>
+                  <div style={{display:'flex',alignItems:'center',gap:8}}><span style={{width:8,height:8,borderRadius:999,background:k.dot}}></span><span style={{fontSize: '1.75rem',fontWeight:700,color:DARK,lineHeight:1}}>{loading?'…':k.value.toLocaleString()}</span></div>
+                       <div style={{fontSize: '0.78125rem',color:MUTED,marginTop:8}}>{k.label}</div>
                 </div>
               ))}
             </div>
@@ -315,11 +315,11 @@ export default function Dashboard(){
               })}
               <div style={{...selWrap,marginInlineStart:'auto'}}>
                 <select aria-label="סינון לפי תחום" className="filter-select" value={biz} onChange={e=>{setBiz(e.target.value);setPg(1);}} style={selStyle}>{bizOptions.map(b=><option key={b.id} value={b.id}>{b.label}</option>)}</select>
-                <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',fontSize:10,color:'#5f6c7a',pointerEvents:'none'}}>▾</span>
+                <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',fontSize: '0.625rem',color:'#5f6c7a',pointerEvents:'none'}}>▾</span>
               </div>
               <div style={selWrap}>
                 <select aria-label="סינון לפי גוף מפרסם" className="filter-select" value={pub} onChange={e=>{setPub(e.target.value);setPg(1);}} style={selStyle}>{PUBS.map(p=><option key={p.id} value={p.id}>{p.label}</option>)}</select>
-                <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',fontSize:10,color:'#5f6c7a',pointerEvents:'none'}}>▾</span>
+                <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',fontSize: '0.625rem',color:'#5f6c7a',pointerEvents:'none'}}>▾</span>
               </div>
               {/* QA #16: מיון אמיתי — קודם כפתור "⇅ סינון" עם אייקון מיון ובלי אפשרות למיין */}
               <div style={selWrap}>
@@ -329,7 +329,7 @@ export default function Dashboard(){
                   <option value="score">ציון התאמה (הגבוה קודם)</option>
                   <option value="published">תאריך פרסום (החדש קודם)</option>
                 </select>
-                <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',fontSize:10,color:'#5f6c7a',pointerEvents:'none'}}>▾</span>
+                <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',fontSize: '0.625rem',color:'#5f6c7a',pointerEvents:'none'}}>▾</span>
               </div>
               <button onClick={()=>setShowFilters(v=>!v)} aria-expanded={showFilters} style={{...chip,padding:'8px 12px',background:showFilters?'#e8f1fb':'#fff',color:showFilters?'#1e5aa8':'#5b6b7a',borderColor:showFilters?'#cfe0f4':'#e2e7ec'}}>⚙ מסננים נוספים</button>
             </div>
@@ -338,11 +338,11 @@ export default function Dashboard(){
             {showFilters&&(
               <div style={{background:'#fff',border:`1px solid ${BORDER}`,borderRadius:10,padding:'16px 18px',marginBottom:14,display:'flex',alignItems:'center',gap:24,flexWrap:'wrap'}}>
                 <div style={{display:'flex',flexDirection:'column',gap:6,minWidth:220}}>
-                  <span style={{fontSize:12.5,fontWeight:700,color:MUTED}}>נסגר בתוך {maxD} ימים</span>
+                  <span style={{fontSize: '0.78125rem',fontWeight:700,color:MUTED}}>נסגר בתוך {maxD} ימים</span>
                   <input type="range" min={7} max={365} value={maxD} onChange={e=>{setMaxD(Number(e.target.value));setPg(1);}} style={{accentColor:BLUE}}/>
                 </div>
-                <label style={{display:'flex',alignItems:'center',gap:8,fontSize:13.5,color:'#33475b',cursor:'pointer'}}><input type="checkbox" checked={showNoDate} onChange={e=>setShowNoDate(e.target.checked)} style={{accentColor:BLUE,width:16,height:16}}/>הצג גם ללא מועד</label>
-                <label style={{display:'flex',alignItems:'center',gap:8,fontSize:13.5,color:'#33475b',cursor:'pointer'}}><input type="checkbox" checked={sbOnly} onChange={e=>{setSbOnly(e.target.checked);setPg(1);}} style={{accentColor:BLUE,width:16,height:16}}/>⭐ העדפה לעסקים קטנים בלבד</label>
+                <label style={{display:'flex',alignItems:'center',gap:8,fontSize: '0.84375rem',color:'#33475b',cursor:'pointer'}}><input type="checkbox" checked={showNoDate} onChange={e=>setShowNoDate(e.target.checked)} style={{accentColor:BLUE,width:16,height:16}}/>הצג גם ללא מועד</label>
+                <label style={{display:'flex',alignItems:'center',gap:8,fontSize: '0.84375rem',color:'#33475b',cursor:'pointer'}}><input type="checkbox" checked={sbOnly} onChange={e=>{setSbOnly(e.target.checked);setPg(1);}} style={{accentColor:BLUE,width:16,height:16}}/>⭐ העדפה לעסקים קטנים בלבד</label>
                 <button onClick={()=>{setBiz('');setPub('');setMaxD(365);setShowNoDate(true);setSbOnly(false);setQ('');setSort('');setPg(1);}} style={{...chip,marginInlineStart:'auto'}}>איפוס ✕</button>
               </div>
             )}
@@ -352,28 +352,28 @@ export default function Dashboard(){
             {!session&&(
               <div role="alert" style={{background:'#fdecea',border:'1px solid #f1b7b0',borderRadius:10,padding:'14px 18px',marginBottom:12,display:'flex',alignItems:'center',gap:14,flexWrap:'wrap'}}>
                 <div style={{flex:'1 1 260px'}}>
-                  <div style={{fontWeight:800,color:'#b02a1e',fontSize:15}}>כדי לראות מכרזים עדכניים נדרשת התחברות</div>
-                  <div style={{fontSize:13,color:'#7a3a33',marginTop:3}}>ללא התחברות מוצג ארכיון בלבד — מכרזים שמועד ההגשה שלהם עבר. התחברות חינם פותחת את כל {counts.active.toLocaleString('he-IL')} המכרזים הפעילים.</div>
+                  <div style={{fontWeight:800,color:'#b02a1e',fontSize: '0.9375rem'}}>כדי לראות מכרזים עדכניים נדרשת התחברות</div>
+                  <div style={{fontSize: '0.8125rem',color:'#7a3a33',marginTop:3}}>ללא התחברות מוצג ארכיון בלבד — מכרזים שמועד ההגשה שלהם עבר. התחברות חינם פותחת את כל {counts.active.toLocaleString('he-IL')} המכרזים הפעילים.</div>
                 </div>
                 <div style={{display:'flex',gap:8}}>
-                  <a href="/signin" style={{background:'#b02a1e',color:'#fff',borderRadius:8,padding:'9px 18px',fontSize:13.5,fontWeight:700,textDecoration:'none',whiteSpace:'nowrap'}}>התחברות</a>
-                  <a href="/signup" style={{background:'#fff',color:'#b02a1e',border:'1px solid #b02a1e',borderRadius:8,padding:'9px 18px',fontSize:13.5,fontWeight:700,textDecoration:'none',whiteSpace:'nowrap'}}>הרשמה חינם</a>
+                  <a href="/signin" style={{background:'#b02a1e',color:'#fff',borderRadius:8,padding:'9px 18px',fontSize: '0.84375rem',fontWeight:700,textDecoration:'none',whiteSpace:'nowrap'}}>התחברות</a>
+                  <a href="/signup" style={{background:'#fff',color:'#b02a1e',border:'1px solid #b02a1e',borderRadius:8,padding:'9px 18px',fontSize: '0.84375rem',fontWeight:700,textDecoration:'none',whiteSpace:'nowrap'}}>הרשמה חינם</a>
                 </div>
               </div>
             )}
             {!session&&view?(
               <div style={{background:'#fff',border:`1px solid ${BORDER}`,borderRadius:10,padding:'46px 24px',textAlign:'center'}}>
-                <div style={{fontSize:34,marginBottom:10}}>🔒</div>
-                <div style={{fontWeight:800,color:'#b02a1e',fontSize:16.5}}>קטגוריה זו זמינה למשתמשים מחוברים בלבד</div>
-                <div style={{fontSize:13.5,color:'#5f6c7a',marginTop:6,maxWidth:420,marginInline:'auto'}}>כדי לראות מכרזים עדכניים — {intentView?'הודעות כוונה להתקשרות':exemptView?'מכרזים פטורים':'העדפה לעסקים קטנים'} — נדרשת התחברות. ההרשמה חינם.</div>
+                <div style={{fontSize: '2.125rem',marginBottom:10}}>🔒</div>
+                <div style={{fontWeight:800,color:'#b02a1e',fontSize: '1.03125rem'}}>קטגוריה זו זמינה למשתמשים מחוברים בלבד</div>
+                <div style={{fontSize: '0.84375rem',color:'#5f6c7a',marginTop:6,maxWidth:420,marginInline:'auto'}}>כדי לראות מכרזים עדכניים — {intentView?'הודעות כוונה להתקשרות':exemptView?'מכרזים פטורים':'העדפה לעסקים קטנים'} — נדרשת התחברות. ההרשמה חינם.</div>
                 <div style={{display:'flex',gap:10,justifyContent:'center',marginTop:16}}>
-                  <a href="/signin" style={{background:'#b02a1e',color:'#fff',borderRadius:8,padding:'10px 22px',fontSize:14,fontWeight:700,textDecoration:'none'}}>התחברות</a>
-                  <a href="/signup" style={{background:'#fff',color:'#b02a1e',border:'1px solid #b02a1e',borderRadius:8,padding:'10px 22px',fontSize:14,fontWeight:700,textDecoration:'none'}}>הרשמה חינם</a>
+                  <a href="/signin" style={{background:'#b02a1e',color:'#fff',borderRadius:8,padding:'10px 22px',fontSize: '0.875rem',fontWeight:700,textDecoration:'none'}}>התחברות</a>
+                  <a href="/signup" style={{background:'#fff',color:'#b02a1e',border:'1px solid #b02a1e',borderRadius:8,padding:'10px 22px',fontSize: '0.875rem',fontWeight:700,textDecoration:'none'}}>הרשמה חינם</a>
                 </div>
               </div>
             ):(
             <div role="table" aria-label="רשימת מכרזים" aria-busy={loading} style={{background:'#fff',border:`1px solid ${BORDER}`,borderRadius:10,overflow:'hidden',opacity:loading&&rows.length?.55:1,transition:'opacity .15s'}}>
-              {!isMobile && (<div role="row" style={{display:'grid',gridTemplateColumns:'70px 1fr 232px 156px 150px',padding:'12px 18px',background:'#f7f9fb',borderBottom:`1px solid ${BORDER}`,fontSize:12,fontWeight:700,color:'#5f6c7a'}}>
+              {!isMobile && (<div role="row" style={{display:'grid',gridTemplateColumns:'70px 1fr 232px 156px 150px',padding:'12px 18px',background:'#f7f9fb',borderBottom:`1px solid ${BORDER}`,fontSize: '0.75rem',fontWeight:700,color:'#5f6c7a'}}>
                 <span role="columnheader">ציון</span><span role="columnheader">נושא המכרז</span><span role="columnheader">סטטוס</span><span role="columnheader">מועד הגשה</span><span role="columnheader" aria-label="פעולות"></span>
               </div>)}
               {/* QA #03: בזמן חיפוש/דפדוף השורות הקודמות נשארות (מעומעמות) — השלד מוצג רק בטעינה הראשונה */}
@@ -382,8 +382,8 @@ export default function Dashboard(){
                   <style>{`@keyframes ldrSpin{to{transform:rotate(360deg)}}@keyframes ldrPulse{0%,100%{opacity:.45}50%{opacity:.9}}@keyframes ldrBar{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}`}</style>
                   <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:12,marginBottom:26}}>
                     <span style={{width:34,height:34,border:'3px solid '+BORDER,borderTopColor:BLUE,borderRadius:'50%',display:'inline-block',animation:'ldrSpin 0.8s linear infinite'}}/>
-                    <div style={{fontSize:15.5,fontWeight:700,color:DARK}}>טוען מכרזים…</div>
-                    <div style={{fontSize:12.5,color:MUTED}}>אוספים, מסווגים ומדרגים את המכרזים העדכניים</div>
+                    <div style={{fontSize: '0.96875rem',fontWeight:700,color:DARK}}>טוען מכרזים…</div>
+                    <div style={{fontSize: '0.78125rem',color:MUTED}}>אוספים, מסווגים ומדרגים את המכרזים העדכניים</div>
                     <div style={{width:'min(320px,80%)',height:4,background:'#eef1f4',borderRadius:99,overflow:'hidden'}}>
                       <div style={{width:'100%',height:'100%',background:`linear-gradient(90deg,transparent,${BLUE},transparent)`,animation:'ldrBar 1.25s ease-in-out infinite'}}/>
                     </div>
@@ -404,12 +404,12 @@ export default function Dashboard(){
                   /* QA/H-3: כשל טעינה נראה קודם בדיוק כמו "אין תוצאות" —
                      האתר האשים את הסינון של המשתמש בזמן שהשרת נפל. */
                   <div style={{padding:44,textAlign:'center'}}>
-                    <div style={{color:'#b04a34',fontWeight:700,fontSize:15,marginBottom:6}}>לא הצלחנו לטעון את המכרזים</div>
-                    <div style={{color:MUTED,fontSize:13.5,marginBottom:14}}>זו תקלה זמנית בשרת, לא בסינון שלכם.</div>
-                    <button onClick={()=>setPg(p=>p)} style={{background:DARK,color:'#fff',border:'none',borderRadius:8,padding:'9px 20px',fontSize:13.5,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>נסו שוב</button>
+                    <div style={{color:'#b04a34',fontWeight:700,fontSize: '0.9375rem',marginBottom:6}}>לא הצלחנו לטעון את המכרזים</div>
+                    <div style={{color:MUTED,fontSize: '0.84375rem',marginBottom:14}}>זו תקלה זמנית בשרת, לא בסינון שלכם.</div>
+                    <button onClick={()=>setPg(p=>p)} style={{background:DARK,color:'#fff',border:'none',borderRadius:8,padding:'9px 20px',fontSize: '0.84375rem',fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>נסו שוב</button>
                   </div>
                 ):(
-                <div style={{padding:50,textAlign:'center',color:MUTED,fontSize:14}}>לא נמצאו מכרזים התואמים לסינון</div>
+                <div style={{padding:50,textAlign:'center',color:MUTED,fontSize: '0.875rem'}}>לא נמצאו מכרזים התואמים לסינון</div>
                 )
               ):rows.map((t,i)=>{
                 const d=dl(t.deadline);
@@ -421,49 +421,49 @@ export default function Dashboard(){
               <a href={`/tender/${t.id}`} key={t.id||i} style={{display:'block',textDecoration:'none',background:'#fff',border:'1px solid #e6eaee',borderRadius:16,padding:'15px 16px',borderBottom:'1px solid #e6eaee'}}>
                 <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:10,marginBottom:11}}>
                   <div style={{display:'flex',flexWrap:'wrap',gap:6,flex:1}}>
-                    {tags.map((g,gi)=>(<span key={gi} title={g.title} style={{fontSize:11,fontWeight:600,padding:'3px 9px',borderRadius:6,background:g.bg,color:g.fg,border:`1px solid ${g.bd}`}}>{g.label}</span>))}
+                    {tags.map((g,gi)=>(<span key={gi} title={g.title} style={{fontSize: '0.6875rem',fontWeight:600,padding:'3px 9px',borderRadius:6,background:g.bg,color:g.fg,border:`1px solid ${g.bd}`}}>{g.label}</span>))}
                   </div>
                   <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4,flex:'0 0 auto'}}>
-                    <span style={{fontSize:22,fontWeight:700,color:DARK,lineHeight:1}}>{score}</span>
+                    <span style={{fontSize: '1.375rem',fontWeight:700,color:DARK,lineHeight:1}}>{score}</span>
                     <span style={{width:26,height:3,borderRadius:2,background:bandColor(score)}}></span>
                   </div>
                 </div>
-                <div style={{fontSize:16.5,fontWeight:700,color:DARK,lineHeight:1.45,textAlign:'right'}}>{t.title||'ללא כותרת'}</div>
-                <div style={{fontSize:13,color:'#62707e',marginTop:8}}>{t.publisher||'לא ידוע'} · פורסם {fd(t.publishDate)}</div>
+                <div style={{fontSize: '1.03125rem',fontWeight:700,color:DARK,lineHeight:1.45,textAlign:'right'}}>{t.title||'ללא כותרת'}</div>
+                <div style={{fontSize: '0.8125rem',color:'#62707e',marginTop:8}}>{t.publisher||'לא ידוע'} · פורסם {fd(t.publishDate)}</div>
                 <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginTop:13,paddingTop:12,borderTop:'1px solid #eef1f4'}}>
-                  <div style={{fontSize:12.5}}>
+                  <div style={{fontSize: '0.78125rem'}}>
                     <span style={{color:'#62707e'}}>הגשה עד </span>
-                    <span style={{color:DARK,fontWeight:700}}>{isExempt(t.type,t.title)?<span style={{color:'#8a5db8',background:'#f3ecfb',borderRadius:6,padding:'2px 8px',fontSize:12,fontWeight:600}}>פטור</span>:fd(t.deadline)}</span>
+                    <span style={{color:DARK,fontWeight:700}}>{isExempt(t.type,t.title)?<span style={{color:'#8a5db8',background:'#f3ecfb',borderRadius:6,padding:'2px 8px',fontSize: '0.75rem',fontWeight:600}}>פטור</span>:fd(t.deadline)}</span>
                     {d!==null&&d>=0&&<span style={{color:d<=7?'#b04a34':'#62707e'}}> · נותרו {d} ימים</span>}
                   </div>
                   <div style={{display:'flex',alignItems:'center',gap:8}}>
-                    <span style={{fontSize:12,fontWeight:600,color:'#1e5aa8',background:'#e8f1fb',border:'1px solid #cfe0f4',borderRadius:7,padding:'5px 11px',whiteSpace:'nowrap'}}>פרטי המכרז ←</span>
-                    <button type="button" onClick={(e)=>toggleMark(t.id,e)} aria-pressed={isMarked} aria-label={isMarked?'הסר סימון':'סמן מכרז'} style={{fontSize:18,color:isMarked?'#d9a520':'#7f8c99',background:'transparent',border:'none',cursor:'pointer',padding:6}}>{isMarked?'★':'☆'}</button>
+                    <span style={{fontSize: '0.75rem',fontWeight:600,color:'#1e5aa8',background:'#e8f1fb',border:'1px solid #cfe0f4',borderRadius:7,padding:'5px 11px',whiteSpace:'nowrap'}}>פרטי המכרז ←</span>
+                    <button type="button" onClick={(e)=>toggleMark(t.id,e)} aria-pressed={isMarked} aria-label={isMarked?'הסר סימון':'סמן מכרז'} style={{fontSize: '1.125rem',color:isMarked?'#d9a520':'#7f8c99',background:'transparent',border:'none',cursor:'pointer',padding:6}}>{isMarked?'★':'☆'}</button>
                   </div>
                 </div>
               </a>
             ) : (
               <div role="row" key={t.id||i} style={{display:'grid',gridTemplateColumns:'70px 1fr 232px 156px 150px',padding:'16px 18px',borderBottom:'1px solid #eef1f4',alignItems:'center'}}>
                     <div role="cell" style={{display:'flex',flexDirection:'column',alignItems:'flex-start',gap:5}}>
-                      <span style={{fontSize:21,fontWeight:700,color:DARK,lineHeight:1}}>{score}</span>
+                      <span style={{fontSize: '1.3125rem',fontWeight:700,color:DARK,lineHeight:1}}>{score}</span>
                       <span style={{width:30,height:3,borderRadius:2,background:bandColor(score)}}></span>
                     </div>
                     <div role="cell" style={{minWidth:0,paddingInlineEnd:16}}>
                       {t.url||t.id
-                        ?<a href={`/tender/${t.id}`} style={{fontSize:16.5,fontWeight:600,color:DARK,lineHeight:1.4,textDecoration:'none',display:'block'}}>{t.title||'ללא כותרת'}</a>
-                        :<div style={{fontSize:15,fontWeight:600,color:DARK,lineHeight:1.4}}>{t.title||'ללא כותרת'}</div>}
-                      <div style={{fontSize:13.5,color:'#62707e',marginTop:5}}>{t.publisher||'לא ידוע'} · פורסם {fd(t.publishDate)}</div>
+                        ?<a href={`/tender/${t.id}`} style={{fontSize: '1.03125rem',fontWeight:600,color:DARK,lineHeight:1.4,textDecoration:'none',display:'block'}}>{t.title||'ללא כותרת'}</a>
+                        :<div style={{fontSize: '0.9375rem',fontWeight:600,color:DARK,lineHeight:1.4}}>{t.title||'ללא כותרת'}</div>}
+                      <div style={{fontSize: '0.84375rem',color:'#62707e',marginTop:5}}>{t.publisher||'לא ידוע'} · פורסם {fd(t.publishDate)}</div>
                     </div>
                     <div role="cell" style={{display:'flex',flexWrap:'wrap',gap:6}}>
-                      {tags.map((g,gi)=>(<span key={gi} title={g.title} style={{fontSize:11.5,fontWeight:600,padding:'3px 10px',borderRadius:6,background:g.bg,color:g.fg,border:`1px solid ${g.bd}`}}>{g.label}</span>))}
+                      {tags.map((g,gi)=>(<span key={gi} title={g.title} style={{fontSize: '0.71875rem',fontWeight:600,padding:'3px 10px',borderRadius:6,background:g.bg,color:g.fg,border:`1px solid ${g.bd}`}}>{g.label}</span>))}
                     </div>
-                    <div role="cell" style={{fontSize:13}}>
-                      <div style={{color:DARK,fontWeight:600}}>{isExempt(t.type,t.title)?<span style={{color:'#8a5db8',background:'#f3ecfb',borderRadius:6,padding:'2px 8px',fontSize:12,fontWeight:600}}>פטור</span>:fd(t.deadline)}</div>
-                      {d!==null&&d>=0&&<div style={{color:d<=7?'#b04a34':'#62707e',fontSize:12,marginTop:3}}>נותרו {d} ימים</div>}
+                    <div role="cell" style={{fontSize: '0.8125rem'}}>
+                      <div style={{color:DARK,fontWeight:600}}>{isExempt(t.type,t.title)?<span style={{color:'#8a5db8',background:'#f3ecfb',borderRadius:6,padding:'2px 8px',fontSize: '0.75rem',fontWeight:600}}>פטור</span>:fd(t.deadline)}</div>
+                      {d!==null&&d>=0&&<div style={{color:d<=7?'#b04a34':'#62707e',fontSize: '0.75rem',marginTop:3}}>נותרו {d} ימים</div>}
                     </div>
                     <div role="cell" style={{display:'flex',justifyContent:'flex-end',alignItems:'center',gap:6}}>
-                      <a href={`/tender/${t.id}`} style={{fontSize:12,fontWeight:600,color:'#1e5aa8',background:'#e8f1fb',border:'1px solid #cfe0f4',borderRadius:7,padding:'5px 11px',textDecoration:'none',whiteSpace:'nowrap'}}>פרטים</a>
-                      <button type="button" onClick={(e)=>toggleMark(t.id,e)} aria-pressed={isMarked} aria-label={isMarked?'הסר סימון':'סמן מכרז'} title={isMarked?'הסר סימון':'סמן מכרז'} style={{fontSize:16,lineHeight:1,color:isMarked?'#d9a520':'#7f8c99',background:'transparent',border:'none',cursor:'pointer',padding:6}}>{isMarked?'★':'☆'}</button>
+                      <a href={`/tender/${t.id}`} style={{fontSize: '0.75rem',fontWeight:600,color:'#1e5aa8',background:'#e8f1fb',border:'1px solid #cfe0f4',borderRadius:7,padding:'5px 11px',textDecoration:'none',whiteSpace:'nowrap'}}>פרטים</a>
+                      <button type="button" onClick={(e)=>toggleMark(t.id,e)} aria-pressed={isMarked} aria-label={isMarked?'הסר סימון':'סמן מכרז'} title={isMarked?'הסר סימון':'סמן מכרז'} style={{fontSize: '1rem',lineHeight:1,color:isMarked?'#d9a520':'#7f8c99',background:'transparent',border:'none',cursor:'pointer',padding:6}}>{isMarked?'★':'☆'}</button>
                     </div>
                   </div>
             )
@@ -483,7 +483,7 @@ export default function Dashboard(){
                 <button onClick={()=>setPg(tp)} disabled={pg===tp} style={{...chip,opacity:pg===tp?.5:1}}>אחרון</button>
               </nav>
             )}
-            <div style={{textAlign:'center',padding:'16px 0',color:'#5f6c7a',fontSize:12}}>
+            <div style={{textAlign:'center',padding:'16px 0',color:'#5f6c7a',fontSize: '0.75rem'}}>
               נתונים: <a href="https://next.obudget.org" target="_blank" rel="noopener noreferrer" style={{color:BLUE}}>BudgetKey</a> · מינהל הרכש הממשלתי · {fetchedAt?scannedLabel:'מתעדכן מדי בוקר'}
             </div>
           </div>

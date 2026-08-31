@@ -101,16 +101,16 @@ export default function MobileMenu() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingBottom: 16, marginBottom: 12, borderBottom: `1px solid ${BORDER}` }}>
-              <div style={{ width: 34, height: 34, borderRadius: 9, background: BLUE, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 15 }}>ש</div>
+              <div style={{ width: 34, height: 34, borderRadius: 9, background: BLUE, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.9375rem' }}>ש</div>
               <div style={{ lineHeight: 1.2, flex: 1 }}>
-                <div style={{ fontWeight: 800, fontSize: 14.5, color: DARK }}>שווה מכרזים</div>
-                <div style={{ fontSize: 11, color: '#8a97a3' }}>מועדון עסקים 360</div>
+                <div style={{ fontWeight: 800, fontSize: '0.90625rem', color: DARK }}>שווה מכרזים</div>
+                <div style={{ fontSize: '0.6875rem', color: '#8a97a3' }}>מועדון עסקים 360</div>
               </div>
               <button
                 type="button"
                 aria-label="סגירת תפריט"
                 onClick={() => setOpen(false)}
-                style={{ width: 32, height: 32, borderRadius: 8, border: 'none', background: '#eef1f4', color: DARK, fontSize: 16, cursor: 'pointer' }}
+                style={{ width: 32, height: 32, borderRadius: 8, border: 'none', background: '#eef1f4', color: DARK, fontSize: '1rem', cursor: 'pointer' }}
               >
                 ✕
               </button>
@@ -125,40 +125,40 @@ export default function MobileMenu() {
                   href={item.href}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none',
-                    padding: '12px 12px', borderRadius: 10, fontSize: 14.5,
+                    padding: '12px 12px', borderRadius: 10, fontSize: '0.90625rem',
                     fontWeight: active ? 700 : 500,
                     color: active ? ACTIVE_FG : '#5b6b7a',
                     background: active ? ACTIVE_BG : 'transparent',
                     borderInlineStart: active ? `3px solid ${BLUE}` : '3px solid transparent',
                   }}
                 >
-                  <span style={{ fontSize: 16 }}>{item.icon}</span>
+                  <span style={{ fontSize: '1rem' }}>{item.icon}</span>
                   <span>{item.label}</span>
                 </a>
               );
             })}
 
             <div style={{ marginTop: 'auto', paddingTop: 14, borderTop: `1px solid ${BORDER}` }}>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 12px', marginBottom: 10, fontSize: 11.5 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 12px', marginBottom: 10, fontSize: '0.71875rem' }}>
                 <a href="/terms" style={{ color: '#8a97a3', textDecoration: 'none' }}>תנאי שימוש</a>
                 <a href="/privacy" style={{ color: '#8a97a3', textDecoration: 'none' }}>פרטיות</a>
                 <a href="/accessibility" style={{ color: '#8a97a3', textDecoration: 'none' }}>נגישות</a>
               </div>
               {session ? (
                 <div>
-                  <div style={{ fontSize: 11.5, color: '#8a97a3', marginBottom: 8, wordBreak: 'break-all' }}>{session.user.email}</div>
+                  <div style={{ fontSize: '0.71875rem', color: '#8a97a3', marginBottom: 8, wordBreak: 'break-all' }}>{session.user.email}</div>
                   <button
                     type="button"
                     onClick={handleSignOut}
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: 9, border: '1px solid #e2e7ec', background: '#fff', color: '#5b6b7a', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: 9, border: '1px solid #e2e7ec', background: '#fff', color: '#5b6b7a', fontSize: '0.8125rem', fontWeight: 600, cursor: 'pointer' }}
                   >
                     התנתקות
                   </button>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <a href="/signin" style={{ display: 'block', textAlign: 'center', padding: '10px 12px', borderRadius: 9, border: '1px solid #e2e7ec', background: '#fff', color: DARK, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>התחברות</a>
-                  <a href="/signup" style={{ display: 'block', textAlign: 'center', padding: '10px 12px', borderRadius: 9, border: 'none', background: BLUE, color: '#fff', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>הרשמה</a>
+                  <a href="/signin" style={{ display: 'block', textAlign: 'center', padding: '10px 12px', borderRadius: 9, border: '1px solid #e2e7ec', background: '#fff', color: DARK, fontSize: '0.8125rem', fontWeight: 600, textDecoration: 'none' }}>התחברות</a>
+                  <a href="/signup" style={{ display: 'block', textAlign: 'center', padding: '10px 12px', borderRadius: 9, border: 'none', background: BLUE, color: '#fff', fontSize: '0.8125rem', fontWeight: 700, textDecoration: 'none' }}>הרשמה</a>
                 </div>
               )}
             </div>

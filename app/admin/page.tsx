@@ -61,7 +61,7 @@ const DOC_LABELS: Record<string, string> = { privacy: 'מדיניות פרטיו
 const DOC_PATHS: Record<string, string> = { privacy: '/privacy', terms: '/terms', accessibility: '/accessibility' };
 const TRIGGER_HE: Record<string, string> = { cron: 'מתוזמן', manual: 'ידני', chain: 'שרשור' };
 
-const inp: React.CSSProperties = { border: '1px solid #e6eaee', borderRadius: 8, padding: '8px 11px', fontSize: 13, fontFamily: 'inherit', direction: 'rtl' };
+const inp: React.CSSProperties = { border: '1px solid #e6eaee', borderRadius: 8, padding: '8px 11px', fontSize: '0.8125rem', fontFamily: 'inherit', direction: 'rtl' };
 
 export default function AdminPage() {
   const [session, setSession] = useState<AuthSession | null>(null);
@@ -295,9 +295,9 @@ export default function AdminPage() {
     <div style={{ minHeight: '100vh', background: '#eef1f4', direction: 'rtl', fontFamily: "'Heebo',Arial,sans-serif", color: DARK }}>
       <header style={{ background: DARK, color: '#fff', padding: '14px 26px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <span style={{ width: 32, height: 32, borderRadius: 8, background: BLUE, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>ש</span>
-        <span style={{ fontWeight: 700, fontSize: 16 }}>שווה מכרזים · מערכת ניהול</span>
-        {data && <span style={{ marginInlineStart: 'auto', fontSize: 12.5, opacity: .75 }}>{data.admin.email} · {data.admin.role}</span>}
-        <a href="/dashboard" style={{ color: '#9db8d8', fontSize: 13, textDecoration: 'none', marginInlineStart: data ? 14 : 'auto' }}>→ לאתר</a>
+        <span style={{ fontWeight: 700, fontSize: '1rem' }}>שווה מכרזים · מערכת ניהול</span>
+        {data && <span style={{ marginInlineStart: 'auto', fontSize: '0.78125rem', opacity: .75 }}>{data.admin.email} · {data.admin.role}</span>}
+        <a href="/dashboard" style={{ color: '#9db8d8', fontSize: '0.8125rem', textDecoration: 'none', marginInlineStart: data ? 14 : 'auto' }}>→ לאתר</a>
       </header>
       <main style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 20px 40px' }}>{content}</main>
     </div>
@@ -308,8 +308,8 @@ export default function AdminPage() {
     const w = Math.max(320, pts.length * 34);
     return (
       <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, padding: 18, flex: 1, minWidth: 320, overflowX: 'auto' }}>
-        <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12 }}>{title}</div>
-        {pts.length === 0 ? <div style={{ color: MUTED, fontSize: 13 }}>אין נתונים בטווח</div> : (
+        <div style={{ fontWeight: 700, fontSize: '0.875rem', marginBottom: 12 }}>{title}</div>
+        {pts.length === 0 ? <div style={{ color: MUTED, fontSize: '0.8125rem' }}>אין נתונים בטווח</div> : (
           <svg width={w} height={150} style={{ direction: 'ltr' }}>
             {pts.map((p, i) => {
               const h = Math.round((p.count / max) * 100);
@@ -329,20 +329,20 @@ export default function AdminPage() {
 
   const pwForm = (heading: string, sub: string) => shell(
     <div style={{ padding: 60, textAlign: 'center' }}>
-      <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 8 }}>{heading}</div>
-      <div style={{ color: MUTED, fontSize: 14, marginBottom: 20 }}>{sub}</div>
+      <div style={{ fontSize: '1.0625rem', fontWeight: 700, marginBottom: 8 }}>{heading}</div>
+      <div style={{ color: MUTED, fontSize: '0.875rem', marginBottom: 20 }}>{sub}</div>
       <div style={{ maxWidth: 320, margin: '0 auto', background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10, color: DARK }}>כניסת מנהל בסיסמה</div>
+        <div style={{ fontSize: '0.8125rem', fontWeight: 600, marginBottom: 10, color: DARK }}>כניסת מנהל בסיסמה</div>
         <input type={showPw ? "text" : "password"} value={pw} onChange={e => setPw(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && pwLogin()} placeholder="סיסמת ניהול"
-          style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: 14, fontFamily: 'inherit', marginBottom: 10, direction: 'rtl' }} />
-        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: MUTED, marginBottom: 10, cursor: 'pointer' }}><input type="checkbox" checked={showPw} onChange={e => setShowPw(e.target.checked)} />👁 הצג סיסמה</label>
+          style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: '0.875rem', fontFamily: 'inherit', marginBottom: 10, direction: 'rtl' }} />
+        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.78125rem', color: MUTED, marginBottom: 10, cursor: 'pointer' }}><input type="checkbox" checked={showPw} onChange={e => setShowPw(e.target.checked)} />👁 הצג סיסמה</label>
         <button onClick={pwLogin} disabled={pwBusy || !pw}
-          style={{ width: '100%', background: pwBusy ? '#9db8d8' : BLUE, color: '#fff', border: 'none', borderRadius: 8, padding: '9px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+          style={{ width: '100%', background: pwBusy ? '#9db8d8' : BLUE, color: '#fff', border: 'none', borderRadius: 8, padding: '9px', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
           {pwBusy ? 'מתחבר…' : 'כניסה'}
         </button>
-        {pwErr && <div style={{ color: '#b04a34', fontSize: 12.5, marginTop: 8 }}>{pwErr}</div>}
-        <a href="/signin" style={{ display: 'block', color: BLUE, fontSize: 12.5, marginTop: 12, textDecoration: 'none' }}>או התחברות רגילה עם חשבון ←</a>
+        {pwErr && <div style={{ color: '#b04a34', fontSize: '0.78125rem', marginTop: 8 }}>{pwErr}</div>}
+        <a href="/signin" style={{ display: 'block', color: BLUE, fontSize: '0.78125rem', marginTop: 12, textDecoration: 'none' }}>או התחברות רגילה עם חשבון ←</a>
       </div>
     </div>
   );
@@ -372,22 +372,22 @@ export default function AdminPage() {
       <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, padding: 18, flex: 1, minWidth: 280 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
           <span style={{ width: 10, height: 10, borderRadius: 999, background: color }} />
-          <span style={{ fontWeight: 700, fontSize: 15 }}>{title}</span>
-          <span style={{ fontSize: 11.5, color: MUTED, marginInlineStart: 'auto' }}>{schedule}</span>
+          <span style={{ fontWeight: 700, fontSize: '0.9375rem' }}>{title}</span>
+          <span style={{ fontSize: '0.71875rem', color: MUTED, marginInlineStart: 'auto' }}>{schedule}</span>
         </div>
         {last ? (
-          <div style={{ fontSize: 13, color: '#4a5a6a', lineHeight: 1.7 }}>
+          <div style={{ fontSize: '0.8125rem', color: '#4a5a6a', lineHeight: 1.7 }}>
             ריצה אחרונה: {fmtTime(last.started_at)} · {fmtDur(last.duration_ms)} · {TRIGGER_HE[last.trigger || ''] || last.trigger}
             {last.error
-              ? <div style={{ color: '#b04a34', fontSize: 12.5 }}>שגיאה: {String(last.error).slice(0, 90)}</div>
-              : <div style={{ color: MUTED, fontSize: 12.5 }}>{JSON.stringify(last.counts_json || {}).slice(0, 90)}</div>}
+              ? <div style={{ color: '#b04a34', fontSize: '0.78125rem' }}>שגיאה: {String(last.error).slice(0, 90)}</div>
+              : <div style={{ color: MUTED, fontSize: '0.78125rem' }}>{JSON.stringify(last.counts_json || {}).slice(0, 90)}</div>}
           </div>
         ) : (
-          <div style={{ fontSize: 13, color: MUTED }}>אין עדיין ריצות מתועדות (הרישום החל עם פריסת מערכת הניהול)</div>
+          <div style={{ fontSize: '0.8125rem', color: MUTED }}>אין עדיין ריצות מתועדות (הרישום החל עם פריסת מערכת הניהול)</div>
         )}
         {data.admin.role !== 'viewer' && (
           <button onClick={() => trigger(type)} disabled={!!triggering}
-            style={{ marginTop: 12, background: triggering === type ? '#9db8d8' : BLUE, color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+            style={{ marginTop: 12, background: triggering === type ? '#9db8d8' : BLUE, color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: '0.8125rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
             {triggering === type ? 'מפעיל…' : 'הפעל עכשיו'}
           </button>
         )}
@@ -395,8 +395,8 @@ export default function AdminPage() {
     );
   };
 
-  const th: React.CSSProperties = { textAlign: 'right', padding: '9px 12px', fontSize: 12, color: MUTED, fontWeight: 700, borderBottom: `1px solid ${BORDER}` };
-  const td: React.CSSProperties = { padding: '9px 12px', fontSize: 12.5, borderBottom: '1px solid #eef1f4', verticalAlign: 'top' };
+  const th: React.CSSProperties = { textAlign: 'right', padding: '9px 12px', fontSize: '0.75rem', color: MUTED, fontWeight: 700, borderBottom: `1px solid ${BORDER}` };
+  const td: React.CSSProperties = { padding: '9px 12px', fontSize: '0.78125rem', borderBottom: '1px solid #eef1f4', verticalAlign: 'top' };
 
   return shell(
     <>
@@ -404,27 +404,27 @@ export default function AdminPage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 1, background: BORDER, border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden', marginBottom: 20 }}>
         {kpis.map((k) => (
           <div key={k.l} style={{ background: '#fff', padding: '14px 16px' }}>
-            <div style={{ fontSize: 24, fontWeight: 700 }}>{typeof k.v === 'number' ? k.v.toLocaleString('he-IL') : k.v}</div>
-            <div style={{ fontSize: 12, color: MUTED, marginTop: 4 }}>{k.l}</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{typeof k.v === 'number' ? k.v.toLocaleString('he-IL') : k.v}</div>
+            <div style={{ fontSize: '0.75rem', color: MUTED, marginTop: 4 }}>{k.l}</div>
           </div>
         ))}
       </div>
 
       {/* צינורות */}
-      <div style={{ fontSize: 15.5, fontWeight: 700, margin: '0 0 10px' }}>צינורות</div>
+      <div style={{ fontSize: '0.96875rem', fontWeight: 700, margin: '0 0 10px' }}>צינורות</div>
       <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 8 }}>
         {pipeCard('sync', 'סנכרון מכרזים + דוח יומי', 'יומי · 07:00')}
         {pipeCard('smallbiz', 'זיהוי העדפת עסקים קטנים', 'יומי · 07:30 + שרשור')}
         {pipeCard('sources', 'סריקת מקורות חדשים', 'יומי · 04:45')}
       </div>
-      {toast && <div style={{ background: '#e8f1fb', border: '1px solid #cfe0f4', color: '#1e5aa8', borderRadius: 8, padding: '9px 14px', fontSize: 13, marginBottom: 8 }}>{toast}</div>}
+      {toast && <div style={{ background: '#e8f1fb', border: '1px solid #cfe0f4', color: '#1e5aa8', borderRadius: 8, padding: '9px 14px', fontSize: '0.8125rem', marginBottom: 8 }}>{toast}</div>}
 
       {/* ריצות — ברירת מחדל: 3 אחרונות; לחיצה על שורה פותחת את הדוח המלא */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '18px 0 10px' }}>
-        <div style={{ fontSize: 15.5, fontWeight: 700 }}>ריצות אחרונות</div>
+        <div style={{ fontSize: '0.96875rem', fontWeight: 700 }}>ריצות אחרונות</div>
         {data.runs.length > 3 && (
           <button onClick={() => setRunsOpen(!runsOpen)}
-            style={{ background: 'transparent', border: 'none', color: '#1e5aa8', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+            style={{ background: 'transparent', border: 'none', color: '#1e5aa8', fontSize: '0.78125rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
             {runsOpen ? '▲ הצג 3 אחרונות בלבד' : `▼ הצג הכל (${data.runs.length})`}
           </button>
         )}
@@ -442,14 +442,14 @@ export default function AdminPage() {
                   <td style={td}>{r.type === 'sync' ? 'סנכרון' : r.type === 'sources' ? 'מקורות חדשים' : 'עסקים קטנים'}</td>
                   <td style={td}>{fmtDur(r.duration_ms)}</td>
                   <td style={td}>{TRIGGER_HE[r.trigger || ''] || r.trigger || '—'}</td>
-                  <td style={{ ...td, fontFamily: 'monospace', fontSize: 11, direction: 'ltr', textAlign: 'left' }}>{JSON.stringify(r.counts_json || {}).slice(0, 80)}</td>
+                  <td style={{ ...td, fontFamily: 'monospace', fontSize: '0.6875rem', direction: 'ltr', textAlign: 'left' }}>{JSON.stringify(r.counts_json || {}).slice(0, 80)}</td>
                   <td style={{ ...td, color: r.error ? '#b04a34' : MUTED }}>{r.error ? String(r.error).slice(0, 60) : '—'}</td>
                 </tr>
                 {openRunId === r.id && (
                   <tr>
                     <td colSpan={6} style={{ padding: '10px 14px', background: '#f8fafc', borderBottom: `1px solid ${BORDER}` }}>
-                      {r.error && <div style={{ color: '#b04a34', fontSize: 12.5, marginBottom: 8, direction: 'ltr', textAlign: 'left' }}>{r.error}</div>}
-                      <pre style={{ margin: 0, fontFamily: 'monospace', fontSize: 11.5, direction: 'ltr', textAlign: 'left', whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxHeight: 320, overflow: 'auto' }}>
+                      {r.error && <div style={{ color: '#b04a34', fontSize: '0.78125rem', marginBottom: 8, direction: 'ltr', textAlign: 'left' }}>{r.error}</div>}
+                      <pre style={{ margin: 0, fontFamily: 'monospace', fontSize: '0.71875rem', direction: 'ltr', textAlign: 'left', whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxHeight: 320, overflow: 'auto' }}>
                         {JSON.stringify(r.counts_json || {}, null, 2)}
                       </pre>
                     </td>
@@ -463,10 +463,10 @@ export default function AdminPage() {
 
       {/* דיוור — ברירת מחדל: 3 משלוחים אחרונים */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '22px 0 10px' }}>
-        <div style={{ fontSize: 15.5, fontWeight: 700 }}>מיילים אחרונים</div>
+        <div style={{ fontSize: '0.96875rem', fontWeight: 700 }}>מיילים אחרונים</div>
         {groupEmails(data.emails).length > 3 && (
           <button onClick={() => setMailsOpen(!mailsOpen)}
-            style={{ background: 'transparent', border: 'none', color: '#1e5aa8', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+            style={{ background: 'transparent', border: 'none', color: '#1e5aa8', fontSize: '0.78125rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
             {mailsOpen ? '▲ הצג 3 אחרונים בלבד' : `▼ הצג הכל (${groupEmails(data.emails).length})`}
           </button>
         )}
@@ -491,7 +491,7 @@ export default function AdminPage() {
       </div>
 
       {/* מסמכי האתר — עריכה + preview חי */}
-      <h2 style={{ fontSize: 15.5, fontWeight: 700, margin: '22px 0 10px' }}>מסמכי האתר</h2>
+      <h2 style={{ fontSize: '0.96875rem', fontWeight: 700, margin: '22px 0 10px' }}>מסמכי האתר</h2>
       <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, padding: 16, marginBottom: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
           {['privacy', 'terms', 'accessibility'].map((slug) => (
@@ -500,7 +500,7 @@ export default function AdminPage() {
                 background: docSlug === slug ? '#e8f1fb' : '#f6f8fa',
                 color: docSlug === slug ? '#1e5aa8' : MUTED,
                 border: docSlug === slug ? '1.5px solid ' + BLUE : `1px solid ${BORDER}`,
-                borderRadius: 999, padding: '7px 15px', fontSize: 13, fontWeight: docSlug === slug ? 700 : 600,
+                borderRadius: 999, padding: '7px 15px', fontSize: '0.8125rem', fontWeight: docSlug === slug ? 700 : 600,
                 cursor: 'pointer', fontFamily: 'inherit',
               }}>
               {DOC_LABELS[slug]}
@@ -508,9 +508,9 @@ export default function AdminPage() {
           ))}
           <div style={{ flex: 1 }} />
           <a href={DOC_PATHS[docSlug]} target="_blank" rel="noopener noreferrer"
-            style={{ fontSize: 12.5, color: '#1e5aa8', fontWeight: 600 }}>פתיחת העמוד באתר ←</a>
+            style={{ fontSize: '0.78125rem', color: '#1e5aa8', fontWeight: 600 }}>פתיחת העמוד באתר ←</a>
         </div>
-        <div style={{ fontSize: 12, color: MUTED, marginBottom: 10 }}>
+        <div style={{ fontSize: '0.75rem', color: MUTED, marginBottom: 10 }}>
           עיצוב: <code dir="ltr"># כותרת</code>, <code dir="ltr">## כותרת משנה</code>, <code dir="ltr">**מודגש**</code>, <code dir="ltr">- פריט רשימה</code>, <code dir="ltr">[טקסט](קישור)</code>. ה-preview מימין מציג בדיוק את מה שיפורסם.
           {(() => { const d = docs.find((x) => x.slug === docSlug); return d?.updated_at ? <> · עודכן {fmtTime(d.updated_at)}{d.updated_by ? ` ע"י ${d.updated_by}` : ''}</> : null; })()}
         </div>
@@ -519,25 +519,25 @@ export default function AdminPage() {
             value={docDraft}
             onChange={(e) => { setDocDraft(e.target.value); setDocDirty(true); }}
             placeholder={'# ' + DOC_LABELS[docSlug] + '\n\nכתבו כאן את תוכן המסמך…'}
-            style={{ ...inp, width: '100%', minHeight: 380, resize: 'vertical', lineHeight: 1.7, fontSize: 13.5, boxSizing: 'border-box' }}
+            style={{ ...inp, width: '100%', minHeight: 380, resize: 'vertical', lineHeight: 1.7, fontSize: '0.84375rem', boxSizing: 'border-box' }}
           />
           <div style={{ border: `1px solid ${BORDER}`, borderRadius: 10, padding: '18px 20px', minHeight: 380, maxHeight: 560, overflow: 'auto', background: '#fbfcfd' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, letterSpacing: 0.5, marginBottom: 10 }}>PREVIEW — כך ייראה העמוד</div>
+            <div style={{ fontSize: '0.6875rem', fontWeight: 700, color: MUTED, letterSpacing: 0.5, marginBottom: 10 }}>PREVIEW — כך ייראה העמוד</div>
             {docDraft.trim()
               ? renderDocMarkdown(docDraft)
-              : <div style={{ fontSize: 13, color: MUTED }}>המסמך ריק — העמוד באתר יציג טקסט ביניים עד שיפורסם תוכן.</div>}
+              : <div style={{ fontSize: '0.8125rem', color: MUTED }}>המסמך ריק — העמוד באתר יציג טקסט ביניים עד שיפורסם תוכן.</div>}
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12 }}>
           <button onClick={saveDoc} disabled={docBusy || !docDirty}
-            style={{ background: docDirty ? BLUE : '#9db8d8', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 22px', fontSize: 13.5, fontWeight: 600, cursor: docDirty ? 'pointer' : 'default', fontFamily: 'inherit' }}>
+            style={{ background: docDirty ? BLUE : '#9db8d8', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 22px', fontSize: '0.84375rem', fontWeight: 600, cursor: docDirty ? 'pointer' : 'default', fontFamily: 'inherit' }}>
             {docBusy ? 'מפרסם…' : 'פרסום לאתר'}
           </button>
-          {docDirty && <span style={{ fontSize: 12.5, color: '#c98a12', fontWeight: 600 }}>יש שינויים שטרם פורסמו</span>}
+          {docDirty && <span style={{ fontSize: '0.78125rem', color: '#c98a12', fontWeight: 600 }}>יש שינויים שטרם פורסמו</span>}
         </div>
       </div>
 
-      <h2 style={{ fontSize: 15.5, fontWeight: 700, margin: '22px 0 10px' }}>סליידר שיווקי בדף הבית</h2>
+      <h2 style={{ fontSize: '0.96875rem', fontWeight: 700, margin: '22px 0 10px' }}>סליידר שיווקי בדף הבית</h2>
       <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, padding: 16, marginBottom: 12 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 10, marginBottom: 10 }}>
           <input placeholder="כותרת (חובה)" value={draft.title} onChange={e => setDraft({ ...draft, title: e.target.value })} style={inp} />
@@ -549,41 +549,41 @@ export default function AdminPage() {
         <textarea placeholder="טקסט משנה" value={draft.subtitle || ''} onChange={e => setDraft({ ...draft, subtitle: e.target.value })}
           style={{ ...inp, width: '100%', minHeight: 62, resize: 'vertical', marginBottom: 10 }} />
         <button onClick={() => saveSlide(draft)} disabled={slideBusy || !draft.title}
-          style={{ background: draft.title ? BLUE : '#9db8d8', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 20px', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+          style={{ background: draft.title ? BLUE : '#9db8d8', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 20px', fontSize: '0.84375rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
           {slideBusy ? 'שומר…' : '+ הוספת שקופית'}
         </button>
       </div>
       <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, overflow: 'hidden', marginBottom: 6 }}>
-        {slides.length === 0 && <div style={{ padding: 18, textAlign: 'center', color: MUTED, fontSize: 13 }}>אין שקופיות — דף הבית מציג את ברירת המחדל</div>}
+        {slides.length === 0 && <div style={{ padding: 18, textAlign: 'center', color: MUTED, fontSize: '0.8125rem' }}>אין שקופיות — דף הבית מציג את ברירת המחדל</div>}
         {slides.map((sl, i) => (
           <div key={sl.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', borderTop: i ? `1px solid ${BORDER}` : 'none' }}>
-            <span style={{ fontSize: 11.5, fontWeight: 700, color: MUTED, minWidth: 22 }}>{sl.sort_order ?? 0}</span>
+            <span style={{ fontSize: '0.71875rem', fontWeight: 700, color: MUTED, minWidth: 22 }}>{sl.sort_order ?? 0}</span>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 600 }}>{sl.badge ? `[${sl.badge}] ` : ''}{sl.title}</div>
-              <div style={{ fontSize: 12, color: MUTED, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sl.subtitle}</div>
+              <div style={{ fontSize: '0.84375rem', fontWeight: 600 }}>{sl.badge ? `[${sl.badge}] ` : ''}{sl.title}</div>
+              <div style={{ fontSize: '0.75rem', color: MUTED, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sl.subtitle}</div>
             </div>
             <button onClick={() => saveSlide({ ...sl, active: !sl.active })}
-              style={{ background: sl.active ? '#e7f6ec' : '#f2f5f8', color: sl.active ? '#1e7d45' : MUTED, border: 'none', borderRadius: 7, padding: '5px 11px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+              style={{ background: sl.active ? '#e7f6ec' : '#f2f5f8', color: sl.active ? '#1e7d45' : MUTED, border: 'none', borderRadius: 7, padding: '5px 11px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
               {sl.active ? 'פעילה' : 'מוסתרת'}
             </button>
             <button onClick={() => removeSlide(sl.id)}
-              style={{ background: 'transparent', color: '#b04a34', border: 'none', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>מחיקה</button>
+              style={{ background: 'transparent', color: '#b04a34', border: 'none', fontSize: '0.8125rem', cursor: 'pointer', fontFamily: 'inherit' }}>מחיקה</button>
           </div>
         ))}
       </div>
 
-      <h2 style={{ fontSize: 15.5, fontWeight: 700, margin: '22px 0 10px' }}>אנליטיקה</h2>
+      <h2 style={{ fontSize: '0.96875rem', fontWeight: 700, margin: '22px 0 10px' }}>אנליטיקה</h2>
       <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 14, flexWrap: 'wrap' }}>
         {(['day', 'month', 'year'] as const).map(g => (
           <button key={g} onClick={() => setGran(g)}
-            style={{ background: gran === g ? DARK : '#fff', color: gran === g ? '#fff' : '#4a5a6a', border: `1px solid ${gran === g ? DARK : BORDER}`, borderRadius: 8, padding: '7px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+            style={{ background: gran === g ? DARK : '#fff', color: gran === g ? '#fff' : '#4a5a6a', border: `1px solid ${gran === g ? DARK : BORDER}`, borderRadius: 8, padding: '7px 14px', fontSize: '0.8125rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
             {g === 'day' ? 'יומי' : g === 'month' ? 'חודשי' : 'שנתי'}
           </button>
         ))}
-        <span style={{ fontSize: 12.5, color: MUTED }}>מ־</span>
-        <input type="date" value={fromD} onChange={e => setFromD(e.target.value)} style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: '6px 10px', fontSize: 13, fontFamily: 'inherit' }} />
-        <span style={{ fontSize: 12.5, color: MUTED }}>עד</span>
-        <input type="date" value={toD} onChange={e => setToD(e.target.value)} style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: '6px 10px', fontSize: 13, fontFamily: 'inherit' }} />
+        <span style={{ fontSize: '0.78125rem', color: MUTED }}>מ־</span>
+        <input type="date" value={fromD} onChange={e => setFromD(e.target.value)} style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: '6px 10px', fontSize: '0.8125rem', fontFamily: 'inherit' }} />
+        <span style={{ fontSize: '0.78125rem', color: MUTED }}>עד</span>
+        <input type="date" value={toD} onChange={e => setToD(e.target.value)} style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: '6px 10px', fontSize: '0.8125rem', fontFamily: 'inherit' }} />
       </div>
       <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
         {barChart('מכרזים שנקלטו', analytics?.tenders || [], '#2b6fc4')}
@@ -591,9 +591,9 @@ export default function AdminPage() {
         {barChart('ריצות צינורות', analytics?.runs || [], '#8a5db8')}
       </div>
 
-      <h2 style={{ fontSize: 15.5, fontWeight: 700, margin: '22px 0 10px' }}>משתמשים רשומים {users ? `(${users.length})` : ''}</h2>
+      <h2 style={{ fontSize: '0.96875rem', fontWeight: 700, margin: '22px 0 10px' }}>משתמשים רשומים {users ? `(${users.length})` : ''}</h2>
       <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem' }}>
           <thead><tr style={{ background: '#f6f8fa', textAlign: 'right' }}>
             <th style={{ padding: '10px 14px', fontWeight: 600 }}>מייל</th>
             <th style={{ padding: '10px 14px', fontWeight: 600 }}>נרשם</th>
@@ -608,12 +608,12 @@ export default function AdminPage() {
                 <td style={{ padding: '9px 14px' }}>{fmtTime(u.created_at)}</td>
                 <td style={{ padding: '9px 14px' }}>{u.last_sign_in_at ? fmtTime(u.last_sign_in_at) : '—'}</td>
                 <td style={{ padding: '9px 14px' }}>{u.email_confirmed_at ? '✓' : '—'}</td>
-                <td style={{ padding: '9px 14px' }}><button onClick={() => removeUser(u.id, u.email)} style={{ background: '#fff', border: '1px solid #f0c6c6', color: '#c0392b', borderRadius: 7, padding: '4px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>מחיקה</button></td>
+                <td style={{ padding: '9px 14px' }}><button onClick={() => removeUser(u.id, u.email)} style={{ background: '#fff', border: '1px solid #f0c6c6', color: '#c0392b', borderRadius: 7, padding: '4px 10px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>מחיקה</button></td>
               </tr>
             ))}
             {users && users.length === 0 && <tr><td colSpan={5} style={{ padding: 20, textAlign: 'center', color: MUTED }}>אין משתמשים</td></tr>}
             {(!users || users.length === 0) && usersNotes.length > 0 && (
-              <tr><td colSpan={5} style={{ padding: '10px 14px', color: '#b04a34', fontSize: 12.5, background: '#fdf6f4' }}>
+              <tr><td colSpan={5} style={{ padding: '10px 14px', color: '#b04a34', fontSize: '0.78125rem', background: '#fdf6f4' }}>
                 אבחון: {usersNotes.join(' · ')}
               </td></tr>
             )}
@@ -621,7 +621,7 @@ export default function AdminPage() {
         </table>
       </div>
 
-      <button onClick={() => { const b = adminToken(); if (b) loadWith(b); }} style={{ marginTop: 18, background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '9px 18px', fontSize: 13, fontWeight: 600, color: '#4a5a6a', cursor: 'pointer', fontFamily: 'inherit' }}>↻ רענון נתונים</button>
+      <button onClick={() => { const b = adminToken(); if (b) loadWith(b); }} style={{ marginTop: 18, background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '9px 18px', fontSize: '0.8125rem', fontWeight: 600, color: '#4a5a6a', cursor: 'pointer', fontFamily: 'inherit' }}>↻ רענון נתונים</button>
     </>
   );
 }

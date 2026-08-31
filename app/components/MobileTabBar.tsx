@@ -41,8 +41,8 @@ export default function MobileTabBar() {
         };
         return (
           <a key={t.href} href={t.href} style={linkStyle}>
-            <span style={{ fontSize: 18, lineHeight: 1 }}>{t.icon}</span>
-            <span style={{ fontSize: 10.5, letterSpacing: '-0.2px', color: active ? '#fff' : DARK }}>{t.label}</span>
+            <span style={{ fontSize: '1.125rem', lineHeight: 1 }}>{t.icon}</span>
+            <span style={{ fontSize: '0.65625rem', letterSpacing: '-0.2px', color: active ? '#fff' : DARK }}>{t.label}</span>
           </a>
         );
       })}

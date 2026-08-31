@@ -34,14 +34,14 @@ export default function FloatingTenders() {
         display: 'inline-flex', alignItems: 'center', gap: 9,
         background: '#2b6fc4', color: '#fff', textDecoration: 'none',
         borderRadius: 999, padding: mobile ? '13px 18px' : '14px 22px',
-        fontSize: mobile ? 14 : 15, fontWeight: 700, fontFamily: 'inherit',
+        fontSize: mobile ? '0.875rem' : '0.9375rem', fontWeight: 700, fontFamily: 'inherit',
         boxShadow: '0 8px 24px rgba(43,111,196,.42)',
       }}
     >
-      <span style={{ fontSize: 17, lineHeight: 1 }}>▧</span>
+      <span style={{ fontSize: '1.0625rem', lineHeight: 1 }}>▧</span>
       <span>כל המכרזים</span>
       {count !== null && (
-        <span style={{ background: 'rgba(255,255,255,.22)', borderRadius: 999, padding: '2px 9px', fontSize: 12.5 }}>
+        <span style={{ background: 'rgba(255,255,255,.22)', borderRadius: 999, padding: '2px 9px', fontSize: '0.78125rem' }}>
           {count.toLocaleString('he-IL')}
         </span>
       )}

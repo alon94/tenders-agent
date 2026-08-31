@@ -57,7 +57,7 @@ export default function SiteNav({
   const logoStyle: CSSProperties = {
     fontFamily: RBK,
     fontWeight: 800,
-    fontSize: 19,
+    fontSize: '1.1875rem',
     color: DARK,
     textDecoration: 'none',
     letterSpacing: -0.4,
@@ -73,9 +73,9 @@ export default function SiteNav({
       <nav style={navStyle} className="site-nav">
         <div style={inner}>
           <a href="/dashboard" style={logoStyle}>
-            <span style={{ width: 30, height: 30, borderRadius: 8, background: 'linear-gradient(135deg,#2b6fc4,#1a5fa8)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800 }}>ש</span>
+            <span style={{ width: 30, height: 30, borderRadius: 8, background: 'linear-gradient(135deg,#2b6fc4,#1a5fa8)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9375rem', fontWeight: 800 }}>ש</span>
             <span>שווה</span>
-            <span style={{ color: BLUE, fontWeight: 500, fontSize: 14, marginInlineStart: 2 }}>מכרזים</span>
+            <span style={{ color: BLUE, fontWeight: 500, fontSize: '0.875rem', marginInlineStart: 2 }}>מכרזים</span>
           </a>
 
           <div className="nav-row" style={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
@@ -91,7 +91,7 @@ export default function SiteNav({
                     textDecoration: 'none',
                     fontFamily: RBK,
                     fontWeight: isActive ? 700 : 500,
-                    fontSize: 14,
+                    fontSize: '0.875rem',
                     padding: '7px 12px',
                     borderRadius: 8,
                     background: isActive ? ACTIVE_BG : 'transparent',
@@ -109,7 +109,7 @@ export default function SiteNav({
             <button
               onClick={onRefresh}
               title="רעננו"
-              style={{ width: 34, height: 34, borderRadius: 8, background: '#f2f5f8', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid ' + BORDER, cursor: 'pointer', color: BLUE, fontSize: 16 }}
+              style={{ width: 34, height: 34, borderRadius: 8, background: '#f2f5f8', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid ' + BORDER, cursor: 'pointer', color: BLUE, fontSize: '1rem' }}
             >
               ↻
             </button>
@@ -120,7 +120,7 @@ export default function SiteNav({
               value={search}
               onChange={(e) => onSearch(e.target.value)}
               placeholder="חיפוש מכרזים…"
-              style={{ marginInlineStart: 12, padding: '8px 14px', borderRadius: 8, border: '1px solid ' + BORDER, background: '#f7f9fb', fontSize: 13, fontFamily: RBK, minWidth: 180, color: DARK }}
+              style={{ marginInlineStart: 12, padding: '8px 14px', borderRadius: 8, border: '1px solid ' + BORDER, background: '#f7f9fb', fontSize: '0.8125rem', fontFamily: RBK, minWidth: 180, color: DARK }}
             />
           ) : (
             <div style={{ marginInlineStart: 'auto' }} />

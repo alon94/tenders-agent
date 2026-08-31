@@ -19,7 +19,7 @@ export async function DocPage({ slug }: { slug: 'privacy' | 'terms' | 'accessibi
   return (
     <div
       style={{
-        minHeight: '100vh',
+        minHeight: 'calc(100vh - 48px)',
         background: '#f6f8fa',
         direction: 'rtl',
         fontFamily: "'Heebo', Arial, sans-serif",
@@ -40,12 +40,12 @@ export async function DocPage({ slug }: { slug: 'privacy' | 'terms' | 'accessibi
           color: '#1a2330',
         }}
       >
-        <Link href="/" style={{ display: 'inline-block', fontSize: 12.5, color: '#1e5aa8', textDecoration: 'none', fontWeight: 600, marginBottom: 14 }}>
+        <Link href="/" style={{ display: 'inline-block', fontSize: '0.78125rem', color: '#1e5aa8', textDecoration: 'none', fontWeight: 600, marginBottom: 14 }}>
           → חזרה לדף הבית
         </Link>
-        <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>{title}</h1>
+        <h1 style={{ fontSize: '1.375rem', fontWeight: 800, marginBottom: 4 }}>{title}</h1>
         {updated && !isNaN(updated.getTime()) && (
-          <div style={{ fontSize: 12, color: '#8a97a3', marginBottom: 18 }}>
+          <div style={{ fontSize: '0.75rem', color: '#8a97a3', marginBottom: 18 }}>
             עודכן לאחרונה: {updated.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' })}
           </div>
         )}

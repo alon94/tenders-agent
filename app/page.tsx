@@ -88,12 +88,12 @@ export default function Home() {
         <div className="wrap" style={{ display: "flex", alignItems: "center", gap: 14, height: 66 }}>
           <div style={{ width: 34, height: 34, borderRadius: 9, background: BLUE, color: "#fff", display: "grid", placeItems: "center", fontWeight: 800 }}>ש</div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 800, fontSize: 16 }}>שווה מכרזים</div>
-            <div style={{ fontSize: 11.5, color: MUTED }}>מועדון עסקים 360</div>
+            <div style={{ fontWeight: 800, fontSize: '1rem' }}>שווה מכרזים</div>
+            <div style={{ fontSize: '0.71875rem', color: MUTED }}>מועדון עסקים 360</div>
           </div>
-          <a className="hide-m" href="/dashboard" style={{ color: INK, textDecoration: "none", fontWeight: 600, fontSize: 15 }}>המכרזים</a>
-          <a className="hide-m" href="/sources" style={{ color: INK, textDecoration: "none", fontWeight: 600, fontSize: 15 }}>מקורות</a>
-          <a href={session ? "/dashboard" : "/signin"} style={{ color: BLUE, textDecoration: "none", fontWeight: 700, fontSize: 15 }}>
+          <a className="hide-m" href="/dashboard" style={{ color: INK, textDecoration: "none", fontWeight: 600, fontSize: '0.9375rem' }}>המכרזים</a>
+          <a className="hide-m" href="/sources" style={{ color: INK, textDecoration: "none", fontWeight: 600, fontSize: '0.9375rem' }}>מקורות</a>
+          <a href={session ? "/dashboard" : "/signin"} style={{ color: BLUE, textDecoration: "none", fontWeight: 700, fontSize: '0.9375rem' }}>
             {session ? "לדשבורד" : "התחברות"}
           </a>
         </div>
@@ -115,20 +115,20 @@ export default function Home() {
               {slides.map((sl, i) => (
                 <div key={sl.id ?? i} aria-hidden={i !== si} style={{ display: i === si ? "block" : "none" }}>
                   {sl.badge && (
-                    <span style={{ display: "inline-block", color: GOLD, fontSize: 11.5, fontWeight: 700, letterSpacing: ".05em", marginBottom: 6 }}>
+                    <span style={{ display: "inline-block", color: GOLD, fontSize: '0.71875rem', fontWeight: 700, letterSpacing: ".05em", marginBottom: 6 }}>
                       {sl.badge}
                     </span>
                   )}
                   <div className="h" style={{ fontSize: "clamp(17px,2.1vw,22px)", marginBottom: 5, color: "#fff" }}>{sl.title}</div>
                   {sl.subtitle && (
-                    <p style={{ color: "#b9cbdf", fontSize: 14.5, lineHeight: 1.55, margin: 0, maxWidth: 660 }}>{sl.subtitle}</p>
+                    <p style={{ color: "#b9cbdf", fontSize: '0.90625rem', lineHeight: 1.55, margin: 0, maxWidth: 660 }}>{sl.subtitle}</p>
                   )}
                 </div>
               ))}
             </div>
 
             {slides[si]?.cta_label && (
-              <a href={slides[si].cta_href || "/dashboard"} className="btn btn-p" style={{ padding: "11px 20px", fontSize: 14.5, flex: "0 0 auto" }}>
+              <a href={slides[si].cta_href || "/dashboard"} className="btn btn-p" style={{ padding: "11px 20px", fontSize: '0.90625rem', flex: "0 0 auto" }}>
                 {slides[si].cta_label} ←
               </a>
             )}
@@ -151,7 +151,7 @@ export default function Home() {
       {/* ---------- Hero ---------- */}
       <section style={{ background: INK, color: "#fff", paddingTop: 44, paddingBottom: 0 }}>
         <div className="wrap">
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 9, border: `1px solid ${GOLD}`, color: GOLD, borderRadius: 999, padding: "6px 14px", fontSize: 12.5, fontWeight: 600, marginBottom: 26 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 9, border: `1px solid ${GOLD}`, color: GOLD, borderRadius: 999, padding: "6px 14px", fontSize: '0.78125rem', fontWeight: 600, marginBottom: 26 }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: GOLD }} />
             שירות של שווה קולקטיב לעסקים קטנים ובינוניים
           </div>
@@ -180,8 +180,8 @@ export default function Home() {
               { v: "יומי 06:00", l: "תדירות עדכון" },
             ].map((k) => (
               <div key={k.l} style={{ background: INK, padding: "20px 18px" }}>
-                <div className="h" style={{ fontSize: 27, color: "#fff" }}>{k.v}</div>
-                <div style={{ fontSize: 12.5, color: "#93a9c1", marginTop: 5 }}>{k.l}</div>
+                <div className="h" style={{ fontSize: '1.6875rem', color: "#fff" }}>{k.v}</div>
+                <div style={{ fontSize: '0.78125rem', color: "#93a9c1", marginTop: 5 }}>{k.l}</div>
               </div>
             ))}
           </div>
@@ -191,12 +191,12 @@ export default function Home() {
         <div style={{ marginTop: 44, borderTop: "1px solid rgba(255,255,255,.14)", padding: "16px 0", overflow: "hidden", maskImage: "linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)" }}>
           <div className="tick">
             {[...sample, ...sample].map((t, i) => (
-              <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 10, whiteSpace: "nowrap", fontSize: 13.5, color: "#9fb4cb", border: "1px solid rgba(255,255,255,.12)", borderRadius: 8, padding: "8px 14px" }}>
-                <span className="mono" style={{ color: GOLD, fontSize: 12 }}>{String(t.id).slice(0, 10)}</span>
+              <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 10, whiteSpace: "nowrap", fontSize: '0.84375rem', color: "#9fb4cb", border: "1px solid rgba(255,255,255,.12)", borderRadius: 8, padding: "8px 14px" }}>
+                <span className="mono" style={{ color: GOLD, fontSize: '0.75rem' }}>{String(t.id).slice(0, 10)}</span>
                 {t.title.length > 62 ? t.title.slice(0, 62).replace(/\s+\S*$/, '') + '…' : t.title}
               </span>
             ))}
-            {sample.length === 0 && <span style={{ color: "#7b91a8", fontSize: 13.5 }}>טוען מכרזים עדכניים…</span>}
+            {sample.length === 0 && <span style={{ color: "#7b91a8", fontSize: '0.84375rem' }}>טוען מכרזים עדכניים…</span>}
           </div>
         </div>
       </section>
@@ -208,7 +208,7 @@ export default function Home() {
             <h2 className="h" style={{ fontSize: "clamp(25px,3.4vw,38px)", margin: "0 0 18px" }}>
               הבעיה איננה שאין מכרזים.<br />הבעיה היא למצוא אותם.
             </h2>
-            <p style={{ fontSize: 16.5, lineHeight: 1.72, color: MUTED, margin: 0 }}>
+            <p style={{ fontSize: '1.03125rem', lineHeight: 1.72, color: MUTED, margin: 0 }}>
               משרדי ממשלה, עיריות, אוניברסיטאות, קופות חולים ותאגידים ציבוריים — כל אחד מפרסם באתר משלו,
               בפורמט משלו, לעיתים בלי מועד הגשה מסודר. עסק קטן שרוצה כיסוי אמיתי צריך לעקוב ידנית אחרי
               עשרות אתרים, כל יום.
@@ -222,7 +222,7 @@ export default function Home() {
             ].map(([t, d]) => (
               <div key={t} style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 12, padding: "16px 18px" }}>
                 <div style={{ fontWeight: 800, marginBottom: 4 }}>{t}</div>
-                <div style={{ fontSize: 14.5, color: MUTED, lineHeight: 1.6 }}>{d}</div>
+                <div style={{ fontSize: '0.90625rem', color: MUTED, lineHeight: 1.6 }}>{d}</div>
               </div>
             ))}
           </div>
@@ -233,7 +233,7 @@ export default function Home() {
       <section style={{ padding: "80px 0" }}>
         <div className="wrap">
           <h2 className="h" style={{ fontSize: "clamp(25px,3.4vw,38px)", margin: "0 0 12px" }}>מה המערכת עושה בשבילך</h2>
-          <p style={{ color: MUTED, fontSize: 16.5, margin: "0 0 40px", maxWidth: 620 }}>
+          <p style={{ color: MUTED, fontSize: '1.03125rem', margin: "0 0 40px", maxWidth: 620 }}>
             איסוף, סיווג ודירוג — אוטומטית, כל יום, בלי שתצטרך לפתוח אתר אחד.
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(268px,1fr))", gap: 18 }}>
@@ -246,9 +246,9 @@ export default function Home() {
               { i: "▤", t: "ערבויות וליווי", d: "הכוונה בשלב ההגשה, כולל ערבויות מכרז — דרך מערך השירות של שווה קולקטיב." },
             ].map((f) => (
               <div className="card" key={f.t}>
-                <div style={{ fontSize: 21, color: BLUE, marginBottom: 12 }}>{f.i}</div>
-                <div className="h" style={{ fontSize: 18.5, marginBottom: 9 }}>{f.t}</div>
-                <div style={{ fontSize: 14.8, lineHeight: 1.68, color: MUTED }}>{f.d}</div>
+                <div style={{ fontSize: '1.3125rem', color: BLUE, marginBottom: 12 }}>{f.i}</div>
+                <div className="h" style={{ fontSize: '1.15625rem', marginBottom: 9 }}>{f.t}</div>
+                <div style={{ fontSize: '0.925rem', lineHeight: 1.68, color: MUTED }}>{f.d}</div>
               </div>
             ))}
           </div>
@@ -259,11 +259,11 @@ export default function Home() {
       <section style={{ background: INK, color: "#fff", padding: "84px 0" }}>
         <div className="wrap" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(290px,1fr))", gap: 46, alignItems: "center" }}>
           <div>
-            <div style={{ color: GOLD, fontSize: 13, fontWeight: 700, letterSpacing: ".04em", marginBottom: 14 }}>היכולת שאין בשום מקום אחר</div>
+            <div style={{ color: GOLD, fontSize: '0.8125rem', fontWeight: 700, letterSpacing: ".04em", marginBottom: 14 }}>היכולת שאין בשום מקום אחר</div>
             <h2 className="h" style={{ fontSize: "clamp(26px,3.6vw,40px)", margin: "0 0 18px" }}>
               מזהים את סעיף ההעדפה — <br />גם כשהוא קבור בעמוד 40
             </h2>
-            <p style={{ fontSize: 16.5, lineHeight: 1.72, color: "#c6d4e4", margin: "0 0 22px" }}>
+            <p style={{ fontSize: '1.03125rem', lineHeight: 1.72, color: "#c6d4e4", margin: "0 0 22px" }}>
               תקנות חובת המכרזים מאפשרות לגופים ציבוריים לתת עדיפות לעסקים קטנים ובינוניים.
               הסעיף הזה כמעט אף פעם לא מופיע בכותרת — הוא נמצא בתוך חוברת המכרז.
               המערכת קוראת את החוברות, מאתרת את הסעיף ומסמנת את המכרזים שבהם יש לך יתרון מובנה.
@@ -278,10 +278,10 @@ export default function Home() {
               padding: "26px 30px", textAlign: "center", color: GOLD, maxWidth: 320,
               boxShadow: "0 0 0 5px rgba(184,148,95,.13)",
             }}>
-              <div style={{ fontSize: 12, letterSpacing: ".22em", marginBottom: 8 }}>נבדק ואומת</div>
-              <div className="h" style={{ fontSize: 27, color: GOLD, lineHeight: 1.2 }}>העדפה<br />לעסקים קטנים</div>
+              <div style={{ fontSize: '0.75rem', letterSpacing: ".22em", marginBottom: 8 }}>נבדק ואומת</div>
+              <div className="h" style={{ fontSize: '1.6875rem', color: GOLD, lineHeight: 1.2 }}>העדפה<br />לעסקים קטנים</div>
               <div style={{ height: 1, background: GOLD, opacity: .5, margin: "14px 0" }} />
-              <div className="mono" style={{ fontSize: 12.5 }}>תקנה 34 · חובת המכרזים</div>
+              <div className="mono" style={{ fontSize: '0.78125rem' }}>תקנה 34 · חובת המכרזים</div>
             </div>
           </div>
         </div>
@@ -298,9 +298,9 @@ export default function Home() {
               ["03", "מקבלים מכרזים מדורגים", "הדשבורד ממוין לפי התאמה, והדוח היומי מגיע למייל."],
             ].map(([num, t, d]) => (
               <div key={num} style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: 26 }}>
-                <div className="mono h" style={{ fontSize: 30, color: GOLD, marginBottom: 12 }}>{num}</div>
-                <div className="h" style={{ fontSize: 19, marginBottom: 8 }}>{t}</div>
-                <div style={{ fontSize: 14.8, lineHeight: 1.68, color: MUTED }}>{d}</div>
+                <div className="mono h" style={{ fontSize: '1.875rem', color: GOLD, marginBottom: 12 }}>{num}</div>
+                <div className="h" style={{ fontSize: '1.1875rem', marginBottom: 8 }}>{t}</div>
+                <div style={{ fontSize: '0.925rem', lineHeight: 1.68, color: MUTED }}>{d}</div>
               </div>
             ))}
           </div>
@@ -311,16 +311,16 @@ export default function Home() {
       <section style={{ padding: "72px 0" }}>
         <div className="wrap">
           <h2 className="h" style={{ fontSize: "clamp(23px,3vw,32px)", margin: "0 0 10px" }}>מאיפה מגיעים המכרזים</h2>
-          <p style={{ color: MUTED, fontSize: 16, margin: "0 0 26px" }}>מקורות רשמיים בלבד — ישירות מהגוף המפרסם, ללא מתווכים.</p>
+          <p style={{ color: MUTED, fontSize: '1rem', margin: "0 0 26px" }}>מקורות רשמיים בלבד — ישירות מהגוף המפרסם, ללא מתווכים.</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
             {["מינהל הרכש הממשלתי", "רשות מקרקעי ישראל", "רשות שדות התעופה", "משרד הביטחון", "מכבי שירותי בריאות",
               "המוסד לביטוח לאומי", "דקל מכרז", "אוניברסיטת תל אביב", "הרשות לפיתוח ירושלים", "עיריות ורשויות מקומיות",
               "התקציב הפתוח"].map((sName) => (
-              <span key={sName} style={{ border: `1px solid ${LINE}`, borderRadius: 999, padding: "9px 16px", fontSize: 14.2, background: "#fff", fontWeight: 600 }}>{sName}</span>
+              <span key={sName} style={{ border: `1px solid ${LINE}`, borderRadius: 999, padding: "9px 16px", fontSize: '0.8875rem', background: "#fff", fontWeight: 600 }}>{sName}</span>
             ))}
           </div>
           <div style={{ marginTop: 22 }}>
-            <a href="/sources" style={{ color: BLUE, fontWeight: 700, textDecoration: "none", fontSize: 15 }}>לרשימת המקורות המלאה ←</a>
+            <a href="/sources" style={{ color: BLUE, fontWeight: 700, textDecoration: "none", fontSize: '0.9375rem' }}>לרשימת המקורות המלאה ←</a>
           </div>
         </div>
       </section>
@@ -337,8 +337,8 @@ export default function Home() {
               ["חברות טכנולוגיה", "פיתוח תוכנה, מערכות מידע, סייבר ודיגיטל"],
             ].map(([t, d]) => (
               <div key={t} style={{ borderTop: `3px solid ${GOLD}`, paddingTop: 14 }}>
-                <div className="h" style={{ fontSize: 17, marginBottom: 6 }}>{t}</div>
-                <div style={{ fontSize: 14.2, color: MUTED, lineHeight: 1.6 }}>{d}</div>
+                <div className="h" style={{ fontSize: '1.0625rem', marginBottom: 6 }}>{t}</div>
+                <div style={{ fontSize: '0.8875rem', color: MUTED, lineHeight: 1.6 }}>{d}</div>
               </div>
             ))}
           </div>
@@ -357,8 +357,8 @@ export default function Home() {
             ["האם כל המכרזים בישראל נמצאים כאן?", "אנחנו מכסים את המקורות הציבוריים המרכזיים ומרחיבים באופן שוטף. מקורות שאינם מאפשרים סריקה אוטומטית מסומנים בעמוד המקורות."],
           ].map(([q, a]) => (
             <details key={q} style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 12, padding: "16px 18px", marginBottom: 11 }}>
-              <summary style={{ cursor: "pointer", fontWeight: 700, fontSize: 16 }}>{q}</summary>
-              <div style={{ marginTop: 10, color: MUTED, fontSize: 15, lineHeight: 1.7 }}>{a}</div>
+              <summary style={{ cursor: "pointer", fontWeight: 700, fontSize: '1rem' }}>{q}</summary>
+              <div style={{ marginTop: 10, color: MUTED, fontSize: '0.9375rem', lineHeight: 1.7 }}>{a}</div>
             </details>
           ))}
         </div>
@@ -370,7 +370,7 @@ export default function Home() {
           <h2 className="h" style={{ fontSize: "clamp(26px,3.8vw,42px)", margin: "0 0 16px" }}>
             {`${n(counts.active)} מכרזים פעילים מחכים לכם`}
           </h2>
-          <p style={{ color: MUTED, fontSize: 17, margin: "0 auto 30px", maxWidth: 540, lineHeight: 1.65 }}>
+          <p style={{ color: MUTED, fontSize: '1.0625rem', margin: "0 auto 30px", maxWidth: 540, lineHeight: 1.65 }}>
             פתיחת חשבון לוקחת דקה. הגדרת הפרופיל העסקי — עוד שתיים.
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
@@ -386,9 +386,9 @@ export default function Home() {
         <div className="wrap" style={{ display: "flex", flexWrap: "wrap", gap: 18, alignItems: "center" }}>
           <div style={{ flex: 1, minWidth: 220 }}>
             <div style={{ color: "#fff", fontWeight: 800, marginBottom: 5 }}>שווה מכרזים · מועדון עסקים 360</div>
-            <div style={{ fontSize: 13.5 }}>שירות של שווה קולקטיב לעסקים קטנים ובינוניים</div>
+            <div style={{ fontSize: '0.84375rem' }}>שירות של שווה קולקטיב לעסקים קטנים ובינוניים</div>
           </div>
-          <div style={{ display: "flex", gap: 20, flexWrap: "wrap", fontSize: 14 }}>
+          <div style={{ display: "flex", gap: 20, flexWrap: "wrap", fontSize: '0.875rem' }}>
             <a href="/dashboard" style={{ color: "#93a9c1", textDecoration: "none" }}>המכרזים</a>
             <a href="/sources" style={{ color: "#93a9c1", textDecoration: "none" }}>מקורות</a>
             <a href="/terms" style={{ color: "#93a9c1", textDecoration: "none" }}>תנאי שימוש</a>

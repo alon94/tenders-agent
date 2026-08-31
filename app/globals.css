@@ -23,14 +23,23 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 16px; }
+/* QA 31.08.2026: הגדלת פונט אחידה — כל הגדלים באתר ב-rem, כך ששינוי הבסיס
+   מגדיל הכול פרופורציונלית. במסכים צרים חוזרים ל-16px כדי לא לדחוס. */
+html { font-size: 17px; }
+@media (max-width: 1280px) { html { font-size: 16px; } }
 body {
   font-family: 'Heebo', sans-serif;
   background: var(--bg2);
   color: var(--ink);
   direction: rtl;
   min-height: 100vh;
+  min-height: 100dvh;
+  /* QA 31.08.2026: עמודת flex — הפוטר הגלובלי נדחף לתחתית וגלוי בלי גלילה */
+  display: flex;
+  flex-direction: column;
 }
+body > div, body > main { flex: 1 0 auto; }
+.site-footer { margin-top: auto; flex-shrink: 0; }
 
 /* ===== TOPBAR ===== */
 .topbar {
@@ -477,12 +486,12 @@ body {
     margin-right: 8px;
 }
 .score-num {
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-weight: 800;
     line-height: 1;
 }
 .score-lbl {
-    font-size: 8px;
+    font-size: 0.5rem;
     color: #6b7280;
 }
 .score-high { background: #dcfce7; }
@@ -495,7 +504,7 @@ body {
 
 /* ===== INNER PAGES ===== */
 .inner-page-wrap {
-    min-height: 100vh;
+    min-height: calc(100vh - 48px);
     background: var(--bg2);
     font-family: 'Heebo', sans-serif;
     direction: rtl;

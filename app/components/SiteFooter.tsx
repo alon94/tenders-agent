@@ -25,7 +25,7 @@ export default function SiteFooter() {
         alignItems: 'center',
         justifyContent: 'center',
         gap: '6px 22px',
-        fontSize: 12.5,
+        fontSize: '0.78125rem',
       }}
     >
       <Link href="/" style={{ color: '#c7d4e2', textDecoration: 'none', fontWeight: 700 }}>שווה מכרזים</Link>
