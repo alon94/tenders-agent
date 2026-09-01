@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "tsx scripts/regression.test.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:mt-rls": "tsx scripts/test-mt-rls.ts"
   },
   "dependencies": {
     "@types/nodemailer": "^8.0.1",
