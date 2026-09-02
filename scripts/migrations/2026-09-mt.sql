@@ -442,6 +442,13 @@ drop trigger if exists trg_mt_total on mt_proposals;
 create trigger trg_mt_total before insert or update on mt_proposals
   for each row execute function mt_check_total();
 
+-- מונה צפיות חשוף (נקרא מ-/api/mt/[id]/view)
+create or replace function mt_bump_views(p_tender uuid) returns void
+language sql security definer set search_path = public as $$
+  update mt_tenders set views_count = (select count(*) from mt_views where tender_id = p_tender)
+  where id = p_tender;
+$$;
+
 -- ---------- 6. הפעימה (נקראת מ-pg_cron כל 5 דקות) ----------
 -- הערה: התראות ואירועים נרשמים בלולאות (FOR ... PERFORM) ולא ב-CTE של SELECT —
 -- CTE שאינו מופנה מהשאילתה הראשית לא מורץ כלל ב-Postgres.
