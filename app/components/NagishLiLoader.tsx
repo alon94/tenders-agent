@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 // מ-CDN → nagishli.js המקומי → קריאה מפורשת ל-initNagishLi, עם שמירה מפני
 // אתחול כפול. כשל בכל שלב נבלע — האתר לא תלוי בתוסף.
 declare global {
-  interface Window { initNagishLi?: () => void; jQuery?: unknown; NagishLiStatus?: unknown }
+  interface Window { initNagishLi?: () => void; jQuery?: unknown; NagishLiStatus?: unknown; nl_pos?: string; nl_link?: string }
 }
 
 // מקומי (public/vendor) — ה-CSP של האתר מתיר סקריפטים מ-'self' בלבד
@@ -29,6 +29,11 @@ export default function NagishLiLoader() {
     let cancelled = false;
     const t = setTimeout(async () => {
       try {
+        // הגדרות התוסף (נקראות כגלובלים בעת האתחול): פינה ימנית-תחתונה —
+        // צמוד לסרגל הצד שבו יושב כפתור הנגישות (AccessibilityButton), וקישור
+        // להצהרת הנגישות שמנוהלת באדמין.
+        window.nl_pos = window.nl_pos || 'BR';
+        window.nl_link = window.nl_link || '/accessibility';
         if (!window.jQuery) await addScript(JQUERY_SRC);
         if (cancelled) return;
         // QA 31.08.2026: nagishli.js מאתחל את עצמו בסוף הקובץ כש-jQuery כבר

@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useIsMobile } from '../hooks/useIsMobile';
 import MobileTabBar from './MobileTabBar';
 import MobileMenu from './MobileMenu';
+import AccessibilityButton from './AccessibilityButton';
 import { getSession, signOut, AUTH_EVENT, type AuthSession } from '../lib/authClient';
 
 // ============================================================
@@ -165,7 +166,8 @@ export default function InternalShell({
             })}
           </div>
           {/* QA #14: קישור "פרופיל עסקי" הופיע פעמיים — נשאר רק ברשימת הניווט */}
-          <div style={{ marginTop: 'auto', paddingTop: 14, borderTop: '1px solid #eef1f4' }}>
+          <div style={{ marginTop: 'auto' }}><AccessibilityButton /></div>
+          <div style={{ paddingTop: 14, borderTop: '1px solid #eef1f4' }}>
             {/* QA 30.08.2026: מדיניות פרטיות ותנאי שימוש היו נגישים רק מדף
                 הבית ומטופס ההרשמה — משתמש בתוך האפליקציה לא ראה אותם כלל. */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 10px', padding: '0 12px 10px', fontSize: '0.6875rem' }}>

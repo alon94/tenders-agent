@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef, useSyncExternalStore } from "react";
 import { useIsMobile } from "../hooks/useIsMobile";
 import MobileTabBar from "../components/MobileTabBar";
+import AccessibilityButton from '../components/AccessibilityButton';
 import MobileMenu from "../components/MobileMenu";
 import { getSession, signOut, AUTH_EVENT, type AuthSession } from '../lib/authClient';
 import { parseHeDate, isExempt } from '../lib/tenderMeta';
@@ -236,7 +237,9 @@ export default function Dashboard(){
               )}
             </a>
           ))}
-          <div style={{marginTop:'auto',border:`1px solid ${BORDER}`,borderRadius:12,padding:16}}>
+          {/* כפתור הנגישות מעל כרטיס הסוכן החכם — מחליף את הסמל הצף של NagishLi בדסקטופ */}
+          <div style={{marginTop:'auto'}}><AccessibilityButton/></div>
+          <div style={{border:`1px solid ${BORDER}`,borderRadius:12,padding:16}}>
             <div style={{fontWeight:700,fontSize: '0.875rem',color:DARK}}>◈ הסוכן החכם</div>
             <div style={{fontSize: '0.75rem',color:MUTED,margin:'7px 0 12px',lineHeight:1.5}}>קבלו מכרזים מותאמים לפי הפרופיל העסקי שלכם</div>
             {/* QA/M-19: הכיתוב היה "הפעלה", אבל אין בפרויקט שום state של
