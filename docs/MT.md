@@ -4,7 +4,7 @@
 
 ## סדר פריסה
 1. **DB** — Supabase → SQL Editor → `scripts/migrations/2026-09-mt.sql` (אידמפוטנטי).
-2. **Storage** — ליצור bucket פרטי בשם `mt-files` (public = off). אין צורך ב-policies: הגישה רק דרך signed URLs מה-API.
+2. **Storage** — ליצור bucket פרטי בשם `mt-attachments` (public = off, מגבלה 15MB, MIME: pdf/jpeg/png/webp/docx/xlsx). אין צורך ב-policies: הגישה רק דרך signed URLs מה-API.
 3. **Env ב-Vercel** (בנוסף לקיימים):
    | משתנה | חובה | תפקיד |
    |---|---|---|
@@ -15,7 +15,7 @@
    | `GMAIL_USER`, `GMAIL_APP_PASSWORD` | קיימים | מיילים |
 4. **דיפלוי קוד** (`git push`).
 5. **בדיקות RLS מול הפרויקט**: `npm run test:mt-rls` עם `SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
-6. **Cron** — להפעיל pg_cron + pg_net ב-Supabase, להחליף URL וסוד ב-`scripts/migrations/2026-09-mt-cron.sql` ולהריץ.
+6. **Cron** — ב-Supabase: Integrations → Vault → סוד בשם `mt_cron_secret` (אותו ערך כמו `MT_CRON_SECRET` ב-Vercel), ואז להריץ `scripts/migrations/2026-09-mt-cron.sql` כמו שהוא (הכתובת והסוד נקראים מה-Vault).
 7. בדיקת פעימה ידנית: `curl -H "x-mt-secret: $MT_CRON_SECRET" "https://<site>/api/mt/cron?tick=1"`.
 
 ## מבנה הקוד

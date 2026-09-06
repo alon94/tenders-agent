@@ -75,7 +75,7 @@ export function dbRpc<T>(fn: string, args: Record<string, unknown> = {}): Promis
 }
 
 // ---------- Storage (Supabase) ----------
-export const MT_BUCKET = "mt-files";
+export const MT_BUCKET = "mt-attachments";
 export async function storageSignedUpload(path: string): Promise<{ url: string; token: string }> {
   const res = await fetch(`${SUPABASE_URL}/storage/v1/object/upload/sign/${MT_BUCKET}/${path}`, {
     method: "POST", headers: headers(), body: "{}",
