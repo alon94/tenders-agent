@@ -60,6 +60,11 @@ function saveSession(data: any): AuthSession {
   return session;
 }
 
+// mt 1c: שמירת סשן שהתקבל מ-/api/mt/otp/verify (רישום מקוצר למציע חיצוני)
+export function setSessionFromTokens(data: { access_token: string; refresh_token: string; expires_in?: number; user?: { id?: string; email?: string } }): AuthSession {
+  return saveSession(data);
+}
+
 function messageFrom(data: any, fallback: string): string {
   const msg = data?.error_description || data?.msg || data?.error || fallback;
   if (typeof msg === 'string' && /already registered|already exists/i.test(msg)) {

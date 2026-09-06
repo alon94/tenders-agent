@@ -18,6 +18,16 @@
 6. **Cron** — ב-Supabase: Integrations → Vault → סוד בשם `mt_cron_secret` (אותו ערך כמו `MT_CRON_SECRET` ב-Vercel), ואז להריץ `scripts/migrations/2026-09-mt-cron.sql` כמו שהוא (הכתובת והסוד נקראים מה-Vault).
 7. בדיקת פעימה ידנית: `curl -H "x-mt-secret: $MT_CRON_SECRET" "https://<site>/api/mt/cron?tick=1"`.
 
+## מסכים (MVP-1c)
+- `/mt` — «המיני־מכרזים שלי» + «ההצעות שלי» · `/mt/open` — פתוחים להגשה (סינון, «הכי מתאים לי») · `/mt/new` — תנאי סף ופתיחת טיוטה.
+- `/mt/[id]/edit` — אשף 5 שלבים + תצוגה מקדימה ופרסום (שמירה אוטומטית, AI, קבצים, הזמנות, קישור ציבורי).
+- `/mt/[id]` — דף המיני־מכרז לשני הצדדים (מציע: שאלה, ההצעה שלי, משיכה) · `/mt/[id]/propose` — טופס הצעה (יצירה/עדכון).
+- `/mt/[id]/manage` — ניהול למזמין: מונים, שאלות/הבהרות, הפצה והזמנות, תוספת לתיאור, הארכה, ביטול.
+- `/mt/[id]/compare` — פתיחת מעטפות: טבלת השוואה, כרטיס מציע, הבהרה פרטית, בחירת זוכה, סגירה ללא בחירה, דיווח תוצאה, CSV.
+- `/mt/i/[token]` — קישור הזמנה/ציבורי: מידע חלקי + רישום מקוצר ב-OTP (נופל ל-`/signup?next=` כשאין ספק SMS).
+- שכבת לקוח: `app/lib/mt/client.ts` (mtFetch, תוויות, פורמט, העלאת קבצים) · רכיבי UI: `app/mt/ui.tsx` · פרטי מכרז משותפים: `app/mt/TenderDetails.tsx`.
+- עדיין לא: כרטיס CTA בדשבורד, כפתור «קבלן משנה» בדף מכרז ציבורי, PDF להצעה, שכפול מיני־מכרז, תג הצעות חדשות בסרגל.
+
 ## מבנה הקוד
 - `app/lib/mt/` — `http` (שגיאות אחידות), `db` (PostgREST + Storage עם service role), `auth` (אימות טוקן מול GoTrue), `validate`, `types`, `tender` (דומיין), `events` (יומן+התראות דרך mt_log/mt_notify), `mailer`+`templates`, `rate`, `sms`, `otp`, `questions`.
 - `app/api/mt/**` — 24 route handlers. כל אחד: `handle(async (req, ctx) => ...)`, אימות → ולידציה → פעולה → אירוע/התראה.

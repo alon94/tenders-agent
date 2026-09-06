@@ -52,7 +52,9 @@ export default function SigninPage() {
     try {
       await signIn(email, password);
       const profile = await fetchMyProfile();
-      router.push(profile ? '/dashboard' : '/onboarding');
+      // mt 1c: חזרה לדף שממנו הגיעו (למשל קישור הזמנה למיני־מכרז) — נתיב פנימי בלבד
+      const next = new URLSearchParams(window.location.search).get('next');
+      router.push(next && next.startsWith('/') && !next.startsWith('//') ? next : profile ? '/dashboard' : '/onboarding');
     } catch (err: any) {
       setError(err?.message || 'שגיאה בהתחברות');
     } finally {

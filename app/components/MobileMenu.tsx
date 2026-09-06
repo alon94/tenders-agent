@@ -25,6 +25,7 @@ const NAV = [
   { icon: '★', label: 'מכרזים מסומנים', href: '/marked' },
   { icon: '◈', label: 'מכרזי הסוכן החכם', href: '/agent' },
   { icon: '▤', label: 'ערבויות וליווי', href: '/guarantee' },
+  { icon: '✎', label: 'מיני־מכרזים', href: '/mt' },
   { icon: '⛁', label: 'מקורות', href: '/sources' },
   { icon: '⚙', label: 'פרופיל עסקי', href: '/profile' },
 ];
