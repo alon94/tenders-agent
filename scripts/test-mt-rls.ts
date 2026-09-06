@@ -82,8 +82,11 @@ async function main() {
     if (prof.status >= 300) throw new Error(`upsert פרופילים נכשל: ${prof.status} ${JSON.stringify(prof.body)}`);
 
     // מיני־מכרז פתוח עם מועד עתידי (הצעות חתומות)
-    const future = new Date(Date.now() + 5 * 86400000).toISOString();
-    const qClose = new Date(Date.now() + 4 * 86400000).toISOString();
+    // בסיס זמן אחד: שתי קריאות ל-Date.now() נבדלות במילישנייה ומפילות את
+    // mt_questions_before_deadline (questions_close_at <= deadline_at - 24h) על הגבול.
+    const now = Date.now();
+    const future = new Date(now + 5 * 86400000).toISOString();
+    const qClose = new Date(now + 3 * 86400000).toISOString();
     const t = await svcInsert("mt_tenders", {
       buyer_profile_id: buyer.id, created_by_user_id: buyer.id, title: "בדיקת RLS",
       category_ids: ["construction"], deadline_at: future, questions_close_at: qClose,
