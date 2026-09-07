@@ -743,3 +743,15 @@ body > div, body > main { flex: 1 0 auto; }
 @media (min-width: 769px) {
   nagishli#NagishLiTag > #NagishLiBar > #NagishLiBarStrip:not(.open) { display: none !important; }
 }
+
+/* mt 1c QA: במובייל הסמל הצף של NagishLi גדול ומפריע — מכווצים אותו למינימום
+   (כ-60%), שקיפות קלה, ומרימים מעל סרגל הטאבים התחתון. כשהתפריט פתוח — גודל מלא. */
+@media (max-width: 768px) {
+  nagishli#NagishLiTag > #NagishLiBar { bottom: 64px !important; }
+  nagishli#NagishLiTag > #NagishLiBar > #NagishLiBarStrip:not(.open) {
+    transform: scale(.6) !important; transform-origin: bottom right !important;
+    opacity: .75 !important; padding: 6px !important;
+  }
+  nagishli#NagishLiTag > #NagishLiBar > #NagishLiBarStrip:not(.open) > #NagishLiMove,
+  nagishli#NagishLiTag > #NagishLiBar > #NagishLiBarStrip:not(.open) > #NagishLiToggleMenus { display: none !important; }
+}
