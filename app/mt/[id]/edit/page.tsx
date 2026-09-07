@@ -122,30 +122,44 @@ export default function MtEdit() {
   const goTo = async (n: number) => { if (timer.current) clearTimeout(timer.current); await flush(); setStep(Math.max(0, Math.min(STEPS.length - 1, n))); window.scrollTo({ top: 0 }); };
 
   // ---------- מה חסר לפרסום (משקף את validateForPublish בשרת) ----------
+  // כל בעיה מצביעה על השלב והשדה שבו מתקנים אותה — לחיצה ברשימה קופצת לשם
+  type Problem = { msg: string; step: number; field: string };
   const problems = useMemo(() => {
-    if (!form) return [] as string[];
-    const p: string[] = [];
-    if (!form.title || form.title.trim().length < 5) p.push('כותרת (לפחות 5 תווים)');
-    if (!form.category_ids?.length) p.push('תחום');
-    if (!form.engagement_type) p.push('סוג ההתקשרות');
-    if (!form.description || form.description.length < LIMITS.descriptionMin) p.push(`תיאור (לפחות ${LIMITS.descriptionMin} תווים)`);
-    if (!form.is_remote && !form.region) p.push('אזור ביצוע (או «מרחוק»)');
+    if (!form) return [] as Problem[];
+    const p: Problem[] = [];
+    if (!form.title || form.title.trim().length < 5) p.push({ msg: 'כותרת (לפחות 5 תווים)', step: 0, field: 'f-title' });
+    if (!form.category_ids?.length) p.push({ msg: 'תחום', step: 0, field: 'f-category' });
+    if (!form.engagement_type) p.push({ msg: 'סוג ההתקשרות', step: 0, field: 'f-engagement' });
+    if (!form.description || form.description.length < LIMITS.descriptionMin) p.push({ msg: `תיאור (לפחות ${LIMITS.descriptionMin} תווים — כרגע ${form.description?.length || 0})`, step: 0, field: 'f-description' });
+    if (!form.is_remote && !form.region) p.push({ msg: 'אזור ביצוע (או «מרחוק»)', step: 0, field: 'f-region' });
     const validItems = items.filter((i) => i.description.trim().length >= 2);
-    if (!validItems.length) p.push('לפחות שורת דרישה אחת');
-    if (!form.deadline_at) p.push('מועד אחרון להגשה');
+    if (!validItems.length) p.push({ msg: 'לפחות שורת דרישה אחת', step: 1, field: 'f-items' });
+    if (!form.deadline_at) p.push({ msg: 'מועד אחרון להגשה', step: 3, field: 'f-deadline' });
     else {
       const h = (new Date(form.deadline_at).getTime() - now) / 3.6e6;
-      if (h < LIMITS.minDeadlineHours) p.push(`מועד אחרון: לפחות ${LIMITS.minDeadlineHours} שעות מעכשיו`);
-      if (h > LIMITS.maxDeadlineDays * 24) p.push(`מועד אחרון: עד ${LIMITS.maxDeadlineDays} יום`);
+      if (h < LIMITS.minDeadlineHours) p.push({ msg: `מועד אחרון: לפחות ${LIMITS.minDeadlineHours} שעות מעכשיו`, step: 3, field: 'f-deadline' });
+      if (h > LIMITS.maxDeadlineDays * 24) p.push({ msg: `מועד אחרון: עד ${LIMITS.maxDeadlineDays} יום`, step: 3, field: 'f-deadline' });
       if (form.questions_close_at && new Date(form.questions_close_at).getTime() > new Date(form.deadline_at).getTime() - LIMITS.questionsCloseBeforeHours * 3.6e6) {
-        p.push(`סיום השאלות חייב להיות לפחות ${LIMITS.questionsCloseBeforeHours} שעות לפני המועד האחרון`);
+        p.push({ msg: `סיום השאלות חייב להיות לפחות ${LIMITS.questionsCloseBeforeHours} שעות לפני המועד האחרון`, step: 3, field: 'f-qclose' });
       }
     }
     const w = form.criteria_weights;
-    if (Math.round(w.price + w.delivery + w.experience + w.quality) !== 100) p.push('משקלות הקריטריונים חייבים להסתכם ל-100%');
-    if (form.budget_min != null && form.budget_max != null && form.budget_max < form.budget_min) p.push('תקציב «עד» קטן מ«מ-»');
+    if (Math.round(w.price + w.delivery + w.experience + w.quality) !== 100) p.push({ msg: 'משקלות הקריטריונים חייבים להסתכם ל-100%', step: 2, field: 'f-weights' });
+    if (form.budget_min != null && form.budget_max != null && form.budget_max < form.budget_min) p.push({ msg: 'תקציב «עד» קטן מ«מ-»', step: 1, field: 'f-budget' });
     return p;
   }, [form, items, now]);
+  const jumpTo = async (pr: Problem) => {
+    await goTo(pr.step);
+    setTimeout(() => {
+      const el = document.getElementById(pr.field);
+      if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const focusable = (el.matches('input,textarea,select') ? el : el.querySelector('input,textarea,select')) as HTMLElement | null;
+      focusable?.focus();
+      el.style.outline = '2px solid #2b6fc4'; el.style.outlineOffset = '4px'; el.style.borderRadius = '8px';
+      setTimeout(() => { el.style.outline = ''; el.style.outlineOffset = ''; }, 2500);
+    }, 60);
+  };
 
   // ---------- AI ----------
   async function aiDraft() {
@@ -258,10 +272,10 @@ export default function MtEdit() {
           {step === 0 && (
             <Card>
               <Field label="כותרת" required hint={`${form.title?.length || 0}/${LIMITS.titleMax} · מוצגת ברשימות`}>
-                <Input value={form.title || ''} maxLength={LIMITS.titleMax} placeholder="למשל: שיפוץ וצביעת משרד 120 מ״ר בחיפה" onChange={(e) => set('title', e.target.value)} />
+                <Input id="f-title" value={form.title || ''} maxLength={LIMITS.titleMax} placeholder="למשל: שיפוץ וצביעת משרד 120 מ״ר בחיפה" onChange={(e) => set('title', e.target.value)} />
               </Field>
               <Field label="תחום" required hint="קובע למי נשלחת ההתראה. עד 2 תחומים.">
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                <div id="f-category" style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {CATEGORY_OPTIONS.filter((o) => o.value !== 'other').map((o) => {
                     const on = form.category_ids.includes(o.value);
                     return (
@@ -275,11 +289,11 @@ export default function MtEdit() {
                 </div>
               </Field>
               <Field label="סוג ההתקשרות" required>
-                <Radio name="engagement" value={form.engagement_type} onChange={(v) => set('engagement_type', v as MtEngagementType)}
-                  options={ENGAGEMENT_TYPES.map((v) => ({ value: v, label: ENGAGEMENT_LABEL[v] }))} />
+                <div id="f-engagement"><Radio name="engagement" value={form.engagement_type} onChange={(v) => set('engagement_type', v as MtEngagementType)}
+                  options={ENGAGEMENT_TYPES.map((v) => ({ value: v, label: ENGAGEMENT_LABEL[v] }))} /></div>
               </Field>
               <Field label="תיאור" required hint={`${form.description?.length || 0}/${LIMITS.descriptionMax} · לפחות ${LIMITS.descriptionMin} תווים: רקע, מה צריך, מה לא כלול, תוצר צפוי`}>
-                <Textarea value={form.description || ''} maxLength={LIMITS.descriptionMax} style={{ minHeight: 160 }} onChange={(e) => set('description', e.target.value)} />
+                <Textarea id="f-description" value={form.description || ''} maxLength={LIMITS.descriptionMax} style={{ minHeight: 160 }} onChange={(e) => set('description', e.target.value)} />
               </Field>
               <details style={{ marginBottom: 14, background: '#f7f9fb', borderRadius: 10, padding: '10px 14px' }}>
                 <summary style={{ cursor: 'pointer', fontWeight: 700, fontSize: '0.83rem', color: C.blueDark }}>✨ נסח לי עם AI</summary>
@@ -289,7 +303,7 @@ export default function MtEdit() {
                 </div>
               </details>
               <Field label="מיקום ביצוע" required>
-                <Row>
+                <Row><div id="f-region" style={{ display: 'contents' }} />
                   <Select value={form.region || ''} disabled={form.is_remote} onChange={(e) => set('region', e.target.value || null)} style={{ width: 180 }}>
                     <option value="">בחרו אזור</option>
                     {REGIONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
@@ -307,7 +321,7 @@ export default function MtEdit() {
           {step === 1 && (
             <Card>
               <Field label="שורות דרישה" required hint={`כל שורה תקבל מחיר נפרד מהמציע. עד ${LIMITS.maxItems} שורות.`}>
-                <div style={{ display: 'grid', gap: 8 }}>
+                <div id="f-items" style={{ display: 'grid', gap: 8 }}>
                   {items.map((it, i) => (
                     <div key={i} style={{ display: 'grid', gridTemplateColumns: 'minmax(160px,1fr) 90px 120px auto auto', gap: 6, alignItems: 'center' }}>
                       <Input value={it.description} placeholder={`שורה ${i + 1} — למשל: צביעת קירות`} onChange={(e) => setItemsAndSave(items.map((x, j) => j === i ? { ...x, description: e.target.value } : x))} />
@@ -326,7 +340,7 @@ export default function MtEdit() {
                   onClick={() => setItemsAndSave([...items, { description: '', quantity: 1, unit: 'lump_sum', is_optional: false }])}>+ הוספת שורה</Btn>
               </Field>
               <Field label="תקציב משוער (₪)" hint="תקציב גלוי מביא הצעות מדויקות יותר. מוצג למציעים כטווח בלבד.">
-                <Row>
+                <Row style={{ }}><span id="f-budget" style={{ display: 'none' }} />
                   <Input type="number" min={0} placeholder="מ-" value={form.budget_min ?? ''} style={{ width: 140 }} onChange={(e) => set('budget_min', e.target.value === '' ? null : Number(e.target.value))} />
                   <Input type="number" min={0} placeholder="עד" value={form.budget_max ?? ''} style={{ width: 140 }} onChange={(e) => set('budget_max', e.target.value === '' ? null : Number(e.target.value))} />
                 </Row>
@@ -371,13 +385,13 @@ export default function MtEdit() {
                 </div>
               </Field>
               <Field label="קריטריוני בחירה" required hint={`מוצגים למציעים ומשמשים לניקוד המשוקלל. סכום: ${weightsSum}% ${weightsSum === 100 ? '✓' : '(חייב 100%)'}`}>
-                {(Object.keys(CRITERIA_LABEL) as (keyof typeof CRITERIA_LABEL)[]).map((k) => (
+                <div id="f-weights">{(Object.keys(CRITERIA_LABEL) as (keyof typeof CRITERIA_LABEL)[]).map((k) => (
                   <div key={k} style={{ display: 'grid', gridTemplateColumns: '150px 1fr 50px', gap: 10, alignItems: 'center', marginBottom: 6, fontSize: '0.83rem' }}>
                     <span>{CRITERIA_LABEL[k]}</span>
                     <input type="range" min={0} max={100} step={5} value={form.criteria_weights[k]} aria-label={CRITERIA_LABEL[k]} onChange={(e) => set('criteria_weights', { ...form.criteria_weights, [k]: Number(e.target.value) })} />
                     <b>{form.criteria_weights[k]}%</b>
                   </div>
-                ))}
+                ))}</div>
               </Field>
               <Field label="תנאי תשלום">
                 <Select value={form.payment_terms || ''} onChange={(e) => set('payment_terms', (e.target.value || null) as MtPaymentTerms | null)} style={{ width: 240 }}>
@@ -407,13 +421,13 @@ export default function MtEdit() {
             <Card>
               <Field label="מועד אחרון להגשה" required hint={`בין ${LIMITS.minDeadlineHours} שעות ל-${LIMITS.maxDeadlineDays} יום מעכשיו. ההצעות חתומות עד אז ונפתחות יחד.`}
                 error={isWeekend(form.deadline_at) ? 'שימו לב: המועד נופל בשישי/שבת' : null}>
-                <Input type="datetime-local" value={toLocalInput(form.deadline_at)} style={{ width: 240 }} onChange={(e) => {
+                <Input id="f-deadline" type="datetime-local" value={toLocalInput(form.deadline_at)} style={{ width: 240 }} onChange={(e) => {
                   const iso = fromLocalInput(e.target.value); set('deadline_at', iso);
                   if (iso) set('questions_close_at', new Date(new Date(iso).getTime() - LIMITS.questionsCloseBeforeHours * 3.6e6).toISOString());
                 }} />
               </Field>
               <Field label="סיום תקופת השאלות" required hint="ברירת מחדל: 24 שעות לפני המועד. לא ניתן לאחר מזה.">
-                <Input type="datetime-local" value={toLocalInput(form.questions_close_at)} style={{ width: 240 }} onChange={(e) => set('questions_close_at', fromLocalInput(e.target.value))} />
+                <Input id="f-qclose" type="datetime-local" value={toLocalInput(form.questions_close_at)} style={{ width: 240 }} onChange={(e) => set('questions_close_at', fromLocalInput(e.target.value))} />
               </Field>
               <Field label="מועד תחילת עבודה רצוי">
                 <Row>
@@ -473,7 +487,7 @@ export default function MtEdit() {
               {problems.length > 0 && (
                 <Notice kind="warn">
                   <b>לפני הפרסום יש להשלים:</b>
-                  <ul style={{ margin: '6px 0 0', paddingInlineStart: 18 }}>{problems.map((p) => <li key={p}>{p}</li>)}</ul>
+                  <ul style={{ margin: '6px 0 0', paddingInlineStart: 18 }}>{problems.map((p) => <li key={p.msg}><button type="button" onClick={() => jumpTo(p)} style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', color: 'inherit', textDecoration: 'underline' }}>{p.msg}</button> <span style={{ opacity: .7 }}>(שלב {p.step + 1})</span></li>)}</ul>
                 </Notice>
               )}
               <Card>
@@ -502,7 +516,9 @@ export default function MtEdit() {
             </div>
             <div style={{ marginTop: 12, paddingTop: 10, borderTop: `1px solid ${C.border}` }}>
               {problems.length === 0 ? <span style={{ color: C.green, fontWeight: 700 }}>✓ מוכן לפרסום</span>
-                : <span style={{ color: C.amber }}>נותרו {problems.length} דברים להשלמה</span>}
+                : <div style={{ color: C.amber }}>נותרו {problems.length} דברים להשלמה:
+                    <ul style={{ margin: '4px 0 0', paddingInlineStart: 16 }}>{problems.map((p) => <li key={p.msg}><button type="button" onClick={() => jumpTo(p)} style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', color: C.blueDark, textDecoration: 'underline', textAlign: 'right' }}>{p.msg}</button></li>)}</ul>
+                  </div>}
             </div>
             <div style={{ marginTop: 6, color: saveState === 'error' ? C.red : C.muted }}>{saveLabel}</div>
           </Card>
