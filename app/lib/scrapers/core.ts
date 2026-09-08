@@ -28,6 +28,20 @@ export function proxied(url: string): string {
   return p ? p + encodeURIComponent(url) : url;
 }
 
+// הסתרת סודות מהודעות שגיאה שמוצגות לאדמין (דוח סנכרון, בדיקת מקורות, CSV):
+// הקידומת של IL_PROXY_URL מכילה token — מוחלפת בסימון קצר וכתובת היעד המקורית.
+export function redactSecrets(msg: string): string {
+  const p = process.env.IL_PROXY_URL;
+  let out = msg;
+  if (p) {
+    out = out.split(p).join("[IL_PROXY→]");
+    out = out.replace(/\[IL_PROXY→\]([^\s:;]+)/g, (_m, enc: string) => {
+      try { return "[IL_PROXY→]" + decodeURIComponent(enc); } catch { return "[IL_PROXY→]" + enc; }
+    });
+  }
+  return out.replace(/token=[A-Za-z0-9_-]{8,}/g, "token=***");
+}
+
 export async function fetchText(url: string, timeoutMs = 20000): Promise<string> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);

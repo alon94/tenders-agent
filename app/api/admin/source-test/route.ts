@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/app/lib/ops';
 import { NEW_SOURCES } from '@/app/lib/scrapers/newSources';
+import { redactSecrets } from '@/app/lib/scrapers/core';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -31,6 +32,6 @@ export async function GET(req: Request) {
       sample: clean.slice(0, 5).map((r) => ({ title: r.title.slice(0, 120), url: r.url, deadline: r.deadline, publisher: r.publisher })),
     });
   } catch (e) {
-    return NextResponse.json({ id, ok: false, enabled: src.enabled, fetched: 0, ms: Date.now() - t0, error: String(e).slice(0, 600) });
+    return NextResponse.json({ id, ok: false, enabled: src.enabled, fetched: 0, ms: Date.now() - t0, error: redactSecrets(String(e)).slice(0, 600) });
   }
 }
