@@ -8,6 +8,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { getSession, type AuthSession } from '../lib/authClient';
 import { renderDocMarkdown } from '../lib/docMarkdown';
+import SourceTester from './SourceTester';
 
 const DARK = '#1a2330';
 const BLUE = '#2b6fc4';
@@ -460,6 +461,9 @@ export default function AdminPage() {
           </tbody>
         </table>
       </div>
+
+      {/* בדיקת מקורות — הרצה יבשה מ-Vercel לכל מקור ברישום */}
+      <SourceTester token={adminToken} />
 
       {/* דיוור — ברירת מחדל: 3 משלוחים אחרונים */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '22px 0 10px' }}>

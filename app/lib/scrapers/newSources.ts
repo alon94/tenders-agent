@@ -530,6 +530,140 @@ export const NEW_SOURCES: NewSource[] = [
     "https://eilatport.co.il/tenders/",
   ], { hrefMatch: /\.pdf|tender/i, note: "נפח נמוך, מכרזים כ-PDF" }),
 
+
+  // ============================================================
+  //  גל חמישי (ספטמבר 2026) — מועמדים חדשים. כולם enabled:false עד
+  //  שבדיקה יבשה מ-Vercel (אדמין → «בדיקת מקורות») מאשרת שליפה בפועל.
+  //  כתובות שסומנו «לאימות» הן משוערות לפי מבנה האתר המקובל — אם
+  //  הבדיקה מחזירה 404 יש לתקן את הכתובת, לא למחוק את המקור.
+  // ============================================================
+
+  // ---------- פורטלים רוחביים וגופים לאומיים ----------
+  { id: "gov-collector", name: "gov.il — אוסף המכרזים הממשלתי", publisher: "משרדי הממשלה (gov.il)", enabled: false,
+    note: "DynamicCollector (Angular) — נדרש מיפוי ה-API של האוסף (DevTools → Network → api/DynamicCollector). מכסה משרדים בלי אתר מכרזים משלהם", run: async () => [] },
+  genericSource("boi", "בנק ישראל — מכרזים", "בנק ישראל", [
+    "https://www.boi.org.il/tenders/",
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות — צפוי HTML מרונדר-שרת" }),
+  genericSource("knesset", "הכנסת — מכרזים", "הכנסת", [
+    "https://main.knesset.gov.il/About/Tenders/Pages/default.aspx",
+  ], { enabled: false, hrefMatch: /Tender|מכרז/i, note: "SharePoint — לאימות; ייתכן שנדרש IL_PROXY_URL" }),
+  genericSource("kan", "תאגיד השידור «כאן» — מכרזים", "תאגיד השידור הישראלי", [
+    proxied("https://www.kan.org.il/tenders/"),
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+  genericSource("jewish-agency", "הסוכנות היהודית — מכרזים", "הסוכנות היהודית לארץ ישראל", [
+    "https://www.jewishagency.org/he/tenders/",
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+  genericSource("yadvashem", "יד ושם — מכרזים", "יד ושם", [
+    "https://www.yadvashem.org/he/about/tenders.html",
+  ], { enabled: false, hrefMatch: /tender|מכרז|\.pdf/i, note: "לאימות" }),
+
+  // ---------- תשתיות, אנרגיה, סביבה ----------
+  genericSource("noga", "נוגה — ניהול המערכת: מכרזים", "נוגה — ניהול מערכת החשמל", [
+    proxied("https://www.noga-iso.co.il/tenders/"),
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+  genericSource("pei", 'תש"ן — תשתיות נפט ואנרגיה: מכרזים', 'תש"ן', [
+    proxied("https://www.pei.co.il/tenders/"),
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+  genericSource("escil", "החברה לשירותי איכות הסביבה — מכרזים", "החברה לשירותי איכות הסביבה", [
+    "https://www.escil.co.il/tenders/",
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+  genericSource("moriah", "מוריה — חברת הפיתוח של ירושלים", "מוריה", [
+    "https://www.moriah.co.il/tenders/",
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+  genericSource("pami", 'פמ"י — פיתוח מזרח ירושלים', 'פמ"י', [
+    "https://www.pami.co.il/he/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/",
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "כתובת אומתה בחיפוש (09.2026)" }),
+  genericSource("jtmt", "תוכנית אב לתחבורה ירושלים — מכרזים", "צוות תוכנית אב לתחבורה ירושלים", [
+    proxied("https://jet.gov.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/"),
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+
+  // ---------- רשויות מקומיות גדולות שחסרות ----------
+  // עיריית ירושלים מפרסמת גם בדקל (bids.dekel.co.il/jerusalemMuni) שכבר סרוק — כאן המקור הישיר.
+  genericSource("jerusalem-muni", "עיריית ירושלים — מכרזים", "עיריית ירושלים", [
+    proxied("https://www.jerusalem.muni.il/he/city/tenders/"),
+    proxied("https://www.jerusalem.muni.il/he/city/tenders/publictenders/"),
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "כתובת האב אומתה בחיפוש (09.2026); תת-העמוד לאימות" }),
+  genericSource("ramatgan-muni", "עיריית רמת גן — מכרזים", "עיריית רמת גן", [
+    proxied("https://www.ramat-gan.muni.il/business/tenders/"),
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+  genericSource("herzliya-muni", "עיריית הרצליה — מכרזים", "עיריית הרצליה", [
+    proxied("https://www.herzliya.muni.il/tenders/"),
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+  genericSource("kfarsaba-muni", "עיריית כפר סבא — מכרזים", "עיריית כפר סבא", [
+    proxied("https://www.kfar-saba.muni.il/tenders/"),
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+  genericSource("raanana-muni", "עיריית רעננה — מכרזים", "עיריית רעננה", [
+    proxied("https://www.raanana.muni.il/tenders/"),
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+  genericSource("rehovot-muni", "עיריית רחובות — מכרזים", "עיריית רחובות", [
+    proxied("https://www.rehovot.muni.il/tenders/"),
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+  genericSource("modiin-muni", "עיריית מודיעין-מכבים-רעות — מכרזים", "עיריית מודיעין", [
+    proxied("https://www.modiin.muni.il/tenders/"),
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+  genericSource("batyam-muni", "עיריית בת ים — מכרזים", "עיריית בת ים", [
+    proxied("https://www.bat-yam.muni.il/tenders/"),
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+  genericSource("bneibrak-muni", "עיריית בני ברק — מכרזים", "עיריית בני ברק", [
+    proxied("https://www.bnei-brak.muni.il/tenders/"),
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+  genericSource("ashkelon-muni", "עיריית אשקלון — מכרזים", "עיריית אשקלון", [
+    proxied("https://www.ashkelon.muni.il/tenders/"),
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+  genericSource("hadera-muni", "עיריית חדרה — מכרזים", "עיריית חדרה", [
+    proxied("https://www.hadera.muni.il/tenders/"),
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+  genericSource("eilat-muni", "עיריית אילת — מכרזים", "עיריית אילת", [
+    proxied("https://www.eilat.muni.il/tenders/"),
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+  genericSource("beitshemesh-muni", "עיריית בית שמש — מכרזים", "עיריית בית שמש", [
+    proxied("https://www.betshemesh.muni.il/tenders/"),
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+  genericSource("nazareth-muni", "עיריית נצרת — מכרזים", "עיריית נצרת", [
+    proxied("https://www.nazareth.muni.il/tenders/"),
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+
+  // ---------- דיור ציבורי ----------
+  genericSource("halamish", "חלמיש — מכרזים", "חלמיש — חברה ממשלתית עירונית לדיור", [
+    proxied("https://www.halamish.co.il/tenders/"),
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+  genericSource("prazot", "פרזות — מכרזים", "פרזות — חברה ממשלתית עירונית לשיכון ירושלים", [
+    proxied("https://www.prazot.co.il/tenders/"),
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+  genericSource("shikmona", "שקמונה — מכרזים", "שקמונה — חברה ממשלתית עירונית לשיקום הדיור בחיפה", [
+    proxied("https://www.shikmona.co.il/tenders/"),
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+
+  // ---------- בריאות ----------
+  genericSource("assuta", "אסותא — מכרזים", "אסותא מרכזים רפואיים", [
+    "https://www.assuta.co.il/tenders/",
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+  genericSource("laniado", "לניאדו — מכרזים", "המרכז הרפואי לניאדו", [
+    "https://www.laniado.org.il/tenders/",
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+  genericSource("mayanei", "מעייני הישועה — מכרזים", "המרכז הרפואי מעייני הישועה", [
+    "https://www.mymc.co.il/tenders/",
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+
+  // ---------- מכללות ----------
+  genericSource("telhai", "מכללת תל-חי — מכרזים", "המכללה האקדמית תל-חי", [
+    "https://www.telhai.ac.il/tenders/",
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+  genericSource("kinneret", "המכללה האקדמית כנרת — מכרזים", "המכללה האקדמית כנרת", [
+    "https://www.kinneret.ac.il/tenders/",
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+  genericSource("sce", "סמי שמעון (SCE) — מכרזים", "המכללה האקדמית להנדסה סמי שמעון", [
+    "https://www.sce.ac.il/tenders/",
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+  genericSource("jct", "מכון לב (JCT) — מכרזים", "המרכז האקדמי לב", [
+    "https://www.jct.ac.il/tenders/",
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+  genericSource("bezalel", "בצלאל — מכרזים", "בצלאל אקדמיה לאמנות ועיצוב", [
+    "https://www.bezalel.ac.il/tenders/",
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
+  genericSource("wingate", "מכון וינגייט — מכרזים", "מכון וינגייט", [
+    "https://www.wingate.org.il/tenders/",
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לאימות" }),
 ];
 
 export interface SourceRunReport {
