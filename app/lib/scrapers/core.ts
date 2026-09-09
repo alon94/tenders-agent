@@ -130,6 +130,9 @@ export interface HarvestedRow {
 }
 
 const NAV_JUNK = /^(עוד|קרא עוד|לחץ כאן|לפרטים|כניסה|הרשמה|התחברות|דף הבית|צור קשר|אודות|חיפוש|הבא|הקודם|עברית|english)/i;
+// כותרות ניווט/קטגוריה שמכילות את המילה «מכרז» אבל אינן מכרז — נפוצות
+// בתפריטי אתרי רשויות (מסוננות לפי טקסט מלא, לא לפי תחילית)
+const NAV_TITLE_JUNK = /^(מכרזים( ודרושים| פעילים| פומביים| סגורים| והתקשרויות| והודעות| וקולות קוראים)?|מכרזי (חוף [\u0590-\u05ff ]{2,12}|כו?ח אדם|משאבי אנוש|שירותים ותשתיות|העירייה|רכש|נכסים|מקרקעין)|ועדת מכרזים|ארכיון מכרזים|מסמכי המכרז|תוצאות מכרזים( עירוניים)?|דפי מכרזים|פרוטוקולים? ועדת מכרזים|כל המכרזים|לכל המכרזים|רשימת המכרזים|מכרזים ודרושים)\s*[›>»]?\s*$/;
 
 /**
  * קוצר הלינקים הגנרי: סורק עוגנים בדף רשימה, שומר את אלה שנראים
@@ -140,7 +143,7 @@ const NAV_JUNK = /^(עוד|קרא עוד|לחץ כאן|לפרטים|כניסה|�
 export function harvestTenderLinks(
   html: string,
   baseUrl: string,
-  opts: { match?: RegExp; hrefMatch?: RegExp; minTitle?: number } = {}
+  opts: { match?: RegExp; hrefMatch?: RegExp; hrefOnly?: boolean; minTitle?: number } = {}
 ): HarvestedRow[] {
   const match = opts.match ?? /מכרז|בל["״"]?מ|קול קורא|הצעות מחיר|RFI|RFP/;
   const minTitle = opts.minTitle ?? 8;
@@ -158,9 +161,10 @@ export function harvestTenderLinks(
     const href = a.href;
     const title = stripTags(a.inner);
     if (title.length < minTitle) continue;
-    if (NAV_JUNK.test(title)) continue;
+    if (NAV_JUNK.test(title) || NAV_TITLE_JUNK.test(title)) continue;
     const hrefOk = opts.hrefMatch ? opts.hrefMatch.test(href) : false;
-    if (!match.test(title) && !hrefOk) continue;
+    // hrefOnly: רק ה-href קובע (לאתרים שבהם כל תפריט מכיל «מכרזים»)
+    if (opts.hrefOnly ? !hrefOk : (!match.test(title) && !hrefOk)) continue;
     if (/\.(css|js|png|jpe?g|svg|ico)(\?|$)/i.test(href)) continue;
     if (/^(mailto:|tel:|javascript:)/i.test(href)) continue;
 
