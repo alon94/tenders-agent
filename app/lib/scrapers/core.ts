@@ -132,6 +132,9 @@ export interface HarvestedRow {
 const NAV_JUNK = /^(עוד|קרא עוד|לחץ כאן|לפרטים|כניסה|הרשמה|התחברות|דף הבית|צור קשר|אודות|חיפוש|הבא|הקודם|עברית|english)/i;
 // כותרות ניווט/קטגוריה שמכילות את המילה «מכרז» אבל אינן מכרז — נפוצות
 // בתפריטי אתרי רשויות (מסוננות לפי טקסט מלא, לא לפי תחילית)
+// מכרזי כוח אדם / משרות — לא רלוונטיים לעסקים (הפלטפורמה העירונית מערבבת
+// אותם עם מכרזי רכש באותה רשימה)
+const HR_JUNK = /^(דרוש(ים|ה|ות|\/ה|\/ות|ים\/ות)?|מכרז (פנימי|חיצוני|פנימי\/חיצוני|כו?ח אדם|כ"א)|הארכת מכרז (פנימי|חיצוני)|משרה|משרת)(?=[\s:,.\-–—(]|$)/;
 const NAV_TITLE_JUNK = /^(מכרזים( ודרושים| פעילים| פומביים| סגורים| והתקשרויות| והודעות| וקולות קוראים)?|מכרזי (חוף [\u0590-\u05ff ]{2,12}|כו?ח אדם|משאבי אנוש|שירותים ותשתיות|העירייה|רכש|נכסים|מקרקעין)|ועדת מכרזים|ארכיון מכרזים|מסמכי המכרז|תוצאות מכרזים( עירוניים)?|דפי מכרזים|פרוטוקולים? ועדת מכרזים|כל המכרזים|לכל המכרזים|רשימת המכרזים|מכרזים ודרושים)\s*[›>»]?\s*$/;
 
 /**
@@ -161,7 +164,7 @@ export function harvestTenderLinks(
     const href = a.href;
     const title = stripTags(a.inner);
     if (title.length < minTitle) continue;
-    if (NAV_JUNK.test(title) || NAV_TITLE_JUNK.test(title)) continue;
+    if (NAV_JUNK.test(title) || NAV_TITLE_JUNK.test(title) || HR_JUNK.test(title)) continue;
     const hrefOk = opts.hrefMatch ? opts.hrefMatch.test(href) : false;
     // hrefOnly: רק ה-href קובע (לאתרים שבהם כל תפריט מכיל «מכרזים»)
     if (opts.hrefOnly ? !hrefOk : (!match.test(title) && !hrefOk)) continue;
