@@ -135,6 +135,8 @@ const NAV_JUNK = /^(עוד|קרא עוד|לחץ כאן|לפרטים|כניסה|�
 // מכרזי כוח אדם / משרות — לא רלוונטיים לעסקים (הפלטפורמה העירונית מערבבת
 // אותם עם מכרזי רכש באותה רשימה)
 const HR_JUNK = /^(דרוש(ים|ה|ות|\/ה|\/ות|ים\/ות)?|מכרז (פנימי|חיצוני|פנימי\/חיצוני|כו?ח אדם|כ"א)|הארכת מכרז (פנימי|חיצוני)|משרה|משרת)(?=[\s:,.\-–—(]|$)/;
+// משרות בניסוח מגדרי «רכז/ת הכנסות», «מדריך/ה», «עו"ס …», «אח/ות», וכן «… - ללא מכרז»
+const HR_TITLE_JUNK = /^([\u0590-\u05ff"״']{2,}\/(ת|ה|ית|נית|ות|אית)(\s|$)|עו["״]ס(\s|$)|(רכז|מנהל|מזכיר|מדריך|עובד|פקיד|אח|פסיכולוג|קב"ט|מהנדס|מפקח|אדריכל)(ת|ה|ית|ות)?\s+(ה?יחיד|ה?מחלק|ה?אגף|ה?מדור|ל?בית|ל?מרכז|ב?מרכז|ה?הכנסות|ה?תעסוקה|ה?רווחה))/;
 const NAV_TITLE_JUNK = /^(מכרזים( ודרושים| פעילים| פומביים| סגורים| והתקשרויות| והודעות| וקולות קוראים)?|מכרזי (חוף [\u0590-\u05ff ]{2,12}|כו?ח אדם|משאבי אנוש|שירותים ותשתיות|העירייה|רכש|נכסים|מקרקעין)|ועדת מכרזים|ארכיון מכרזים|מסמכי המכרז|תוצאות מכרזים( עירוניים)?|דפי מכרזים|פרוטוקולים? ועדת מכרזים|כל המכרזים|לכל המכרזים|רשימת המכרזים|מכרזים ודרושים)\s*[›>»]?\s*$/;
 
 /**
@@ -164,7 +166,7 @@ export function harvestTenderLinks(
     const href = a.href;
     const title = stripTags(a.inner);
     if (title.length < minTitle) continue;
-    if (NAV_JUNK.test(title) || NAV_TITLE_JUNK.test(title) || HR_JUNK.test(title)) continue;
+    if (NAV_JUNK.test(title) || NAV_TITLE_JUNK.test(title) || HR_JUNK.test(title) || HR_TITLE_JUNK.test(title)) continue;
     const hrefOk = opts.hrefMatch ? opts.hrefMatch.test(href) : false;
     // hrefOnly: רק ה-href קובע (לאתרים שבהם כל תפריט מכיל «מכרזים»)
     if (opts.hrefOnly ? !hrefOk : (!match.test(title) && !hrefOk)) continue;
@@ -213,10 +215,14 @@ export function rowsToRecords(
   src: { id: string; publisher: string }
 ): TenderRecord[] {
   const now = new Date().toISOString();
+  const today = now.slice(0, 10);
   const out: TenderRecord[] = [];
   const seen = new Set<string>();
   for (const r of rows) {
     const id = `${src.id}-${hashId(r.url + "|" + r.title)}`;
+    // 13.09.2026: מועד הגשה השווה ליום הסריקה בלי תאריך פרסום הוא כמעט תמיד
+    // «עודכן לאחרונה» של הדף, לא מועד אמיתי — הציף את «נסגרים בקרוב»
+    const deadline = r.deadline && !r.publishDate && r.deadline.slice(0, 10) === today ? null : r.deadline;
     if (seen.has(id)) continue;
     seen.add(id);
     out.push({
@@ -227,7 +233,7 @@ export function rowsToRecords(
       publisher: src.publisher,
       publisher_unit: null,
       publish_date: r.publishDate,
-      deadline: r.deadline,
+      deadline,
       status: "פורסם",
       url: r.url,
       type: "מכרז",

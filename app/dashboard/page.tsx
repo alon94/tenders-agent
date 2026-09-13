@@ -4,7 +4,7 @@ import { useIsMobile } from "../hooks/useIsMobile";
 import MobileTabBar from "../components/MobileTabBar";
 import AccessibilityButton from '../components/AccessibilityButton';
 import MobileMenu from "../components/MobileMenu";
-import { getSession, signOut, AUTH_EVENT, type AuthSession } from '../lib/authClient';
+import { getSession, signOut, AUTH_EVENT, type AuthSession, getValidSession } from '../lib/authClient';
 import { parseHeDate, isExempt } from '../lib/tenderMeta';
 import { fetchMyProfile, type BusinessProfile } from '../lib/profileApi';
 import { displayScore } from '../lib/scoring';
@@ -45,16 +45,23 @@ export default function Dashboard(){
   const[ready,setReady]=useState(false);
   const hydrated=useSyncExternalStore(()=>()=>{},()=>true,()=>false);
   useEffect(() => {
-    const s = getSession();
-    setSession(s);
-    // מסע הלקוח: אורח רואה רק מכרזים שנסגרו, רשום רק פתוחים — נאכף בשרת
-    // re-QA: למשתמש מחובר ה-ready נקבע רק אחרי טעינת הפרופיל — אחרת נורות
-    // שתי בקשות (GET גנרי ואז POST מותאם) בכל טעינה.
-    if (!s) setReady(true);
+    // 13.09.2026: getSession() מחזיר null כשטוקן הגישה פג (גם אם יש refresh
+    // token) — הדף ירה בקשת אורח (GET מה-CDN: ארכיון, 772, בלי מונים) ורק
+    // רענון הציג את הנתונים האמיתיים. getValidSession מרענן לפני הירייה.
+    let alive = true;
+    getValidSession().then((s) => {
+      if (!alive) return;
+      setSession(s);
+      // מסע הלקוח: אורח רואה רק מכרזים שנסגרו, רשום רק פתוחים — נאכף בשרת
+      // re-QA: למשתמש מחובר ה-ready נקבע רק אחרי טעינת הפרופיל — אחרת נורות
+      // שתי בקשות (GET גנרי ואז POST מותאם) בכל טעינה.
+      if (!s) setReady(true);
+    });
     const onChange = () => setSession(prev => { const n = getSession(); return (n?.user?.email || '') === (prev?.user?.email || '') ? prev : n; });
     window.addEventListener(AUTH_EVENT, onChange);
     window.addEventListener('storage', onChange);
     return () => {
+      alive = false;
       window.removeEventListener(AUTH_EVENT, onChange);
       window.removeEventListener('storage', onChange);
     };
