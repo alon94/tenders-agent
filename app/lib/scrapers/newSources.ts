@@ -286,7 +286,7 @@ export const NEW_SOURCES: NewSource[] = [
   genericSource("rail", "רכבת ישראל", "רכבת ישראל", [
     proxied("https://tender.rail.co.il/"),
     "https://tender.rail.co.il/",
-  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "פורטל מכרזים ייעודי tender.rail.co.il (JS, 13.09.2026) — נוסה; הכתובות הישנות 403" }),
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "tender.rail.co.il — מעטפת JS (13.09.2026); נדרש מיפוי API/רינדור" }),
   genericSource("nta", 'נת"ע — מטרו וקווי רכבת קלה', 'נת"ע נתיבי תחבורה עירוניים', [
     proxied("https://www.nta.co.il/tenders/"),
   ], { enabled: false, hrefMatch: /tender/i, note: "WAF מחזיר 403 מכל מקור כולל IP ביתי (אומת 27.08.2026) — נדרש רינדור דפדפן" }),
@@ -395,7 +395,7 @@ export const NEW_SOURCES: NewSource[] = [
   genericSource("eapc", 'קצא"א — מכרזים', 'קצא"א (EAPC)', [
     "https://www.eapc.co.il/conn/",
     proxied("https://www.eapc.co.il/conn/"),
-  ], { enabled: false, hrefMatch: /hpirsum|tender|מכרז|\.pdf/i, note: "עמוד «מכרזים והתקשרויות» /conn/ (13.09.2026) — לאימות; אם ריק — JS" }),
+  ], { enabled: false, hrefMatch: /hpirsum|tender|מכרז|\.pdf/i, note: "/conn/ נטען אך הרשימה נבנית ב-JS (13.09.2026) — נדרש מיפוי API" }),
   // דואר ישראל — מערכת Domino ישנה בתהליך מעבר ל-SPA; כניסה מפנה ל-SPA.
   { id: "israelpost", name: "דואר ישראל — מכרזים", publisher: "חברת דואר ישראל", enabled: false,
     note: "מעבר ל-SPA — נדרשת כתובת ה-view הישירה של mihrazim.nsf או ה-API החדש", run: async () => [] },
@@ -456,7 +456,7 @@ export const NEW_SOURCES: NewSource[] = [
   genericSource("meniv", "מניב ראשון — מכרזים", "מניב ראשון לציון", [
     proxied("https://www.meniv-rishon.co.il/pages/wanted.aspx"),
     "https://www.meniv-rishon.co.il/pages/wanted.aspx",
-  ], { enabled: false, hrefMatch: /tender|מכרז|\.pdf|List/i, note: "רשימה ציבורית ב-pages/wanted.aspx (13.09.2026, טרם אומתה — timeout בפתיחה ישירה); להפריד מכרזים מדרושים" }),
+  ], { enabled: false, hrefMatch: /tender|מכרז|\.pdf|List/i, note: "pages/wanted.aspx — 502 דרך הפרוקסי ו-fetch failed ישירות (13.09.2026) — חסימת cloud; רץ ביתי" }),
 
   // ---------- תעשיות ביטחוניות ומקורות ממשלתיים נוספים ----------
   // סיב"ת — מִנהל הסחר החוץ-ביטחוני של משהב"ט (רשימה ציבורית מרונדרת-שרת)
@@ -496,13 +496,13 @@ export const NEW_SOURCES: NewSource[] = [
   ], { hrefMatch: /tender|michraz/i, note: "טבלת מכרזים פעילים — ייתכן קציר חלקי אם התאים אינם עוגנים" }),
   genericSource("telaviv-muni", "עיריית תל אביב-יפו — מכרזים", "עיריית תל אביב-יפו", [
     proxied("https://www.tel-aviv.gov.il/AuctionAndCareers/Pages/Service.aspx"),
-  ], { enabled: false, hrefMatch: /Auction|tender|מכרז|\.pdf/i, note: "עמוד «שירותים, עבודה קבלנית ורכש» AuctionAndCareers/Pages/Service.aspx (13.09.2026) — לאימות; קודם רק ניווט" }),
+  ], { enabled: true, hrefMatch: /Auction|tender|מכרז|\.pdf/i, note: "SharePoint AuctionAndCareers/Pages/Service.aspx דרך IL_PROXY_URL — 5 פריטים (אומת 13.09.2026)" }),
   genericSource("petahtikva-muni", "עיריית פתח תקווה — מכרזים", "עיריית פתח תקווה", [
     proxied("https://www.petah-tikva.muni.il/city-and-municipality/bids/bids"),
   ], { enabled: false, note: "F5 «Request Rejected» גם דרך IL_PROXY_URL (13.09.2026) — נדרש IP ביתי" }),
   genericSource("netanya-muni", "עיריית נתניה — מכרזים", "עיריית נתניה", [
     proxied("https://www.netanya.muni.il/CityHall/transparency/Tenders/Pages/default.aspx"),
-  ], { enabled: false, hrefMatch: /TendersAndJobsList|\.pdf|מכרז/i, note: "עמוד השקיפות transparency/Tenders (SharePoint, 13.09.2026); מסמכים תחת TendersAndJobsList — לאימות" }),
+  ], { enabled: true, hrefMatch: /TendersAndJobsList|\.pdf|מכרז/i, note: "SharePoint transparency/Tenders דרך IL_PROXY_URL — 12 פריטים (אומת 13.09.2026)" }),
 
   // ---------- מכללות ואוניברסיטאות נוספות ----------
   genericSource("sapir", "המכללה האקדמית ספיר — מכרזים", "המכללה האקדמית ספיר", [
@@ -526,7 +526,7 @@ export const NEW_SOURCES: NewSource[] = [
   genericSource("ruppin", "מכללת רופין — מכרזים", "המרכז האקדמי רופין", [
     "https://www.ruppin.ac.il/tenders/the-list-of-tenders/",
     proxied("https://www.ruppin.ac.il/tenders/the-list-of-tenders/"),
-  ], { enabled: false, hrefMatch: /tender|מכרז|\.pdf/i, note: "עמוד הרשימה הישיר /tenders/the-list-of-tenders/ (טבלה מרונדרת-שרת, 13.09.2026) — לאימות שליפה" }),
+  ], { enabled: false, hrefMatch: /tender|מכרז|\.pdf/i, note: "גם עמוד הרשימה הישיר מחזיר מעטפת של ~580 תווים (אנטי-בוט/JS, 13.09.2026) — נדרש רינדור/רץ ביתי" }),
 
   // ---------- גופי ממשלה וציבור נוספים ----------
   genericSource("parks", "רשות הטבע והגנים — מכרזים", "רשות הטבע והגנים", [
@@ -585,7 +585,7 @@ export const NEW_SOURCES: NewSource[] = [
   ], { enabled: true, hrefMatch: /tender|מכרז|\.pdf/i, note: "WordPress דרך IL_PROXY_URL — 13 פריטים (אומת 13.09.2026); מפרסמת גם בדקל" }),
   genericSource("pami", 'פמ"י — פיתוח מזרח ירושלים', 'פמ"י', [
     "https://www.pami.co.il/he/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/",
-  ], { enabled: true, hrefMatch: /tender|מכרז/i, note: "נטען ישירות — 3 פריטים (אומת 08.09.2026)" }),
+  ], { enabled: true, hrefMatch: /tender|מכרז/i, note: "החזיר 2–3 פריטים (08–13.09) אך לעיתים מסמך זעיר (213 תווים) — תגובה לא יציבה, לעקוב" }),
   genericSource("jtmt", "תוכנית אב לתחבורה ירושלים — מכרזים", "צוות תוכנית אב לתחבורה ירושלים", [
     proxied("https://jet.gov.il/tenders/"),
     proxied("https://jet.gov.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/"),
@@ -642,7 +642,7 @@ export const NEW_SOURCES: NewSource[] = [
   genericSource("halamish", "חלמיש — מכרזים", "חלמיש — חברה ממשלתית עירונית לדיור", [
     "https://www.halamish.org/bids/",
     proxied("https://www.halamish.org/bids/"),
-  ], { enabled: false, hrefMatch: /bids|tender|מכרז|\.pdf/i, note: "הדומיין הנכון halamish.org/bids/ (13.09.2026); «אין מכרזים להצגה» = רשימה ריקה תקינה — לאימות" }),
+  ], { enabled: true, hrefOnly: true, hrefMatch: /\/bids\/\d|\.pdf/i, note: "halamish.org/bids/ — נטען (13.09.2026); רשימה ריקה כרגע, רק דפי /bids/NNN או PDF נקלטים" }),
   genericSource("prazot", "פרזות — מכרזים", "פרזות — חברה ממשלתית עירונית לשיכון ירושלים", [
     proxied("https://www.prazot.co.il/tenders/"),
   ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לא נמצא אתר מכרזים פעיל (10.09.2026); פרסומים דרך gov.il/דקל — להשאיר מושבת" }),
