@@ -5,9 +5,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 const BORDER = '#e6eaee';
+const STATUS_LABEL: Record<string, { t: string; c: string }> = {
+  empty: { t: '∅ נטען, 0 מכרזים', c: '#B45309' }, blocked: { t: '⛔ חסימה (200)', c: '#B91C1C' }, js: { t: '⚙ מעטפת JS', c: '#7C3AED' },
+  tiny: { t: '↪ הפניה/מסמך זעיר', c: '#B45309' }, stub: { t: '— לא ממומש', c: '#8a97a3' }, error: { t: '✗ שגיאה', c: '#B91C1C' },
+};
 type SourceMeta = { id: string; name: string; publisher: string; enabled: boolean; note: string | null };
 type RawDiag = { pages: { url: string; ok: boolean; chars?: number; snippet?: string; anchors?: { href: string; text: string }[]; error?: string }[] };
-type Result = { ok: boolean; fetched?: number; raw?: number; ms?: number; error?: string; sample?: { title: string; url: string; deadline: string | null }[] };
+type Result = { ok: boolean; status?: 'ok' | 'empty' | 'blocked' | 'js' | 'tiny' | 'stub' | 'error'; reason?: string; fetched?: number; raw?: number; ms?: number; error?: string; sample?: { title: string; url: string; deadline: string | null }[] };
 
 export default function SourceTester({ token }: { token: () => string | null }) {
   const [sources, setSources] = useState<SourceMeta[] | null>(null);
@@ -67,11 +71,11 @@ export default function SourceTester({ token }: { token: () => string | null }) 
     setBatch(false);
   }
   function exportCsv() {
-    const rows = [['id', 'name', 'enabled', 'ok', 'fetched', 'ms', 'error', 'note']];
+    const rows = [['id', 'name', 'enabled', 'ok', 'status', 'fetched', 'ms', 'error', 'reason', 'note']];
     for (const s of sources || []) {
       const r = results[s.id];
       const rr = r && r !== 'running' ? r : null;
-      rows.push([s.id, s.name, String(s.enabled), rr ? String(rr.ok) : '', rr?.fetched != null ? String(rr.fetched) : '', rr?.ms != null ? String(rr.ms) : '', rr?.error || '', s.note || '']);
+      rows.push([s.id, s.name, String(s.enabled), rr ? String(rr.ok) : '', rr?.status || '', rr?.fetched != null ? String(rr.fetched) : '', rr?.ms != null ? String(rr.ms) : '', rr?.error || '', rr?.reason || '', s.note || '']);
     }
     const csv = '﻿' + rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); a.download = `sources-test-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
@@ -89,8 +93,8 @@ export default function SourceTester({ token }: { token: () => string | null }) 
     setDiagBusy(false);
   }
 
-  const counts = { ok: 0, fail: 0, empty: 0 };
-  for (const s of sources || []) { const r = results[s.id]; if (r && r !== 'running') { if (!r.ok) counts.fail++; else if (!r.fetched) counts.empty++; else counts.ok++; } }
+  const counts = { ok: 0, fail: 0, empty: 0, blocked: 0, js: 0 };
+  for (const s of sources || []) { const r = results[s.id]; if (r && r !== 'running') { if (!r.ok) counts.fail++; else if (r.fetched) counts.ok++; else if (r.status === 'blocked') counts.blocked++; else if (r.status === 'js' || r.status === 'tiny' || r.status === 'stub') counts.js++; else counts.empty++; } }
 
   const btn = (label: string, onClick: () => void, disabled = false, primary = false) => (
     <button type="button" onClick={onClick} disabled={disabled}
@@ -107,6 +111,8 @@ export default function SourceTester({ token }: { token: () => string | null }) 
         <span style={{ marginInlineStart: 'auto', fontSize: '0.74rem', color: '#5f6c7a' }}>
           {counts.ok > 0 && <span style={{ color: '#0D9488', fontWeight: 700 }}>✓ {counts.ok} </span>}
           {counts.empty > 0 && <span style={{ color: '#B45309', fontWeight: 700 }}>∅ {counts.empty} </span>}
+          {counts.blocked > 0 && <span style={{ color: '#B91C1C', fontWeight: 700 }}>⛔ {counts.blocked} </span>}
+          {counts.js > 0 && <span style={{ color: '#7C3AED', fontWeight: 700 }}>⚙ {counts.js} </span>}
           {counts.fail > 0 && <span style={{ color: '#B91C1C', fontWeight: 700 }}>✗ {counts.fail}</span>}
         </span>
       </div>
@@ -143,9 +149,9 @@ export default function SourceTester({ token }: { token: () => string | null }) 
                         : !rr ? <span style={{ color: '#c5ccd3' }}>—</span>
                         : !rr.ok ? <span style={{ color: '#B91C1C', fontWeight: 700 }} title={rr.error}>✗ שגיאה</span>
                         : rr.fetched ? <button type="button" onClick={() => setOpen(open === s.id ? null : s.id)} style={{ border: 'none', background: 'transparent', color: '#0D9488', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>✓ {rr.fetched} פריטים · {Math.round((rr.ms || 0) / 100) / 10}s ▾</button>
-                        : <span style={{ color: '#B45309', fontWeight: 700 }}>∅ נטען, 0 פריטים · {Math.round((rr.ms || 0) / 100) / 10}s</span>}
+                        : <span style={{ color: STATUS_LABEL[rr.status || 'empty']?.c || '#B45309', fontWeight: 700 }} title={rr.reason}>{STATUS_LABEL[rr.status || 'empty']?.t || '∅ נטען, 0 פריטים'} · {Math.round((rr.ms || 0) / 100) / 10}s</span>}
                     </td>
-                    <td style={{ padding: '7px 10px', color: '#5f6c7a', maxWidth: 360, fontSize: '0.72rem' }}>{rr && !rr.ok ? <span style={{ color: '#B91C1C' }}>{rr.error}</span> : s.note}</td>
+                    <td style={{ padding: '7px 10px', color: '#5f6c7a', maxWidth: 360, fontSize: '0.72rem' }}>{rr && !rr.ok ? <span style={{ color: '#B91C1C' }}>{rr.error}</span> : rr && !rr.fetched && rr.reason ? <><span style={{ color: '#1a2330' }}>{rr.reason}</span>{s.note && <span> · {s.note}</span>}</> : s.note}</td>
                     <td style={{ padding: '7px 10px', textAlign: 'left', whiteSpace: 'nowrap' }}>
                       {btn('בדיקה', () => test(s.id), r === 'running')}
                       {rr && (!rr.ok || !rr.fetched) && <span style={{ marginInlineStart: 4 }}>{btn(raw[s.id] === 'running' ? '…' : 'אבחון', async () => { await diag(s.id); setRawOpen(s.id); }, raw[s.id] === 'running')}</span>}

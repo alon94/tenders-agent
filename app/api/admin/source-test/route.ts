@@ -3,6 +3,19 @@ import { requireAdmin } from '@/app/lib/ops';
 import { NEW_SOURCES } from '@/app/lib/scrapers/newSources';
 import { fetchText, listAnchors, redactSecrets, stripTags } from '@/app/lib/scrapers/core';
 
+// סיווג תוצאה: «נטען» לבד אינו הצלחה — דף חסימה חוזר ב-200, אפליקציית JS
+// מחזירה מעטפת ריקה, והפניה מחזירה מסמך זעיר. הסיווג מבדיל ביניהם.
+export type SourceStatus = 'ok' | 'empty' | 'blocked' | 'js' | 'tiny' | 'stub' | 'error';
+const BLOCK_SIG = /Incapsula|Request Rejected|Radware|Verifying your browser|Access Denied|Attention Required|cf-browser-verification|Just a moment|__cf_chl|distil_r_captcha|Bot Verification|imperva/i;
+function classifyHtml(html: string): Exclude<SourceStatus, 'ok' | 'stub' | 'error'> {
+  if (BLOCK_SIG.test(html)) return 'blocked';
+  if (html.length < 1500) return 'tiny';
+  const anchors = listAnchors(html, 'https://x/', 400).length;
+  const text = stripTags(html);
+  if (anchors < 3 || text.length < 400) return 'js';
+  return 'empty';
+}
+
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
@@ -42,11 +55,24 @@ export async function GET(req: Request) {
   try {
     const recs = await src.run();
     const clean = recs.filter((r) => r.title && r.title.length >= 8);
+    let status: SourceStatus = clean.length ? 'ok' : 'empty';
+    let reason: string | undefined;
+    if (!clean.length) {
+      if (!src.urls?.length) { status = 'stub'; reason = 'המקור עדיין לא ממומש (run ריק) — נדרש מחבר ייעודי'; }
+      else {
+        // שליפה נוספת אחת רק כשריק — כדי להבין למה
+        try {
+          const html = await fetchText(src.urls[0]);
+          status = classifyHtml(html);
+          reason = status === 'blocked' ? 'דף חסימה/אתגר הוחזר עם 200 (WAF)' : status === 'tiny' ? `מסמך זעיר (${html.length} תווים) — הפניה/JS` : status === 'js' ? 'מעטפת JS — הרשימה נבנית בצד הלקוח' : 'הדף נטען עם קישורים, אך אף אחד לא זוהה כמכרז — לבדוק כתובת/hrefMatch';
+        } catch (e) { status = 'error'; reason = redactSecrets(String(e)).slice(0, 200); }
+      }
+    }
     return NextResponse.json({
-      id, ok: true, enabled: src.enabled, fetched: clean.length, raw: recs.length, ms: Date.now() - t0,
+      id, ok: true, status, reason, enabled: src.enabled, fetched: clean.length, raw: recs.length, ms: Date.now() - t0,
       sample: clean.slice(0, 5).map((r) => ({ title: r.title.slice(0, 120), url: r.url, deadline: r.deadline, publisher: r.publisher })),
     });
   } catch (e) {
-    return NextResponse.json({ id, ok: false, enabled: src.enabled, fetched: 0, ms: Date.now() - t0, error: redactSecrets(String(e)).slice(0, 600) });
+    return NextResponse.json({ id, ok: false, status: 'error' as SourceStatus, enabled: src.enabled, fetched: 0, ms: Date.now() - t0, error: redactSecrets(String(e)).slice(0, 600) });
   }
 }
