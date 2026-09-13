@@ -347,7 +347,7 @@ export const NEW_SOURCES: NewSource[] = [
     proxied("https://www.clalit.co.il/he/info/tenders/Pages/mkomi_mhozot.aspx"),
     proxied("https://www.clalit.co.il/he/info/tenders/Pages/general_matters.aspx"),
     proxied("https://www.clalit.co.il/he/info/tenders/Pages/kol-kore.aspx"),
-  ], { hrefMatch: /tender|michraz|Pages/i, note: "SharePoint — מכרזים מרונדרי-שרת בתתי-עמודים לפי ועדה" }),
+  ], { hrefMatch: /tender|michraz|Pages/i, note: "Incapsula חוסם את ה-IP של הפרוקסי (דף חסימה ב-200, אומת 13.09.2026) — נדרש IP אחר/רץ ביתי" }),
   genericSource("leumit", "קופת חולים לאומית — מכרזים", "קופת חולים לאומית", [
     "https://www.leumit.co.il/bids/publictenders/",
   ], { hrefMatch: /bids|tender|publictenders/i }),
@@ -389,8 +389,8 @@ export const NEW_SOURCES: NewSource[] = [
     proxied("https://www.transisrael.co.il/Tenders"),
   ], { enabled: true, hrefMatch: /tender/i, note: "נטען דרך IL_PROXY_URL — 19 פריטים (אומת 08.09.2026)" }),
   genericSource("amidar", "עמידר — מכרזים", "עמידר החברה הלאומית לשיכון", [
-    proxied("https://www.amidar.co.il/wps/portal/amidar/service/tenders"),
-  ], { enabled: false, hrefMatch: /tender/i, note: "נטען דרך IL_PROXY_URL (08.09.2026) אך 0 פריטים — WebSphere Portal, נדרש רינדור/מיפוי" }),
+    proxied("https://www.amidar.co.il/wps/portal/amidar/applications/tenders"),
+  ], { enabled: false, hrefMatch: /tender/i, note: "אבחון 13.09.2026: עמוד המכרזים הוא /applications/tenders (הקודם היה דף שירות) — לאימות" }),
   // קצא"א (EAPC) — אתר WordPress בטעינת JS; מכרזים כעמודי /hpirsum/ נפרדים.
   { id: "eapc", name: 'קצא"א — מכרזים', publisher: "קצא\"א (EAPC)", enabled: false,
     note: "אתר JS — הרשימה אינה ב-HTML הגולמי; פרסומים תחת /hpirsum/ ו-PDF", run: async () => [] },
@@ -421,8 +421,8 @@ export const NEW_SOURCES: NewSource[] = [
     "https://www.openu.ac.il/bid/",
   ], { hrefMatch: /bid|michraz|shlifa/i, note: "דף נחיתה סטטי המקשר למערכת Oracle ישנה" }),
   genericSource("ariel", "אוניברסיטת אריאל — מכרזים", "אוניברסיטת אריאל בשומרון", [
-    "https://www.ariel.ac.il/wp/auctions-and-decisions/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/",
-  ], { hrefMatch: /auctions|tender|michraz/i, note: "WordPress — ייתכן אנטי-בוט; אם ריק יש להפעיל דרך proxy" }),
+    proxied("https://www.ariel.ac.il/wp/auctions-and-decisions/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/"),
+  ], { hrefMatch: /auctions|tender|michraz/i, note: "WordPress מחזיר 573 תווים — אנטי-בוט (13.09.2026); לנסות דרך הפרוקסי" }),
 
   // ---------- תאגידים עירוניים, מים וחברות כלכליות ----------
   genericSource("mei-avivim", "מי אביבים — מכרזים פומביים", "מי אביבים", [
@@ -449,7 +449,7 @@ export const NEW_SOURCES: NewSource[] = [
   genericSource("halat", 'ח.ל.ת נתניה — מכרזים', "ח.ל.ת החברה לפיתוח ותיירות נתניה", [
     proxied("https://www.halat.co.il/html5/?_id=12925&did=2300&g=12157&sm=12925"),
     proxied("https://www.halat.co.il/html5/?_id=15746&did=2300&g=12157&sm=15746"),
-  ], { enabled: false, note: "CMS html5 — עמוד «מכרזים פעילים» _id=12925 (10.09.2026); מסמכים כ-PDF תחת /html5/Web/2300/ — לאימות" }),
+  ], { enabled: false, note: "CMS html5 ב-windows-1255 — פענוח charset תוקן 13.09.2026; לאימות שליפה" }),
   // מניב ראשון — SharePoint (List13) ללא עמוד אינדקס נקי; מושבת עד למיפוי.
   { id: "meniv", name: "מניב ראשון — מכרזים", publisher: "מניב ראשון לציון", enabled: false,
     note: "SharePoint List13 ללא אינדקס ציבורי — נדרש מיפוי ישיר או אגרגטור", run: async () => [] },
@@ -477,7 +477,7 @@ export const NEW_SOURCES: NewSource[] = [
   // ---------- עיריות גדולות ----------
   genericSource("haifa-muni", "עיריית חיפה — מכרזים", "עיריית חיפה", [
     proxied("https://www2.haifa.muni.il/Michrazim/Default.aspx"),
-  ], { hrefMatch: /Michrazim|TendersFiles|\.pdf/i, note: "ASP.NET — מכרזים כ-PDF תחת /Michrazim/TendersFiles" }),
+  ], { hrefMatch: /Michrazim|TendersFiles|\.pdf/i, note: "ASP.NET — עוגנים במרכאות בודדות/PDF תחת /Michrazim/TendersFiles; תמיכה במרכאות בודדות נוספה 13.09.2026" }),
   genericSource("rishon-muni", "עיריית ראשון לציון — מכרזים", "עיריית ראשון לציון", [
     proxied("https://www.rishonlezion.muni.il/Activities/Tenders/Pages/Contracting_tenders.aspx"),
   ], { enabled: false, hrefMatch: /CustomDispForm|Tenders/i, note: "SharePoint — חסימת cloud ברמת רשת (reset/timeout גם דרך IL_PROXY_URL ב-Oracle IL, אומת 27.08.2026) — עובד רק מ-IP ביתי" }),
@@ -495,7 +495,7 @@ export const NEW_SOURCES: NewSource[] = [
   ], { enabled: false, note: "Angular/JS + WAF — ה-HTML מחזיר רק קישורי ניווט (אומת 08.09.2026); נדרש מיפוי API/רינדור" }),
   genericSource("petahtikva-muni", "עיריית פתח תקווה — מכרזים", "עיריית פתח תקווה", [
     proxied("https://www.petah-tikva.muni.il/city-and-municipality/bids/bids"),
-  ], { enabled: false, note: "נטען דרך IL_PROXY_URL (08.09.2026) אך 0 פריטים — הרשימה כנראה ב-JS; נדרש מיפוי" }),
+  ], { enabled: false, note: "F5 «Request Rejected» גם דרך IL_PROXY_URL (13.09.2026) — נדרש IP ביתי" }),
   genericSource("netanya-muni", "עיריית נתניה — מכרזים", "עיריית נתניה", [
     proxied("https://www.netanya.muni.il/tenders/Pages/tenderLists.aspx"),
   ], { enabled: false, note: "הרשימה ב-JS — ה-HTML מחזיר רק קישורי ניווט (אומת 08.09.2026); נדרש מיפוי API" }),
@@ -529,7 +529,7 @@ export const NEW_SOURCES: NewSource[] = [
   ], { hrefMatch: /\/tender\//i, note: "ארכיון WordPress מרונדר-שרת (חלופה ל-SPA ב-/tenders/)" }),
   genericSource("rmi-rechesh", "רמ\"י — מכרזי רכש והתקשרות", "רשות מקרקעי ישראל", [
     proxied("https://land.gov.il/Pages/Tenders.aspx"),
-  ], { hrefMatch: /DispForm|Tenders/i, note: "מכרזי רכש (נבדל ממכרזי הקרקע) — 10.09.2026: נטען דרך IL_PROXY_URL אך 0 פריטים (ייתכן דף חסימה) — לבדוק ידנית" }),
+  ], { hrefMatch: /DispForm|Tenders/i, note: "land.gov.il מחזיר דף ריק (3K) דרך הפרוקסי — כנראה חסימה שקטה (13.09.2026); נדרש IP אחר/רץ ביתי" }),
   genericSource("eilat-port", "נמל אילת — מכרזים", "חברת נמל אילת", [
     "https://eilatport.co.il/tenders/",
   ], { hrefMatch: /\.pdf|tender/i, note: "נפח נמוך, מכרזים כ-PDF" }),
@@ -547,20 +547,21 @@ export const NEW_SOURCES: NewSource[] = [
     note: "DynamicCollector (Angular) — נדרש מיפוי ה-API של האוסף (DevTools → Network → api/DynamicCollector). מכסה משרדים בלי אתר מכרזים משלהם", run: async () => [] },
   genericSource("boi", "בנק ישראל — מכרזים", "בנק ישראל", [
     "https://www.boi.org.il/bank-of-israel/tenders/",
-  ], { enabled: false, hrefMatch: /\/tenders\/|מכרז/i, note: "הכתובת נטענת (08.09.2026) אך 0 פריטים — הרשימה כנראה ב-JS; נדרש מיפוי" }),
+  ], { enabled: false, hrefMatch: /\/tenders\/|מכרז/i, note: "Radware JS-challenge (13.09.2026) — נדרש רינדור דפדפן/רץ ביתי" }),
   genericSource("knesset", "הכנסת — מכרזים", "הכנסת", [
     "https://main.knesset.gov.il/About/KnessetWork/Pages/Tenders.aspx",
     "https://main.knesset.gov.il/About/Tenders/Pages/default.aspx",
-  ], { enabled: false, hrefMatch: /KnessetWork\/Tender\/|\.pdf/i, note: "מסמכי המכרזים תחת /About/KnessetWork/Tender/*.pdf (10.09.2026); עמוד הרשימה משוער — לאימות" }),
+  ], { enabled: false, hrefMatch: /KnessetWork\/Tender\/|\.pdf/i, note: "הכתובות מחזירות 577 תווים (הפניה/JS) — 13.09.2026; לאתר את עמוד הרשימה האמיתי" }),
   genericSource("kan", "תאגיד השידור «כאן» — מכרזים", "תאגיד השידור הישראלי", [
     "https://www.kan.org.il/tenders/",
   ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "403 גם ישירות וגם דרך IL_PROXY_URL (08.09.2026) — עובד רק מ-IP ביתי" }),
   genericSource("jewish-agency", "הסוכנות היהודית — מכרזים", "הסוכנות היהודית לארץ ישראל", [
+    "https://app.vendors.co.il/jewishagency/michrazim",
     "https://www.jewishagency.org/il/tenders/",
-  ], { enabled: false, hrefMatch: /tender|מכרז|\.pdf/i, note: "הכתובת נטענת (08.09.2026) אך 0 פריטים — לבדוק מבנה/hrefMatch" }),
+  ], { enabled: false, hrefMatch: /michrazim\/[0-9a-f]{12,}$/i, note: "המכרזים מתארחים בפלטפורמת Arma (app.vendors.co.il/jewishagency) — הכותרות אינן בעוגנים; נוסה עמוד הרשימה של Arma (13.09.2026)" }),
   genericSource("yadvashem", "יד ושם — מכרזים", "יד ושם", [
     proxied("https://yvservices.yadvashem.org/he/tenders"),
-  ], { enabled: false, hrefMatch: /tender|מכרז|\.pdf/i, note: "yvservices — fetch failed ישירות מ-Vercel (10.09.2026); נוסה דרך IL_PROXY_URL" }),
+  ], { enabled: false, hrefMatch: /tender|מכרז|\.pdf/i, note: "yvservices — SPA, ה-HTML ריק (אומת באבחון 13.09.2026); נדרש מיפוי API" }),
 
   // ---------- תשתיות, אנרגיה, סביבה ----------
   genericSource("noga", "נוגה — ניהול המערכת: מכרזים", "נוגה — ניהול מערכת החשמל", [
@@ -594,7 +595,7 @@ export const NEW_SOURCES: NewSource[] = [
   genericSource("ramatgan-muni", "עיריית רמת גן — מכרזים", "עיריית רמת גן", [
     "https://www.ramat-gan.muni.il/michrazim-ramatgan/business-units/michrazim-public",
     "https://www.ramat-gan.muni.il/thecity/jobs/auctions/",
-  ], { enabled: false, hrefMatch: /michrazim|auction|\.pdf|מכרז/i, note: "כתובות אותרו (10.09.2026): michrazim-public + auctions — לאימות שליפה" }),
+  ], { enabled: false, hrefMatch: /michrazim|auction|\.pdf|מכרז/i, note: "אפליקציית JS — ה-HTML ללא קישורים (אומת באבחון 13.09.2026); נדרש מיפוי API" }),
   genericSource("herzliya-muni", "עיריית הרצליה — מכרזים", "עיריית הרצליה", [
     proxied("https://www.herzliya.muni.il/bids/"),
   ], { enabled: true, hrefMatch: /\/bids\/|\.pdf/i, note: "פלטפורמה עירונית — עד 11 פריטים (09.09.2026); ניווט ומשרות מסוננים לפי כותרת" }),
@@ -618,10 +619,10 @@ export const NEW_SOURCES: NewSource[] = [
   ], { enabled: true, hrefMatch: /\/bids\/|\.pdf/i, note: "פלטפורמה עירונית — עד 75 פריטים (09.09.2026); ניווט ומשרות מסוננים לפי כותרת" }),
   genericSource("ashkelon-muni", "עיריית אשקלון — מכרזים", "עיריית אשקלון", [
     "https://ashkelon.muni.gov.il/he/%D7%94%D7%A2%D7%99%D7%A8%D7%99%D7%99%D7%94/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D",
-  ], { enabled: false, hrefMatch: /\/media\/|\.pdf|מכרז/i, note: "הדומיין החדש ashkelon.muni.gov.il (Umbraco, 10.09.2026) — לאימות שליפה" }),
+  ], { enabled: false, hrefMatch: /\/media\/|\.pdf|מכרז/i, note: "Umbraco — הרשימה ב-JS (68K תווים, 0 עוגנים; 13.09.2026); נדרש מיפוי API" }),
   genericSource("hadera-muni", "עיריית חדרה — מכרזים", "עיריית חדרה", [
     proxied("https://www.ur-hadera.co.il/index.php?id=19"),
-  ], { enabled: false, hrefMatch: /bids|tender|מכרז/i, note: "החברה הכלכלית חדרה נטענת (08.09.2026) אך 0 פריטים — לבדוק מבנה הדף" }),
+  ], { enabled: false, hrefMatch: /bids|tender|מכרז/i, note: "עמוד id=19 מכיל ניווט בלבד (13.09.2026) — המכרזים כנראה בטקסט/טבלה ללא קישורים; לבדוק ידנית" }),
   genericSource("eilat-muni", "עיריית אילת — מכרזים", "עיריית אילת", [
     proxied("https://www.eilat.muni.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/"),
   ], { enabled: true, hrefMatch: /\/bids\/|\.pdf/i, note: "פלטפורמה עירונית — עד 16 פריטים (09.09.2026); ניווט ומשרות מסוננים לפי כותרת" }),
@@ -649,7 +650,7 @@ export const NEW_SOURCES: NewSource[] = [
   ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "403 גם ישירות וגם דרך IL_PROXY_URL (08.09.2026) — עובד רק מ-IP ביתי; הכתובת משוערת" }),
   genericSource("laniado", "לניאדו — מכרזים", "המרכז הרפואי לניאדו", [
     "https://www.laniado.org.il/tenders/",
-  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לא נמצא עמוד מכרזים באתר (10.09.2026); להשאיר מושבת" }),
+  ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "ה-URL מחזיר את דף הבית (13.09.2026) — אין עמוד מכרזים; להשאיר מושבת" }),
   genericSource("mayanei", "מעייני הישועה — מכרזים", "המרכז הרפואי מעייני הישועה", [
     proxied("https://www.mymc.co.il/tenders/"),
   ], { enabled: false, hrefMatch: /tender|מכרז/i, note: "לא נמצא עמוד מכרזים באתר (10.09.2026) — רק דרושים; להשאיר מושבת" }),

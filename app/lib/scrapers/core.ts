@@ -53,7 +53,17 @@ export async function fetchText(url: string, timeoutMs = 20000): Promise<string>
       redirect: "follow",
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.text();
+    // 13.09.2026: אתרים ישנים (ח.ל.ת ועוד) מוגשים ב-windows-1255 — res.text()
+    // מפענח תמיד כ-UTF-8 ומחזיר ג'יבריש, והקוצר לא מוצא «מכרז» בכותרות.
+    const buf = new Uint8Array(await res.arrayBuffer());
+    const head = new TextDecoder("latin1").decode(buf.subarray(0, 4096));
+    const ct = res.headers.get("content-type") || "";
+    const cs = (ct.match(/charset=([\w-]+)/i)?.[1] || head.match(/<meta[^>]+charset=["']?([\w-]+)/i)?.[1] || "utf-8").toLowerCase();
+    try {
+      return new TextDecoder(cs === "iso-8859-8" || cs === "iso-8859-8-i" ? "iso-8859-8" : cs).decode(buf);
+    } catch {
+      return new TextDecoder("utf-8").decode(buf);
+    }
   } finally {
     clearTimeout(timer);
   }
@@ -85,6 +95,9 @@ export function stripTags(html: string): string {
     .replace(/&amp;/g, "&")
     .replace(/&quot;/g, '"')
     .replace(/&#0?39;|&apos;/g, "'")
+    // ישויות מספריות (&#x5DC; / &#1506;) — מכבי, עמידר ועוד מקודדים כך כל טקסט עברי
+    .replace(/&#x([0-9a-f]{1,6});/gi, (_m, h: string) => { try { return String.fromCodePoint(parseInt(h, 16)); } catch { return " "; } })
+    .replace(/&#(\d{1,7});/g, (_m, d: string) => { try { return String.fromCodePoint(parseInt(d, 10)); } catch { return " "; } })
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -155,7 +168,7 @@ export function harvestTenderLinks(
   const rows: HarvestedRow[] = [];
   const seen = new Set<string>();
 
-  const anchorRe = /<a\b[^>]*href="([^"#]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+  const anchorRe = /<a\b[^>]*href=["']([^"'#]+)["'][^>]*>([\s\S]*?)<\/a>/gi;
   const matches: { index: number; end: number; href: string; inner: string }[] = [];
   let m: RegExpExecArray | null;
   while ((m = anchorRe.exec(html)) !== null) {
@@ -213,7 +226,7 @@ export function harvestTenderLinks(
 /** אבחון: כל העוגנים בדף (href + טקסט) — כדי לראות מה הקוצר רואה ולכוון hrefMatch/כתובת */
 export function listAnchors(html: string, baseUrl: string, limit = 80): { href: string; text: string }[] {
   const out: { href: string; text: string }[] = [];
-  const re = /<a\b[^>]*href="([^"#]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+  const re = /<a\b[^>]*href=["']([^"'#]+)["'][^>]*>([\s\S]*?)<\/a>/gi;
   let m: RegExpExecArray | null;
   while ((m = re.exec(html)) !== null && out.length < limit) {
     const text = stripTags(m[2]).replace(/\s+/g, " ").trim();

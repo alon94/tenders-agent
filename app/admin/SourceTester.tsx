@@ -121,7 +121,7 @@ export default function SourceTester({ token }: { token: () => string | null }) 
           <span style={{ marginInlineStart: 'auto', display: 'flex', gap: 6 }}>
             {btn(batch ? 'בודק…' : `בדוק את כל המוצגים (${visible.length})`, testAll, batch || !visible.length, true)}
             {btn('ייצוא CSV', exportCsv, !Object.keys(results).length)}
-            {btn(diagBusy ? 'מאבחן…' : 'ייצוא אבחון (0 פריטים)', exportDiag, diagBusy || !Object.keys(results).length)}
+            {btn(diagBusy ? 'מאבחן…' : 'ייצוא אבחון (מקורות ריקים/שגויים)', exportDiag, diagBusy || !Object.keys(results).length)}
           </span>
         </div>
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 720, fontSize: '0.8rem' }}>
