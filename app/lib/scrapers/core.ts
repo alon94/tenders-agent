@@ -142,6 +142,16 @@ export interface HarvestedRow {
   deadline: string | null;
 }
 
+// כותרות «המשך» שמצביעות לדף המכרז עצמו — הכותרת נלקחת מההקשר (ראו harvestTenderLinks)
+const READ_MORE = /^(קרא עוד|לפרטים( נוספים)?|פרטים( נוספים)?|למכרז|לצפייה|צפייה|הורדה|להורדה|קישור להגשה|לחץ כאן|עוד|המשך קריאה|read more|details?)\s*[›>»…]*$/i;
+/** כותרת מתוך ה-slug של ה-URL: /tender/מכרז-פומבי-02-2026-… → «מכרז פומבי 02 2026 …» */
+export function slugTitle(href: string): string {
+  try {
+    const path = decodeURIComponent(href.split(/[?#]/)[0]).replace(/\/+$/, "");
+    const seg = path.split("/").pop() || "";
+    return seg.replace(/\.(pdf|aspx?|html?|php)$/i, "").replace(/[-_+]+/g, " ").trim();
+  } catch { return ""; }
+}
 const NAV_JUNK = /^(עוד|קרא עוד|לחץ כאן|לפרטים|כניסה|הרשמה|התחברות|דף הבית|צור קשר|אודות|חיפוש|הבא|הקודם|עברית|english)/i;
 // כותרות ניווט/קטגוריה שמכילות את המילה «מכרז» אבל אינן מכרז — נפוצות
 // בתפריטי אתרי רשויות (מסוננות לפי טקסט מלא, לא לפי תחילית)
@@ -177,10 +187,19 @@ export function harvestTenderLinks(
   for (let i = 0; i < matches.length; i++) {
     const a = matches[i];
     const href = a.href;
-    const title = stripTags(a.inner);
+    let title = stripTags(a.inner);
+    const hrefOk = opts.hrefMatch ? opts.hrefMatch.test(href) : false;
+    // 13.09.2026: עוגני «קרא עוד» / «לפרטים» / «קישור להגשה» שמצביעים לדף מכרז —
+    // הכותרת נמצאת בטקסט שלפני העוגן (כרטיס/שורה), ואם אין — ב-slug של ה-URL.
+    if (hrefOk && (title.length < minTitle || READ_MORE.test(title))) {
+      const prevEnd0 = i > 0 ? matches[i - 1].end : 0;
+      const ctx = stripTags(html.slice(Math.max(prevEnd0, a.index - 700), a.index)).replace(/\s+/g, " ").trim();
+      const fromCtx = ctx.split(/[|•·]|\s{2,}/).map((s) => s.trim()).filter((s) => s.length >= minTitle).pop() || "";
+      const fromSlug = slugTitle(href);
+      title = fromCtx.length >= minTitle && !NAV_TITLE_JUNK.test(fromCtx) ? fromCtx.slice(-160) : fromSlug;
+    }
     if (title.length < minTitle) continue;
     if (NAV_JUNK.test(title) || NAV_TITLE_JUNK.test(title) || HR_JUNK.test(title) || HR_TITLE_JUNK.test(title)) continue;
-    const hrefOk = opts.hrefMatch ? opts.hrefMatch.test(href) : false;
     // hrefOnly: רק ה-href קובע (לאתרים שבהם כל תפריט מכיל «מכרזים»)
     if (opts.hrefOnly ? !hrefOk : (!match.test(title) && !hrefOk)) continue;
     if (/\.(css|js|png|jpe?g|svg|ico)(\?|$)/i.test(href)) continue;
