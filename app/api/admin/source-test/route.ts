@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/app/lib/ops';
 import { NEW_SOURCES } from '@/app/lib/scrapers/newSources';
-import { redactSecrets } from '@/app/lib/scrapers/core';
+import { fetchText, listAnchors, redactSecrets, stripTags } from '@/app/lib/scrapers/core';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -22,6 +22,21 @@ export async function GET(req: Request) {
   }
   const src = NEW_SOURCES.find((s) => s.id === id);
   if (!src) return NextResponse.json({ error: 'unknown source' }, { status: 404 });
+
+  // ?raw=1 — אבחון: מה השרת מקבל בפועל מכל כתובת (גודל, קטע טקסט, עוגנים)
+  // כדי לכוון כתובת/hrefMatch למקורות שנטענים אך מחזירים 0 פריטים.
+  if (new URL(req.url).searchParams.get('raw') === '1') {
+    const pages = await Promise.all((src.urls ?? []).map(async (u) => {
+      try {
+        const html = await fetchText(u);
+        const text = stripTags(html).replace(/\s+/g, ' ').trim();
+        return { url: redactSecrets(u), ok: true, chars: html.length, snippet: text.slice(0, 400), anchors: listAnchors(html, u.includes('url=') ? decodeURIComponent(u.split('url=')[1]) : u) };
+      } catch (e) {
+        return { url: redactSecrets(u), ok: false, error: redactSecrets(String(e)).slice(0, 300) };
+      }
+    }));
+    return NextResponse.json({ id, name: src.name, enabled: src.enabled, note: src.note ?? null, pages });
+  }
 
   const t0 = Date.now();
   try {

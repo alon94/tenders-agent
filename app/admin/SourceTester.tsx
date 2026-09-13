@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 const BORDER = '#e6eaee';
 type SourceMeta = { id: string; name: string; publisher: string; enabled: boolean; note: string | null };
+type RawDiag = { pages: { url: string; ok: boolean; chars?: number; snippet?: string; anchors?: { href: string; text: string }[]; error?: string }[] };
 type Result = { ok: boolean; fetched?: number; raw?: number; ms?: number; error?: string; sample?: { title: string; url: string; deadline: string | null }[] };
 
 export default function SourceTester({ token }: { token: () => string | null }) {
@@ -15,6 +16,9 @@ export default function SourceTester({ token }: { token: () => string | null }) 
   const [q, setQ] = useState('');
   const [open, setOpen] = useState<string | null>(null);
   const [batch, setBatch] = useState(false);
+  const [raw, setRaw] = useState<Record<string, RawDiag | 'running'>>({});
+  const [rawOpen, setRawOpen] = useState<string | null>(null);
+  const [diagBusy, setDiagBusy] = useState(false);
 
   useEffect(() => {
     const b = token(); if (!b) return;
@@ -31,6 +35,21 @@ export default function SourceTester({ token }: { token: () => string | null }) 
       setResults((prev) => ({ ...prev, [id]: r.ok ? d : { ok: false, error: d.error || `HTTP ${r.status}` } }));
     } catch (e) {
       setResults((prev) => ({ ...prev, [id]: { ok: false, error: String(e) } }));
+    }
+  }, [token]);
+
+  const diag = useCallback(async (id: string): Promise<RawDiag | null> => {
+    const b = token(); if (!b) return null;
+    setRaw((r) => ({ ...r, [id]: 'running' }));
+    try {
+      const r = await fetch(`/api/admin/source-test?source=${encodeURIComponent(id)}&raw=1`, { headers: { Authorization: `Bearer ${b}` } });
+      const d = await r.json();
+      const v: RawDiag = r.ok ? d : { pages: [{ url: '', ok: false, error: d.error || `HTTP ${r.status}` }] };
+      setRaw((prev) => ({ ...prev, [id]: v }));
+      return v;
+    } catch (e) {
+      const v: RawDiag = { pages: [{ url: '', ok: false, error: String(e) }] };
+      setRaw((prev) => ({ ...prev, [id]: v })); return v;
     }
   }, [token]);
 
@@ -56,6 +75,18 @@ export default function SourceTester({ token }: { token: () => string | null }) 
     }
     const csv = '﻿' + rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); a.download = `sources-test-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+  }
+
+  // אבחון מרוכז: כל המקורות המוצגים שנטענו אך החזירו 0 פריטים (או נכשלו) → JSON אחד
+  async function exportDiag() {
+    if (diagBusy) return;
+    setDiagBusy(true);
+    const targets = visible.filter((s) => { const r = results[s.id]; return r && r !== 'running' && (!r.ok || !r.fetched); });
+    const out: Record<string, unknown> = {};
+    const queue = [...targets];
+    await Promise.all(Array.from({ length: 3 }, async () => { while (queue.length) { const s = queue.shift()!; out[s.id] = { name: s.name, enabled: s.enabled, note: s.note, result: results[s.id], raw: await diag(s.id) }; } }));
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 1)], { type: 'application/json' })); a.download = `sources-diag-${new Date().toISOString().slice(0, 10)}.json`; a.click();
+    setDiagBusy(false);
   }
 
   const counts = { ok: 0, fail: 0, empty: 0 };
@@ -90,6 +121,7 @@ export default function SourceTester({ token }: { token: () => string | null }) 
           <span style={{ marginInlineStart: 'auto', display: 'flex', gap: 6 }}>
             {btn(batch ? 'בודק…' : `בדוק את כל המוצגים (${visible.length})`, testAll, batch || !visible.length, true)}
             {btn('ייצוא CSV', exportCsv, !Object.keys(results).length)}
+            {btn(diagBusy ? 'מאבחן…' : 'ייצוא אבחון (0 פריטים)', exportDiag, diagBusy || !Object.keys(results).length)}
           </span>
         </div>
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 720, fontSize: '0.8rem' }}>
@@ -114,8 +146,23 @@ export default function SourceTester({ token }: { token: () => string | null }) 
                         : <span style={{ color: '#B45309', fontWeight: 700 }}>∅ נטען, 0 פריטים · {Math.round((rr.ms || 0) / 100) / 10}s</span>}
                     </td>
                     <td style={{ padding: '7px 10px', color: '#5f6c7a', maxWidth: 360, fontSize: '0.72rem' }}>{rr && !rr.ok ? <span style={{ color: '#B91C1C' }}>{rr.error}</span> : s.note}</td>
-                    <td style={{ padding: '7px 10px', textAlign: 'left' }}>{btn('בדיקה', () => test(s.id), r === 'running')}</td>
+                    <td style={{ padding: '7px 10px', textAlign: 'left', whiteSpace: 'nowrap' }}>
+                      {btn('בדיקה', () => test(s.id), r === 'running')}
+                      {rr && (!rr.ok || !rr.fetched) && <span style={{ marginInlineStart: 4 }}>{btn(raw[s.id] === 'running' ? '…' : 'אבחון', async () => { await diag(s.id); setRawOpen(s.id); }, raw[s.id] === 'running')}</span>}
+                    </td>
                   </tr>
+                  {rawOpen === s.id && raw[s.id] && raw[s.id] !== 'running' && (
+                    <tr><td colSpan={5} style={{ padding: '4px 10px 10px', background: '#fff8e6', fontSize: '0.72rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}><b>אבחון גולמי — מה Vercel מקבל מהכתובות</b><button type="button" onClick={() => setRawOpen(null)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'inherit' }}>סגור ✕</button></div>
+                      {(raw[s.id] as RawDiag).pages.map((pg, i) => (
+                        <div key={i} style={{ marginTop: 6, paddingTop: 6, borderTop: '1px dashed #e0d3b0' }}>
+                          <div dir="ltr" style={{ textAlign: 'left', color: pg.ok ? '#1a2330' : '#B91C1C', wordBreak: 'break-all' }}>{pg.url} {pg.ok ? `· ${pg.chars} תווים · ${pg.anchors?.length ?? 0} קישורים` : `· ${pg.error}`}</div>
+                          {pg.snippet && <div style={{ color: '#5f6c7a', marginTop: 2 }}>{pg.snippet}</div>}
+                          {pg.anchors && <div style={{ marginTop: 4, maxHeight: 260, overflow: 'auto' }}>{pg.anchors.map((a, j) => <div key={j} style={{ padding: '1px 0' }}>{a.text} <span dir="ltr" style={{ color: '#8a97a3' }}>{a.href}</span></div>)}</div>}
+                        </div>
+                      ))}
+                    </td></tr>
+                  )}
                   {open === s.id && rr?.sample && (
                     <tr><td colSpan={5} style={{ padding: '4px 10px 10px', background: '#f7f9fb' }}>
                       {rr.sample.map((x, i) => <div key={i} style={{ fontSize: '0.74rem', padding: '2px 0' }}><a href={x.url} target="_blank" rel="noreferrer">{x.title}</a>{x.deadline && <span style={{ color: '#5f6c7a' }}> · {x.deadline}</span>}</div>)}

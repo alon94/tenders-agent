@@ -210,6 +210,20 @@ export function harvestTenderLinks(
 }
 
 /** ממיר שורות שנקצרו ל-TenderRecord אחיד עבור מקור נתון. */
+/** אבחון: כל העוגנים בדף (href + טקסט) — כדי לראות מה הקוצר רואה ולכוון hrefMatch/כתובת */
+export function listAnchors(html: string, baseUrl: string, limit = 80): { href: string; text: string }[] {
+  const out: { href: string; text: string }[] = [];
+  const re = /<a\b[^>]*href="([^"#]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html)) !== null && out.length < limit) {
+    const text = stripTags(m[2]).replace(/\s+/g, " ").trim();
+    if (text.length < 4) continue;
+    if (/^(mailto:|tel:|javascript:)/i.test(m[1])) continue;
+    out.push({ href: absolutize(baseUrl, m[1]), text: text.slice(0, 120) });
+  }
+  return out;
+}
+
 export function rowsToRecords(
   rows: HarvestedRow[],
   src: { id: string; publisher: string }

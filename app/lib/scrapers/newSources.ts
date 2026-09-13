@@ -16,6 +16,8 @@ export interface NewSource {
   publisher: string;
   enabled: boolean;
   note?: string;
+  /** כתובות הרשימה (למקורות גנריים) — לאבחון גולמי בבודק המקורות */
+  urls?: string[];
   run: () => Promise<TenderRecord[]>;
 }
 
@@ -163,6 +165,7 @@ function genericSource(
     publisher,
     enabled: opts.enabled ?? true,
     note: opts.note,
+    urls,
     run: async () => {
       const all: TenderRecord[] = [];
       const errors: string[] = [];
@@ -381,7 +384,7 @@ export const NEW_SOURCES: NewSource[] = [
   // חסומי WAF/גיאו לשרת חו"ל — ידרשו IL_PROXY_URL
   genericSource("haifa-port", "נמל חיפה — מכרזים", "חברת נמל חיפה", [
     proxied("https://www.haifaport.co.il/tenders/"),
-  ], { enabled: false, hrefMatch: /\/tender|engagements|annonce|\.pdf/i, note: "WordPress — נטען דרך הפרוקסי אך 0 פריטים; hrefMatch הורחב ל-/tender/ /engagements/ /annonce/ (10.09.2026) — לאימות" }),
+  ], { enabled: false, hrefMatch: /\/tender|engagements|annonce|\.pdf/i, note: "13.09.2026: 403 דרך IL_PROXY_URL (קודם נטען ריק) — ה-IP של הפרוקסי כנראה סומן" }),
   genericSource("transisrael", "חוצה ישראל (כביש 6) — מכרזים", "חוצה ישראל", [
     proxied("https://www.transisrael.co.il/Tenders"),
   ], { enabled: true, hrefMatch: /tender/i, note: "נטען דרך IL_PROXY_URL — 19 פריטים (אומת 08.09.2026)" }),
@@ -563,24 +566,24 @@ export const NEW_SOURCES: NewSource[] = [
   genericSource("noga", "נוגה — ניהול המערכת: מכרזים", "נוגה — ניהול מערכת החשמל", [
     "https://www.noga-iso.co.il/procurement-lobby/tenders/",
     proxied("https://www.noga-iso.co.il/procurement-lobby/tenders/"),
-  ], { enabled: false, hrefMatch: /tender|מכרז|\.pdf/i, note: "עמוד המכרזים אותר: /procurement-lobby/tenders/ (10.09.2026) — לאימות שליפה" }),
+  ], { enabled: true, hrefMatch: /tender|מכרז|\.pdf/i, note: "נטען ישירות — 3 מכרזים (אומת 13.09.2026)" }),
   genericSource("pei", 'תש"ן — תשתיות נפט ואנרגיה: מכרזים', 'תש"ן', [
     proxied("https://www.pei.co.il/tenders/"),
-  ], { enabled: true, hrefMatch: /tender|מכרז/i, note: "נטען דרך IL_PROXY_URL — 16 פריטים (אומת 08.09.2026)" }),
+  ], { enabled: true, hrefMatch: /tender|מכרז/i, note: "עבד דרך IL_PROXY_URL (16 פריטים, 08.09) — 13.09.2026: 403 דרך הפרוקסי; ה-IP של הפרוקסי כנראה סומן" }),
   genericSource("escil", "החברה לשירותי איכות הסביבה — מכרזים", "החברה לשירותי איכות הסביבה", [
     "https://enviro-services.co.il/blog/category/tender/active-tenders/",
   ], { enabled: true, hrefMatch: /\/blog\/tender\//i, note: "WordPress enviro-services.co.il — קטגוריית «מכרזים פעילים» בלבד (אומת 08.09.2026)" }),
   genericSource("moriah", "מוריה — חברת הפיתוח של ירושלים", "מוריה", [
     proxied("https://www.moriah.co.il/suppliers/"),
     proxied("https://www.moriah.co.il/tender_cat/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/"),
-  ], { enabled: false, hrefMatch: /tender|מכרז|\.pdf/i, note: "עמוד ספקים + ארכיון מכרזים (WordPress, 10.09.2026); מוריה מפרסמת גם בדקל (מכוסה) — לאימות" }),
+  ], { enabled: true, hrefMatch: /tender|מכרז|\.pdf/i, note: "WordPress דרך IL_PROXY_URL — 13 פריטים (אומת 13.09.2026); מפרסמת גם בדקל" }),
   genericSource("pami", 'פמ"י — פיתוח מזרח ירושלים', 'פמ"י', [
     "https://www.pami.co.il/he/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/",
   ], { enabled: true, hrefMatch: /tender|מכרז/i, note: "נטען ישירות — 3 פריטים (אומת 08.09.2026)" }),
   genericSource("jtmt", "תוכנית אב לתחבורה ירושלים — מכרזים", "צוות תוכנית אב לתחבורה ירושלים", [
     proxied("https://jet.gov.il/tenders/"),
     proxied("https://jet.gov.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/"),
-  ], { enabled: false, hrefMatch: /tenders-\d/i, note: "fetch failed ישירות (10.09.2026) — נוסה דרך IL_PROXY_URL; דפי מכרז בתבנית /tenders-NN-YYYY/" }),
+  ], { enabled: false, hrefMatch: /tenders-\d/i, note: "13.09.2026: 502 דרך IL_PROXY_URL, fetch failed ישירות — לאבחון" }),
 
   // ---------- רשויות מקומיות גדולות שחסרות ----------
   // עיריית ירושלים מפרסמת גם בדקל (bids.dekel.co.il/jerusalemMuni) שכבר סרוק — כאן המקור הישיר.
@@ -605,8 +608,8 @@ export const NEW_SOURCES: NewSource[] = [
     proxied("https://www.rehovot.muni.il/bids/?categoryId=7"),
   ], { enabled: true, hrefMatch: /\/bids\/|\.pdf/i, note: "פלטפורמה עירונית — עד 8 פריטים (09.09.2026); ניווט ומשרות מסוננים לפי כותרת" }),
   genericSource("modiin-muni", "עיריית מודיעין-מכבים-רעות — מכרזים", "עיריית מודיעין", [
-    "https://www.modiin.muni.il/modiinwebsite/ChannelArticle.aspx?PageID=487_468",
-  ], { enabled: false, hrefMatch: /ArticlePage|GlobalFiles|\.pdf/i, note: "ASP.NET ChannelArticle PageID=487_468 (10.09.2026) — לאימות שליפה" }),
+    proxied("https://www.modiin.muni.il/modiinwebsite/ChannelArticle.aspx?PageID=487_468"),
+  ], { enabled: false, hrefMatch: /ArticlePage|GlobalFiles|\.pdf/i, note: "ASP.NET PageID=487_468 — 403 ישירות (13.09.2026); לנסות דרך הפרוקסי" }),
   genericSource("batyam-muni", "עיריית בת ים — מכרזים", "עיריית בת ים", [
     proxied("https://www.bat-yam.muni.il/he/bids/"),
   ], { enabled: true, hrefMatch: /\/bids\/|\.pdf/i, note: "פלטפורמה עירונית — עד 58 פריטים (09.09.2026); ניווט ומשרות מסוננים לפי כותרת" }),
