@@ -143,7 +143,9 @@ export interface HarvestedRow {
 }
 
 // כותרות «המשך» שמצביעות לדף המכרז עצמו — הכותרת נלקחת מההקשר (ראו harvestTenderLinks)
-const READ_MORE = /^(קרא עוד|לפרטים( נוספים)?|פרטים( נוספים)?|למכרז|לצפייה|צפייה|הורדה|להורדה|קישור להגשה|לחץ כאן|עוד|המשך קריאה|read more|details?)\s*[›>»…]*$/i;
+const READ_MORE = /^(קרא עוד|קראו עוד|לפרטים( נוספים)?|פרטים( נוספים)?|למכרז|לצפייה( בקובץ)?|צפייה|הורדה|להורדה|קישור להגשה|לחץ( כאן)?|לחצו( כאן)?|עוד|המשך קריאה|read more|details?)\s*[›>»…]*$/i;
+// 13.09.2026: זנבות נגישות/סוג קובץ שנדבקים לכותרת («קובץ מסוג PDF», «נפתח בחלון חדש»)
+const TITLE_TAILS = /\s*(קובץ מסוג (PDF|WORD|EXCEL|DOCX?|XLSX?)|נפתח בחלון חדש|\(PDF\)|-\s*$)\s*/gi;
 /** כותרת מתוך ה-slug של ה-URL: /tender/מכרז-פומבי-02-2026-… → «מכרז פומבי 02 2026 …» */
 export function slugTitle(href: string): string {
   try {
@@ -196,8 +198,11 @@ export function harvestTenderLinks(
       const ctx = stripTags(html.slice(Math.max(prevEnd0, a.index - 700), a.index)).replace(/\s+/g, " ").trim();
       const fromCtx = ctx.split(/[|•·]|\s{2,}/).map((s) => s.trim()).filter((s) => s.length >= minTitle).pop() || "";
       const fromSlug = slugTitle(href);
-      title = fromCtx.length >= minTitle && !NAV_TITLE_JUNK.test(fromCtx) ? fromCtx.slice(-160) : fromSlug;
+      // slug עברי תיאורי (WordPress: /tender/מכרז-פומבי-02-2026-למתן-שירותי-מחשוב/) עדיף על זנב ההקשר
+      const slugHeWords = (fromSlug.match(/[\u0590-\u05ff]{2,}/g) || []).length;
+      title = slugHeWords >= 3 ? fromSlug : fromCtx.length >= minTitle && !NAV_TITLE_JUNK.test(fromCtx) ? fromCtx.slice(-160) : fromSlug;
     }
+    title = title.replace(TITLE_TAILS, " ").replace(/\s+/g, " ").replace(/[\s\-–—:]+$/, "").trim();
     if (title.length < minTitle) continue;
     if (NAV_JUNK.test(title) || NAV_TITLE_JUNK.test(title) || HR_JUNK.test(title) || HR_TITLE_JUNK.test(title)) continue;
     // hrefOnly: רק ה-href קובע (לאתרים שבהם כל תפריט מכיל «מכרזים»)

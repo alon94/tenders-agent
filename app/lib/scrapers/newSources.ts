@@ -563,7 +563,7 @@ export const NEW_SOURCES: NewSource[] = [
   genericSource("jewish-agency", "הסוכנות היהודית — מכרזים", "הסוכנות היהודית לארץ ישראל", [
     "https://app.vendors.co.il/jewishagency/michrazim",
     "https://www.jewishagency.org/il/tenders/",
-  ], { enabled: false, hrefMatch: /michrazim\/[0-9a-f]{12,}$/i, note: "Arma (app.vendors.co.il) — הקישורים נשלפים אך הכותרת היא «קישור להגשה» (13.09.2026); נדרש קוצר ייעודי שלוקח כותרת מההקשר" }),
+  ], { enabled: true, hrefMatch: /michrazim\/[0-9a-f]{12,}$/i, note: "Arma (app.vendors.co.il) — «קישור להגשה» → הכותרת מטקסט הכרטיס; 2 פריטים (אומת 13.09.2026)" }),
   genericSource("yadvashem", "יד ושם — מכרזים", "יד ושם", [
     proxied("https://yvservices.yadvashem.org/he/tenders"),
   ], { enabled: false, hrefMatch: /tender|מכרז|\.pdf/i, note: "yvservices — SPA, ה-HTML ריק (אומת באבחון 13.09.2026); נדרש מיפוי API" }),
@@ -698,10 +698,10 @@ export const NEW_SOURCES: NewSource[] = [
   ], { enabled: true, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "גל 6 — 4 פריטים בבדיקה יבשה (אומת 13.09.2026)" }),
   genericSource("lod-muni", "עיריית לוד — מכרזים", "עיריית לוד", [
     "https://www.lod.muni.il/bids/",
-  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "timeout דרך הפרוקסי (13.09.2026) — נוסה ישירות" }),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "timeout דרך IL_PROXY_URL ו-fetch failed ישירות (13.09.2026) — חסימת cloud ברמת רשת; נדרש רץ ביתי/Web Unlocker" }),
   genericSource("nahariya-muni", "עיריית נהריה — מכרזים", "עיריית נהריה", [
     "https://www.nahariya.muni.il/bids/",
-  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "timeout דרך הפרוקסי (13.09.2026) — נוסה ישירות" }),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "timeout דרך IL_PROXY_URL ו-fetch failed ישירות (13.09.2026) — חסימת cloud ברמת רשת; נדרש רץ ביתי/Web Unlocker" }),
   genericSource("nof-hagalil-muni", "עיריית נוף הגליל — מכרזים", "עיריית נוף הגליל", [
     proxied("https://www.nof-hagalil.muni.il/duplicated-1630576171/"),
   ], { enabled: true, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "גל 6 — 18 פריטים בבדיקה יבשה (אומת 13.09.2026)" }),
@@ -721,7 +721,7 @@ export const NEW_SOURCES: NewSource[] = [
   ], { enabled: true, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "גל 6 — 6 פריטים בבדיקה יבשה (אומת 13.09.2026)" }),
   genericSource("eshkol-rc", "מועצה אזורית אשכול — מכרזים", "מועצה אזורית אשכול", [
     "https://eshkol.info/bids/",
-  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "403 דרך הפרוקסי (13.09.2026) — נוסה ישירות" }),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "403 גם דרך IL_PROXY_URL וגם ישירות (13.09.2026) — WAF; נדרש רץ ביתי/Web Unlocker" }),
   genericSource("bns-rc", "מועצה אזורית בני שמעון — מכרזים", "מועצה אזורית בני שמעון", [
     proxied("https://www.bns.org.il/bids/"),
   ], { enabled: true, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "גל 6 — 33 פריטים בבדיקה יבשה (אומת 13.09.2026)" }),
@@ -738,8 +738,8 @@ export const NEW_SOURCES: NewSource[] = [
     proxied("https://www.shaffir.org.il/195/"),
   ], { enabled: true, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "גל 6 — 4 פריטים בבדיקה יבשה (אומת 13.09.2026)" }),
   genericSource("yoav-rc", "מועצה אזורית יואב — מכרזים", "מועצה אזורית יואב", [
-    proxied("https://www.yoav.org.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/"),
-  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "403 ישירות (13.09.2026) — נוסה דרך הפרוקסי" }),
+    proxied("https://www.yoav.org.il/bids/"),
+  ], { enabled: true, hrefMatch: /\/bids\/\d|\.pdf/i, note: "פלטפורמה עירונית /bids/ דרך IL_PROXY_URL (13.09.2026) — כרגע «אין מכרזים פעילים»; /מכרזים/ היה עמוד ניווט בלבד" }),
   genericSource("beer-tuvia-rc", "מועצה אזורית באר טוביה — מכרזים", "מועצה אזורית באר טוביה", [
     proxied("https://beer-tuvia.org.il/bids/"),
   ], { enabled: true, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "גל 6 — 19 פריטים בבדיקה יבשה (אומת 13.09.2026)" }),
@@ -798,7 +798,7 @@ export const NEW_SOURCES: NewSource[] = [
   ], { enabled: true, hrefMatch: /ItemID=|\.pdf/i, note: "גל 6 — 83 פריטים בבדיקה יבשה (אומת 13.09.2026)" }),
   genericSource("mei-barak", "מי ברק — מכרזים", "מי ברק", [
     "https://www.mei-barak.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%A4%D7%95%D7%9E%D7%91%D7%99%D7%99%D7%9D/",
-  ], { enabled: false, hrefMatch: /\/tenders\/./i, note: "עוגני «לפרטים» → דפי /tenders/ (כותרת מההקשר/slug, 13.09.2026) — לאימות" }),
+  ], { enabled: true, hrefMatch: /\/tenders\/./i, note: "עוגני «לפרטים» → דפי /tenders/<slug עברי> — הכותרת מה-slug (אומת 13.09.2026, מכרז אחד פעיל)" }),
   genericSource("mei-bat-yam", "מי בת ים — מכרזים", "מי בת ים", [
     "https://www.mei-bat-yam.co.il/?CategoryID=246",
   ], { enabled: true, hrefMatch: /ItemID=|\.pdf/i, note: "גל 6 — 56 פריטים בבדיקה יבשה (אומת 13.09.2026)" }),
@@ -807,7 +807,7 @@ export const NEW_SOURCES: NewSource[] = [
   ], { enabled: true, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "גל 6 — 9 פריטים בבדיקה יבשה (אומת 13.09.2026)" }),
   genericSource("mei-megalil", "מי גליל — מכרזים", "מי גליל", [
     "https://megalil.co.il/bids/",
-  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "timeout דרך הפרוקסי (13.09.2026) — נוסה ישירות" }),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "timeout דרך IL_PROXY_URL ו-fetch failed ישירות (13.09.2026) — חסימת cloud ברמת רשת; נדרש רץ ביתי/Web Unlocker" }),
   genericSource("mei-hahar", "מי ההר — מכרזים", "מי ההר", [
     "https://mei-hahar.co.il/%D7%93%D7%A8%D7%95%D7%A9%D7%99%D7%9D-%D7%95%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D",
   ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "העמוד מכיל ניווט בלבד (13.09.2026) — לאתר עמוד רשימה" }),
@@ -816,15 +816,15 @@ export const NEW_SOURCES: NewSource[] = [
   ], { enabled: true, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "גל 6 — 6 פריטים בבדיקה יבשה (אומת 13.09.2026)" }),
   genericSource("mei-hatanur", "מי התנור — מכרזים", "מי התנור", [
     proxied("https://www.hatanur.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D"),
-  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "403 ישירות (13.09.2026) — נוסה דרך הפרוקסי" }),
+  ], { enabled: true, match: /^מכרז/, note: "טבלת PDF דרך IL_PROXY_URL — רק כותרות שמתחילות ב«מכרז» (הנספחים/מדיניות מסוננים); אומת 13.09.2026" }),
   genericSource("mei-hadera", "מי חדרה — מכרזים", "מי חדרה", [
     proxied("https://www.mei-hadera.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%95%D7%94%D7%A6%D7%A2%D7%95%D7%AA"),
-  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "403 ישירות (13.09.2026) — נוסה דרך הפרוקסי" }),
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "נטען דרך הפרוקסי אך הקבצים בכותרות גנריות («מסמכי פנייה», «מסמך הבהרות») ורובם ארכיון web.archive (13.09.2026) — לא שווה קציר" }),
 
   // ---------- חברות וגופים ציבוריים ----------
   genericSource("tarbut-hadiur", "האגודה לתרבות הדיור — מכרזים", "האגודה לתרבות הדיור", [
     "https://www.tarbut-hadiur.gov.il/content/20393",
-  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "80 קישורים, אף אחד לא מכרז (13.09.2026) — לאתר עמוד רשימה" }),
+  ], { enabled: true, hrefMatch: /\/(sites\/default\/)?files\/.*\.pdf/i, note: "עוגני «לחץ» → PDF; הכותרת מטקסט השורה שלפני העוגן. כולל גם «מכרזים לא פעילים» (13.09.2026)" }),
   genericSource("igtc", "החברה הממשלתית לתיירות — מכרזים", "החברה הממשלתית לתיירות", [
     "https://igtc.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/",
   ], { enabled: true, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "גל 6 — 3 פריטים בבדיקה יבשה (אומת 13.09.2026)" }),
@@ -853,7 +853,7 @@ export const NEW_SOURCES: NewSource[] = [
   ], { enabled: true, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "גל 6 — 8 פריטים בבדיקה יבשה (אומת 13.09.2026)" }),
   genericSource("beitberl", "המכללה האקדמית בית ברל — מכרזים", "המכללה האקדמית בית ברל", [
     proxied("https://www.beitberl.ac.il/about-information/auctions/publicity/"),
-  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "fetch failed ישירות (13.09.2026) — נוסה דרך הפרוקסי" }),
+  ], { enabled: true, hrefMatch: /\/tenders\/./i, note: "WordPress /tenders/<slug> דרך IL_PROXY_URL — ~38 מכרזים עם כותרות מלאות ומועד הגשה (אומת 13.09.2026)" }),
   genericSource("smkb", "סמינר הקיבוצים — מכרזים", "סמינר הקיבוצים", [
     "https://www.smkb.ac.il/us/contact-us/biddings/bidding/",
   ], { enabled: true, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "גל 6 — 61 פריטים בבדיקה יבשה (אומת 13.09.2026)" }),
@@ -864,7 +864,7 @@ export const NEW_SOURCES: NewSource[] = [
   ], { enabled: true, hrefMatch: /ItemID=|\.pdf/i, note: "גל 6 — 78 פריטים בבדיקה יבשה (אומת 13.09.2026)" }),
   genericSource("poria", "פוריה – המרכז הרפואי צפון — מכרזים", "פוריה – המרכז הרפואי צפון", [
     proxied("https://www.poria.org.il/?CategoryID=1944"),
-  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "403 ישירות (13.09.2026) — נוסה דרך הפרוקסי" }),
+  ], { enabled: true, hrefMatch: /ArticleID=|\.pdf/i, note: "CategoryID דרך IL_PROXY_URL — hrefMatch הוגבל ל-ArticleID (CategoryID תפס את כל הניווט, 96); 3 מכרזים (אומת 13.09.2026)" }),
 
   // ---------- רשויות ניקוז ונחלים ----------
   genericSource("nikuzcarmel-nikuz", "רשות ניקוז ונחלים כרמל — מכרזים", "רשות ניקוז ונחלים כרמל", [
@@ -872,13 +872,13 @@ export const NEW_SOURCES: NewSource[] = [
   ], { enabled: true, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "גל 6 — 11 פריטים בבדיקה יבשה (אומת 13.09.2026)" }),
   genericSource("rnsharon-nikuz", "רשות ניקוז ונחלים שרון — מכרזים", "רשות ניקוז ונחלים שרון", [
     "https://rnsharon.org.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%95%D7%93%D7%A8%D7%95%D7%A9%D7%99%D7%9D/",
-  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "הכתובת הוחלפה לעמוד «מכרזים ודרושים» (13.09.2026) — לאימות" }),
+  ], { enabled: true, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "עמוד «מכרזים ודרושים» — 4 פריטים (אומת 13.09.2026)" }),
   genericSource("yarkon-nikuz-nikuz", "רשות ניקוז ירקון — מכרזים", "רשות ניקוז ירקון", [
     proxied("https://yarkon-nikuz.org.il/index.php/bids-1/"),
-  ], { match: /מכרז|קול קורא|מאגר|הצעות|בל"מ/, enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "הפריטים הם «רישום למאגר…» — match הורחב (13.09.2026) — לאימות" }),
+  ], { match: /מכרז|קול קורא|מאגר|הצעות|בל"מ/, enabled: true, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "21 פריטים — בעיקר «רישום למאגר…» (match הורחב, אומת 13.09.2026)" }),
   genericSource("nikuz-nikuz", "רשות ניקוז ונחלים שורק לכיש — מכרזים", "רשות ניקוז ונחלים שורק לכיש", [
     "https://nikuz.org.il/he/tender/",
-  ], { enabled: false, hrefMatch: /\/he\/tender\/./i, note: "עוגני «קרא עוד» → דפי /he/tender/ (כותרת מההקשר/slug, 13.09.2026) — לאימות" }),
+  ], { enabled: true, hrefMatch: /\/he\/tender\/./i, note: "עוגני «קרא עוד» → /he/tender/<slug עברי> — הכותרת מה-slug; 10 פריטים (אומת 13.09.2026)" }),
   genericSource("besor-nikuz", "רשות ניקוז ונחלים שקמה בשור — מכרזים", "רשות ניקוז ונחלים שקמה בשור", [
     "https://www.besor.org.il/he/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%A4%D7%A2%D7%99%D7%9C%D7%99%D7%9D/",
   ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "העמוד מכיל ניווט בלבד — הרשימה כנראה ב-JS (13.09.2026)" }),
