@@ -680,6 +680,217 @@ export const NEW_SOURCES: NewSource[] = [
   genericSource("wingate", "מכון וינגייט — מכרזים", "מכון וינגייט", [
     "https://wingate.org.il/tender_type/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%A4%D7%A2%D7%99%D7%9C%D7%99%D7%9D/",
   ], { enabled: true, hrefMatch: /\/tenders\//i, note: "נטען ישירות — 9 מכרזים פעילים (אומת 08.09.2026)" }),
+  // ============================================================
+  //  גל 6 (13.09.2026): מועמדים מקובץ «מפת מקורות וקישורים» — 63 עמודי
+  //  מכרזים שאותרו (מועצות אזוריות, תאגידי מים, רשויות ניקוז, מכללות,
+  //  בתי חולים, חברות ממשלתיות). כולם מושבתים עד אימות בבודק המקורות.
+  // ============================================================
+
+  // ---------- רשויות מקומיות ----------
+  genericSource("ofaqim-muni", "עיריית אופקים — מכרזים", "עיריית אופקים", [
+    proxied("https://www.ofaqim.muni.il/bids/"),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "מועמד 13.09.2026 — יש להפריד מכרזי רכש ממשרות." }),
+  genericSource("harish-muni", "עיריית חריש — מכרזים", "עיריית חריש", [
+    proxied("https://www.harish.muni.il/cityservices/info/bids/"),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "מועמד 13.09.2026 — יש להפריד מכרזי רכש ממשרות." }),
+  genericSource("tiberias-muni", "עיריית טבריה — מכרזים", "עיריית טבריה", [
+    proxied("https://www.tiberias.muni.il/council_services/toshav/bids/"),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("lod-muni", "עיריית לוד — מכרזים", "עיריית לוד", [
+    proxied("https://www.lod.muni.il/bids/"),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("nahariya-muni", "עיריית נהריה — מכרזים", "עיריית נהריה", [
+    proxied("https://www.nahariya.muni.il/bids/"),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("nof-hagalil-muni", "עיריית נוף הגליל — מכרזים", "עיריית נוף הגליל", [
+    proxied("https://www.nof-hagalil.muni.il/duplicated-1630576171/"),
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("arad-muni", "עיריית ערד — מכרזים", "עיריית ערד", [
+    proxied("https://www.arad.muni.il/bids/"),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("ramle-muni", "עיריית רמלה — מכרזים", "עיריית רמלה", [
+    proxied("https://ramle.org.il/446/"),
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — יש להפריד מכרזי רכש ממשרות." }),
+
+  // ---------- מועצות אזוריות ----------
+  genericSource("arava-rc", "מועצה אזורית הערבה התיכונה — מכרזים", "מועצה אזורית הערבה התיכונה", [
+    proxied("https://www.arava.co.il/bids/"),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("ma-tamar-rc", "מועצה אזורית תמר — מכרזים", "מועצה אזורית תמר", [
+    proxied("https://www.ma-tamar.org.il/bids/"),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("eshkol-rc", "מועצה אזורית אשכול — מכרזים", "מועצה אזורית אשכול", [
+    proxied("https://eshkol.info/bids/"),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("bns-rc", "מועצה אזורית בני שמעון — מכרזים", "מועצה אזורית בני שמעון", [
+    proxied("https://www.bns.org.il/bids/"),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("lachish-rc", "מועצה אזורית לכיש — מכרזים", "מועצה אזורית לכיש", [
+    "https://lachish.org.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("hrhevron-rc", "מועצה אזורית הר חברון — מכרזים", "מועצה אזורית הר חברון", [
+    proxied("https://www.hrhevron.co.il/2153/"),
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — יש להפריד מכרזי רכש ממשרות." }),
+  genericSource("hof-ashkelon-rc", "מועצה אזורית חוף אשקלון — מכרזים", "מועצה אזורית חוף אשקלון", [
+    proxied("https://www.hof-ashkelon.org.il/bids/"),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("shaffir-rc", "מועצה אזורית שפיר — מכרזים", "מועצה אזורית שפיר", [
+    proxied("https://www.shaffir.org.il/195/"),
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — יש להפריד מכרזי רכש ממשרות." }),
+  genericSource("yoav-rc", "מועצה אזורית יואב — מכרזים", "מועצה אזורית יואב", [
+    "https://www.yoav.org.il/מכרזים/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("beer-tuvia-rc", "מועצה אזורית באר טוביה — מכרזים", "מועצה אזורית באר טוביה", [
+    proxied("https://beer-tuvia.org.il/bids/"),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("m-yehuda-rc", "מועצה אזורית מטה יהודה — מכרזים", "מועצה אזורית מטה יהודה", [
+    proxied("https://www.m-yehuda.org.il/bids/"),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("gderot-rc", "מועצה אזורית גדרות — מכרזים", "מועצה אזורית גדרות", [
+    proxied("https://www.gderot.muni.il/bids/"),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("hevel-yavne-rc", "מועצה אזורית חבל יבנה — מכרזים", "מועצה אזורית חבל יבנה", [
+    proxied("https://www.hevel-yavne.org.il/bids/"),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("brener-rc", "מועצה אזורית ברנר — מכרזים", "מועצה אזורית ברנר", [
+    proxied("https://www.brener.org.il/955/"),
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — יש להפריד מכרזי רכש ממשרות." }),
+  genericSource("ganrave-rc", "מועצה אזורית גן רווה — מכרזים", "מועצה אזורית גן רווה", [
+    proxied("https://www.ganrave.org.il/bids/"),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("gezer-region-rc", "מועצה אזורית גזר — מכרזים", "מועצה אזורית גזר", [
+    proxied("https://gezer-region.muni.il/bids/?category=4"),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("hof-hasharon-rc", "מועצה אזורית חוף השרון — מכרזים", "מועצה אזורית חוף השרון", [
+    proxied("https://hof-hasharon.co.il/bids/"),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "מועמד 13.09.2026 — יש להפריד מכרזי רכש ממשרות." }),
+  genericSource("lev-hasharon-rc", "מועצה אזורית לב השרון — מכרזים", "מועצה אזורית לב השרון", [
+    proxied("https://www.lev-hasharon.com/348/"),
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("hefer-rc", "מועצה אזורית עמק חפר — מכרזים", "מועצה אזורית עמק חפר", [
+    proxied("https://www.hefer.org.il/bids/?category=3"),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("menashe-rc", "מועצה אזורית מנשה — מכרזים", "מועצה אזורית מנשה", [
+    proxied("https://www.menashe.co.il/bids/"),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "מועמד 13.09.2026 — יש לאמת שינויים בזהות ובכיסוי הרשות לפני ספירה ייחודית." }),
+  genericSource("megiddo-rc", "מועצה אזורית מגידו — מכרזים", "מועצה אזורית מגידו", [
+    proxied("https://www.megiddo.org.il/bids/"),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("hof-hacarmel-rc", "מועצה אזורית חוף הכרמל — מכרזים", "מועצה אזורית חוף הכרמל", [
+    proxied("https://www.hof-hacarmel.co.il/183/"),
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — יש להפריד מכרזי רכש ממשרות." }),
+  genericSource("emekyizrael-rc", "מועצה אזורית עמק יזרעאל — מכרזים", "מועצה אזורית עמק יזרעאל", [
+    proxied("https://www.emekyizrael.org.il/bids/"),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("hagilboa-rc", "מועצה אזורית הגלבוע — מכרזים", "מועצה אזורית הגלבוע", [
+    proxied("https://www.hagilboa.org.il/308/"),
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — יש להפריד מכרזי רכש ממשרות." }),
+  genericSource("bustanelmarg-rc", "מועצה אזורית בוסתאן אל מרג׳ — מכרזים", "מועצה אזורית בוסתאן אל מרג׳", [
+    proxied("https://www.bustanelmarg.muni.il/about/info/bids/"),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "מועמד 13.09.2026 — יש להפריד מכרזי רכש ממשרות." }),
+
+  // ---------- תאגידי מים ----------
+  genericSource("mei-hari-nazareth", "הרי נצרת — מכרזים", "הרי נצרת", [
+    proxied("https://www.hari-nazareth.org.il/bids/"),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("mei-mono", "מי אונו — מכרזים", "מי אונו", [
+    "https://www.mono.org.il/?CategoryID=252",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("mei-barak", "מי ברק — מכרזים", "מי ברק", [
+    "https://www.mei-barak.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%A4%D7%95%D7%9E%D7%91%D7%99%D7%99%D7%9D/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("mei-bat-yam", "מי בת ים — מכרזים", "מי בת ים", [
+    "https://www.mei-bat-yam.co.il/?CategoryID=246",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("mei-givatayim", "מי גבעתיים — מכרזים", "מי גבעתיים", [
+    proxied("https://mei-givatayim.co.il/bids/"),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("mei-megalil", "מי גליל — מכרזים", "מי גליל", [
+    proxied("https://megalil.co.il/bids/"),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("mei-hahar", "מי ההר — מכרזים", "מי ההר", [
+    "https://mei-hahar.co.il/%D7%93%D7%A8%D7%95%D7%A9%D7%99%D7%9D-%D7%95%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — יש להפריד מכרזי רכש ממשרות." }),
+  genericSource("mey-herz", "מי הרצליה — מכרזים", "מי הרצליה", [
+    "https://www.mey-herz.co.il/מכרזים/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("mei-hatanur", "מי התנור — מכרזים", "מי התנור", [
+    "https://www.hatanur.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("mei-hadera", "מי חדרה — מכרזים", "מי חדרה", [
+    "https://www.mei-hadera.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%95%D7%94%D7%A6%D7%A2%D7%95%D7%AA",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+
+  // ---------- חברות וגופים ציבוריים ----------
+  genericSource("tarbut-hadiur", "האגודה לתרבות הדיור — מכרזים", "האגודה לתרבות הדיור", [
+    "https://www.tarbut-hadiur.gov.il/content/20393",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("igtc", "החברה הממשלתית לתיירות — מכרזים", "החברה הממשלתית לתיירות", [
+    "https://igtc.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("matnasim", "החברה למתנ״סים — מכרזים", "החברה למתנ״סים", [
+    "https://www.matnasim.org.il/messages",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("travelrova", "החברה לשיקום ולפיתוח הרובע היהודי — מכרזים", "החברה לשיקום ולפיתוח הרובע היהודי", [
+    "https://travelrova.co.il/michrazim/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("kanat", "קנט – הקרן לביטוח נזקי טבע בחקלאות — מכרזים", "קנט – הקרן לביטוח נזקי טבע בחקלאות", [
+    "https://www.kanat.co.il/tenders/active-tenders/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("rotemi", "רותם תעשיות — מכרזים", "רותם תעשיות", [
+    "https://www.rotemi.co.il/tenders/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("osh", "המוסד לבטיחות ולגיהות — מכרזים", "המוסד לבטיחות ולגיהות", [
+    "https://www.osh.org.il/heb/projects/.aspx",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("sii", "מכון התקנים הישראלי — מכרזים", "מכון התקנים הישראלי", [
+    "https://www.sii.org.il/he/tenders/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+
+  // ---------- השכלה גבוהה ----------
+  genericSource("afeka", "אפקה — מכרזים", "אפקה", [
+    "https://www.afeka.ac.il/about-afeka/general-information/tenders/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("beitberl", "המכללה האקדמית בית ברל — מכרזים", "המכללה האקדמית בית ברל", [
+    "https://www.beitberl.ac.il/about-information/auctions/publicity/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("smkb", "סמינר הקיבוצים — מכרזים", "סמינר הקיבוצים", [
+    "https://www.smkb.ac.il/us/contact-us/biddings/bidding/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+
+  // ---------- בריאות ----------
+  genericSource("hymc", "הלל יפה — מכרזים", "הלל יפה", [
+    "https://hymc.org.il/?CategoryID=360",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("poria", "פוריה – המרכז הרפואי צפון — מכרזים", "פוריה – המרכז הרפואי צפון", [
+    "https://www.poria.org.il/?CategoryID=1944",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+
+  // ---------- רשויות ניקוז ונחלים ----------
+  genericSource("nikuzcarmel-nikuz", "רשות ניקוז ונחלים כרמל — מכרזים", "רשות ניקוז ונחלים כרמל", [
+    "https://www.nikuzcarmel.co.il/tenders/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("rnsharon-nikuz", "רשות ניקוז ונחלים שרון — מכרזים", "רשות ניקוז ונחלים שרון", [
+    "https://rnsharon.org.il/חדשות-ועידכונים/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — מדור חדשות הכולל פרסומי מכרזים; נדרש סינון." }),
+  genericSource("yarkon-nikuz-nikuz", "רשות ניקוז ירקון — מכרזים", "רשות ניקוז ירקון", [
+    proxied("https://yarkon-nikuz.org.il/index.php/bids-1/"),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("nikuz-nikuz", "רשות ניקוז ונחלים שורק לכיש — מכרזים", "רשות ניקוז ונחלים שורק לכיש", [
+    "https://nikuz.org.il/he/tender/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("besor-nikuz", "רשות ניקוז ונחלים שקמה בשור — מכרזים", "רשות ניקוז ונחלים שקמה בשור", [
+    "https://www.besor.org.il/he/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%A4%D7%A2%D7%99%D7%9C%D7%99%D7%9D/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — עמוד מכרזים אותר; לאימות שליפה" }),
+  genericSource("dsda-nikuz", "רשות ניקוז ים המלח — מכרזים", "רשות ניקוז ים המלח", [
+    proxied("https://dsda.org.il/125/"),
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "מועמד 13.09.2026 — הכתובת שנמצאה כעת היא dsda.org.il." }),
+
+  // ---------- חברות כלכליות ----------
+  genericSource("c-hefer", "החברה הכלכלית עמק חפר — מכרזים", "החברה הכלכלית עמק חפר", [
+    proxied("https://c-hefer.org.il/bids/"),
+  ], { enabled: false, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "מועמד 13.09.2026 — החברה הכלכלית היא רשומה נפרדת מהמועצה; לבדוק כפילויות פרסום." }),
+
 ];
 
 export interface SourceRunReport {
