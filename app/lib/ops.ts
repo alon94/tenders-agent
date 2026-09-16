@@ -90,6 +90,20 @@ export async function ensureOpsTables(): Promise<void> {
       );
       insert into admins (email, role) values ('${SEED_SUPER_ADMIN}', 'super')
         on conflict (email) do nothing;
+
+      -- אבטחה (Security Advisor 16.09.2026): טבלאות תוכן האתר נחשפות דרך PostgREST.
+      -- קריאה ציבורית בלבד; כתיבה רק מהשרת (service_role / חיבור ישיר).
+      -- ראו scripts/migrations/2026-09-16-security-advisor.sql
+      alter table marketing_slides enable row level security;
+      alter table site_documents   enable row level security;
+      revoke insert, update, delete, truncate, references, trigger
+        on marketing_slides, site_documents from anon, authenticated;
+      drop policy if exists "public read active slides"  on marketing_slides;
+      drop policy if exists "public read site documents" on site_documents;
+      create policy "public read active slides" on marketing_slides
+        for select to anon, authenticated using (active = true);
+      create policy "public read site documents" on site_documents
+        for select to anon, authenticated using (true);
     `);
     opsTablesEnsured = true;
   } finally {
