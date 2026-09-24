@@ -827,7 +827,7 @@ export const NEW_SOURCES: NewSource[] = [
   ], { enabled: true, hrefMatch: /\/(sites\/default\/)?files\/.*\.pdf/i, note: "עוגני «לחץ» → PDF; הכותרת מטקסט השורה שלפני העוגן. כולל גם «מכרזים לא פעילים» (13.09.2026)" }),
   genericSource("igtc", "החברה הממשלתית לתיירות — מכרזים", "החברה הממשלתית לתיירות", [
     "https://igtc.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/",
-  ], { enabled: true, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "גל 6 — 3 פריטים בבדיקה יבשה (אומת 13.09.2026)" }),
+  ], { enabled: true, hrefMatch: /\/tender\/./i, note: "עוגני «לפירוט» → /tender/<slug עברי>, ~37 מכרזים (אומת 24.09.2026); PDF של מדיניות/קוד אתי הוחרגו" }),
   genericSource("matnasim", "החברה למתנ״סים — מכרזים", "החברה למתנ״סים", [
     "https://www.matnasim.org.il/messages",
   ], { enabled: false, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "עמוד הודעות ענק (1.9MB) ללא קישורי מכרז (13.09.2026) — לאתר עמוד ייעודי" }),
@@ -836,7 +836,7 @@ export const NEW_SOURCES: NewSource[] = [
   ], { enabled: true, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "גל 6 — 28 פריטים בבדיקה יבשה (אומת 13.09.2026)" }),
   genericSource("kanat", "קנט – הקרן לביטוח נזקי טבע בחקלאות — מכרזים", "קנט – הקרן לביטוח נזקי טבע בחקלאות", [
     "https://www.kanat.co.il/tenders/active-tenders/",
-  ], { enabled: true, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "גל 6 — 4 פריטים בבדיקה יבשה (אומת 13.09.2026)" }),
+  ], { enabled: true, hrefMatch: /\/tenders\/(?!auctions-that-have-ended|active-tenders\/page)[a-z-]+\/[^/?#]{3,}/i, note: "עוגני «לפרטים נוספים» → כוונות ספק יחיד/פטור ממכרז (slug עברי); העמוד מכיל גם «מכרזים שהסתיימו» ודפדוף — הוחרגו (24.09.2026); המכרזים עצמם ב-Arma app.vendors.co.il/kanat" }),
   genericSource("rotemi", "רותם תעשיות — מכרזים", "רותם תעשיות", [
     "https://www.rotemi.co.il/tenders/",
   ], { enabled: true, hrefMatch: /tender|bid|מכרז|\.pdf|CategoryID|michraz/i, note: "גל 6 — 1 פריטים בבדיקה יבשה (אומת 13.09.2026)" }),
