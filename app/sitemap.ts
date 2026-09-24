@@ -19,6 +19,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/signup`, lastModified: now, changeFrequency: 'monthly', priority: 0.4 },
     { url: `${base}/privacy`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
     { url: `${base}/terms`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
+    { url: `${base}/accessibility`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
   ];
   try {
     const tenders = await fetchActiveTenders();
