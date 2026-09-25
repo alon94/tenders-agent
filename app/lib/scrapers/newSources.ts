@@ -891,6 +891,432 @@ export const NEW_SOURCES: NewSource[] = [
     proxied("https://c-hefer.org.il/bids/"),
   ], { enabled: true, hrefMatch: /\/bids\/|\.pdf|מכרז/i, note: "גל 6 — 6 פריטים בבדיקה יבשה (אומת 13.09.2026)" }),
 
+
+  // ---------- גל 7 (25.09.2026) — 141 מועמדים ממחקר 24.09: תאגידי מים, רשויות מקומיות, מועצות אזוריות, אשכולות, גופים ממשלתיים. מושבתים עד בדיקה יבשה ----------
+  genericSource("habeer3-water", "הבאר השלישית — מכרזים", "הבאר השלישית", [
+    "https://www.habeer3.co.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — בינה /bids/; 1 פעיל" }),
+  genericSource("yuvallim-water", "יובלים אשדוד — מכרזים", "יובלים אשדוד", [
+    "https://www.yuvallim.co.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — בינה /bids/; 4 פעילים" }),
+  genericSource("yamim-water", "ימים — מכרזים", "ימים", [
+    "https://yamim.org.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; 4" }),
+  genericSource("miahcom-water", "כפרי גליל תחתון — מכרזים", "כפרי גליל תחתון", [
+    "https://www.miahcom.co.il/tender-category/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%91%D7%AA%D7%95%D7%A7%D7%A3/",
+  ], { enabled: false, hrefMatch: /\/tender\/.|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress /tender/; 2 (כ\"א); ארכיון ב-/tender-category/מכרזים-ישנים/" }),
+  genericSource("mei-ashkelon-water", "מי אשקלון — מכרזים", "מי אשקלון", [
+    "https://www.mei-ashkelon.co.il/?id=35",
+  ], { enabled: false, hrefMatch: /\?id=\d|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — CMS ?id=; 6" }),
+  genericSource("mayawater-water", "מי הוד השרון — מכרזים", "מי הוד השרון", [
+    "https://www.mayawater.co.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — בינה /bids/; 0 כרגע" }),
+  genericSource("mey-yavne-water", "מי יבנה — מכרזים", "מי יבנה", [
+    "https://www.mey-yavne.co.il/?CategoryID=265",
+  ], { enabled: false, hrefMatch: /ItemID=|ArticleID=|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — CategoryID; 10+ עם דפדוף; להגביל ל-ItemID/PDF" }),
+  genericSource("mei-lod-water", "מי לוד — מכרזים", "מי לוד", [
+    "https://www.mei-lod.co.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — בינה /bids/; 1" }),
+  genericSource("mei-modiin-water", "מי מודיעין — מכרזים", "מי מודיעין", [
+    "https://mei-modiin.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%A4%D7%A2%D7%99%D7%9C%D7%99%D7%9D",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — Joomla; 6" }),
+  genericSource("mey-noam-water", "מי נעם — מכרזים", "מי נעם", [
+    "http://www.mey-noam.co.il/index.php?id=86",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — PHP ישן, דפי .htm; ?; לבדוק בדפדפן" }),
+  genericSource("mei-netanya-water", "מי נתניה — מכרזים", "מי נתניה", [
+    "https://www.mei-netanya.co.il/template/default.aspx?PageId=54&CatId=7",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — ASP.NET; ~16" }),
+  genericSource("myah-water", "מי עירון — מכרזים", "מי עירון", [
+    "https://myah.co.il/tender/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; 20+" }),
+  genericSource("mei-akko-water", "מי עכו — מכרזים", "מי עכו", [
+    "https://mei-akko.co.il/%D7%94%D7%A0%D7%93%D7%A1%D7%94-%D7%95%D7%A4%D7%A8%D7%95%D7%99%D7%99%D7%A7%D7%98%D7%99%D7%9D/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; 30+ (7 ב-2026)" }),
+  genericSource("mei-ziona-water", "מי ציונה — מכרזים", "מי ציונה", [
+    "https://mei-ziona.co.il/tndr_type/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%A4%D7%95%D7%9E%D7%91%D7%99%D7%99%D7%9D/",
+  ], { enabled: false, hrefMatch: /\/tender\/.|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress /tender/; 0 כרגע; 6 תתי-קטגוריות" }),
+  genericSource("mei-gat-water", "מי קרית גת — מכרזים", "מי קרית גת", [
+    "https://mei-gat.co.il/tenders/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; ~24" }),
+  genericSource("m-rahat-water", "מי רהט — מכרזים", "מי רהט", [
+    "https://www.m-rahat.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-2026/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress, עמוד לפי שנה; 4–5; להוסיף כתובת חדשה כל שנה" }),
+  genericSource("mei-rg-water", "מי רמת גן — מכרזים", "מי רמת גן", [
+    "https://www.mei-rg.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; 1" }),
+  genericSource("mei-raanana-water", "מי רעננה — מכרזים", "מי רעננה", [
+    "https://mei-raanana.co.il/info/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; 1" }),
+  genericSource("mei-rakat-water", "מי רקת טבריה — מכרזים", "מי רקת טבריה", [
+    "https://mei-rakat.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%A4%D7%A2%D7%99%D7%9C%D7%99%D7%9D/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — CMS ייעודי; 2" }),
+  genericSource("mey7-water", "מי שבע — מכרזים", "מי שבע", [
+    "https://www.mey7.co.il/purchasing/tenders/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — CMS ייעודי; 1; כ\"א ב-/jobs/tenders/" }),
+  genericSource("m-sms-water", "מי שמש — מכרזים", "מי שמש", [
+    "https://www.m-sms.co.il/tender_cat/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%A4%D7%95%D7%9E%D7%91%D7%99%D7%99%D7%9D/",
+  ], { enabled: false, hrefMatch: /\/tender\/.|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress /tender/; ~27" }),
+  genericSource("mayanot-hadarom-water", "מעיינות הדרום — מכרזים", "מעיינות הדרום", [
+    "https://mayanot-hadarom.co.il/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — WordPress; 1 בדף הבית; אין עמוד מכרזים ייעודי" }),
+  genericSource("mayanot-h-water", "מעיינות העמקים — מכרזים", "מעיינות העמקים", [
+    "https://mayanot-h.co.il/?id=35",
+  ], { enabled: false, hrefMatch: /\?id=\d|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — CMS ?id=; ~9" }),
+  genericSource("mayanot-hasharon-water", "מעיינות השרון — מכרזים", "מעיינות השרון", [
+    "https://mayanot-hasharon.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — Joomla; ?; עמוד hub — לאתר תת-עמוד" }),
+  genericSource("navemedbar-water", "נווה מדבר — מכרזים", "נווה מדבר", [
+    "https://navemedbar.org/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%9B%D7%9C%D7%9C%D7%99%D7%9D/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — WordPress; 4" }),
+  genericSource("meyah-water", "סובב שפרעם — מכרזים", "סובב שפרעם", [
+    "https://www.meyah.co.il/auctions/",
+  ], { enabled: false, hrefMatch: /\/auctions\/.|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress /auctions/; 4" }),
+  genericSource("einafek-water", "עין אפק — מכרזים", "עין אפק", [
+    "https://www.einafek.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%9C%D7%A7%D7%91%D7%9C%D7%A0%D7%99%D7%9D-%D7%95%D7%A0%D7%95%D7%AA%D7%A0%D7%99-%D7%A9%D7%99%D7%A8%D7%95%D7%AA/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress טבלה; 10" }),
+  genericSource("ein-netafim-water", "עין נטפים — מכרזים", "עין נטפים", [
+    "https://www.ein-netafim.co.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — בינה /bids/; 0 כרגע" }),
+  genericSource("peleg-hagalil-water", "פלג הגליל — מכרזים", "פלג הגליל", [
+    "https://peleg-hagalil.org.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; ~16" }),
+  genericSource("palgey-motzkin-water", "פלגי מוצקין — מכרזים", "פלגי מוצקין", [
+    "https://palgey-motzkin.co.il/tender-type/%D7%9E%D7%9B%D7%A8%D7%96%D7%99-%D7%A1%D7%A4%D7%A7%D7%99%D7%9D/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; 1" }),
+  genericSource("palgey-sharon-water", "פלגי שרון — מכרזים", "פלגי שרון", [
+    "https://www.palgey-sharon.co.il/tenders/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; ~18" }),
+  genericSource("sharonim-water", "שרונים — מכרזים", "שרונים", [
+    "https://sharonim.org/he/content/generalpage/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — CMS ייעודי; 12–15" }),
+  genericSource("tamarwater-water", "תמ\"ר — מכרזים", "תמ\"ר", [
+    "https://tamarwater.co.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — בינה /bids/; 14" }),
+  genericSource("qiryat-gat-muni", "קריית גת — מכרזים", "עיריית קריית גת", [
+    "https://www.qiryat-gat.muni.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — בינה /bids/; ~28" }),
+  genericSource("kiryatono-muni", "קריית אונו — מכרזים", "עיריית קריית אונו", [
+    "https://www.kiryatono.muni.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("yavne-muni", "יבנה — מכרזים", "עיריית יבנה", [
+    "https://www.yavne.muni.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — בינה /bids/; ~6" }),
+  genericSource("nzc-muni", "נס ציונה — מכרזים", "עיריית נס ציונה", [
+    "https://www.nzc.org.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("givatayim-muni", "גבעתיים — מכרזים", "עיריית גבעתיים", [
+    "https://www.givatayim.muni.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("hod-hasharon-muni", "הוד השרון — מכרזים", "עיריית הוד השרון", [
+    "https://www.hod-hasharon.muni.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("rosh-haayin-muni", "ראש העין — מכרזים", "עיריית ראש העין", [
+    "https://www.rosh-haayin.muni.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?; גם פורטל metropolinet" }),
+  genericSource("yehud-monosson-muni", "יהוד-מונוסון — מכרזים", "עיריית יהוד-מונוסון", [
+    "https://yehud-monosson.muni.il/mcat/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%A1%D7%A4%D7%A7%D7%99%D7%9D-%D7%95%D7%A7%D7%91%D7%9C%D7%A0%D7%99%D7%9D/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; 1" }),
+  genericSource("oryehuda-muni", "אור יהודה — מכרזים", "עיריית אור יהודה", [
+    "https://www.oryehuda.muni.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — בינה /bids/; ?; עמוד hub ב-/מכרזים/" }),
+  genericSource("kiryat-ata-muni", "קריית אתא — מכרזים", "עיריית קריית אתא", [
+    "https://www.kiryat-ata.org.il/auctions/category/p_c_andservicestenders/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; ~2" }),
+  genericSource("kiryat-yam-muni", "קריית ים — מכרזים", "עיריית קריית ים", [
+    "https://www.kiryat-yam.muni.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("akko-muni", "עכו — מכרזים", "עיריית עכו", [
+    "https://www.akko.muni.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("karmiel-muni", "כרמיאל — מכרזים", "עיריית כרמיאל", [
+    "https://www.karmiel.muni.il/%D7%A8%D7%90%D7%A9%D7%99/shkifut/tenders/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; ~15" }),
+  genericSource("zefat-muni", "צפת — מכרזים", "עיריית צפת", [
+    "https://www.zefat.muni.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — WordPress /bids/; ?" }),
+  genericSource("k-8-muni", "קריית שמונה — מכרזים", "עיריית קריית שמונה", [
+    "https://www.k-8.co.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — בינה /bids/; ~16" }),
+  genericSource("maltar-muni", "מעלות-תרשיחא — מכרזים", "עיריית מעלות-תרשיחא", [
+    "https://www.maltar.org.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("e-sderot-muni", "שדרות — מכרזים", "עיריית שדרות", [
+    "https://www.e-sderot.org.il/%D7%A2%D7%99%D7%A8%D7%99%D7%99%D7%94/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — hub עם 5 קטגוריות; ?; חכ\"ל: hakal.org.il/bids/ (5)" }),
+  genericSource("dimona-muni", "דימונה — מכרזים", "עיריית דימונה", [
+    "https://www.dimona.muni.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("netivot-muni", "נתיבות — מכרזים", "עיריית נתיבות", [
+    "https://www.netivot.muni.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("rahat-muni", "רהט — מכרזים", "עיריית רהט", [
+    "https://rahat-muni.com/knowledge-base-archive/?lang=he",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; ?; PDF" }),
+  genericSource("modil-muni", "מודיעין עילית — מכרזים", "עיריית מודיעין עילית", [
+    "https://www.modil.org.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("betar-illit-muni", "ביתר עילית — מכרזים", "עיריית ביתר עילית", [
+    "https://www.betar-illit.muni.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("givat-shmuel-muni", "גבעת שמואל — מכרזים", "עיריית גבעת שמואל", [
+    "https://www.givat-shmuel.muni.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — בינה /bids/; ~14 (רוב כ\"א)" }),
+  genericSource("kfar-yona-muni", "כפר יונה — מכרזים", "עיריית כפר יונה", [
+    "https://kfar-yona.muni.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — בינה; ~20; hub ב-/דרושים-ומכרזים/" }),
+  genericSource("tira-muni", "טירה — מכרזים", "עיריית טירה", [
+    "https://www.tira.muni.il/muni/info/bids/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; ~13" }),
+  genericSource("taibeh-muni", "טייבה — מכרזים", "עיריית טייבה", [
+    "https://taibeh.muni.il/tenders?type=1",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — CMS ייעודי; ~91; דפי /tender/N" }),
+  genericSource("umelfahem-muni", "אום אל-פחם — מכרזים", "עיריית אום אל-פחם", [
+    "https://he.umelfahem.org/cat.asp?RecordID=3075&root=167&sub=152&grid=grid_2",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — Classic ASP; ~200" }),
+  genericSource("shefaram-muni", "שפרעם — מכרזים", "עיריית שפרעם", [
+    "https://shefaram.muni.il/he/CmsPage/Services?categoryId=1111",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — CMS ייעודי; ~10" }),
+  genericSource("tamra-muni", "טמרה — מכרזים", "עיריית טמרה", [
+    "https://www.tamra.muni.il/he/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — בינה /he/bids/; 1" }),
+  genericSource("baqa-muni", "באקה אל-גרבייה — מכרזים", "עיריית באקה אל-גרבייה", [
+    "https://www.baqa.co.il/services/jobs/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; ~13" }),
+  genericSource("kfar-qasem-muni", "כפר קאסם — מכרזים", "עיריית כפר קאסם", [
+    "https://kfar-qasem.muni.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?; חכ\"ל: qec.org.il/tenders/" }),
+  genericSource("ariel-muni", "אריאל — מכרזים", "עיריית אריאל", [
+    "https://www.ariel.muni.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("maale-adummim-muni", "מעלה אדומים — מכרזים", "עיריית מעלה אדומים", [
+    "https://www.maale-adummim.muni.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — בינה /bids/; 1; עמוד רכש החזיר 403" }),
+  genericSource("m-zion-muni", "מבשרת ציון — מכרזים", "מועצה מקומית מבשרת ציון", [
+    "http://www.m-zion.org.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — בינה /bids/ (http); ~4" }),
+  genericSource("zy1882-muni", "זכרון יעקב — מכרזים", "מועצה מקומית זכרון יעקב", [
+    "https://www.zy1882.co.il/Branches/Branches.aspx?nodeId=1265",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — mpage CMS; ~2" }),
+  genericSource("pardes-hanna-karkur-muni", "פרדס חנה-כרכור — מכרזים", "מועצה מקומית פרדס חנה-כרכור", [
+    "https://www.pardes-hanna-karkur.muni.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress /bids/; ~18" }),
+  genericSource("gedera-muni", "גדרה — מכרזים", "מועצה מקומית גדרה", [
+    "https://www.gedera.muni.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — בינה /bids/; ~10" }),
+  genericSource("kiryat-ekron-muni", "קריית עקרון — מכרזים", "מועצה מקומית קריית עקרון", [
+    "https://www.kiryat-ekron.muni.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%95%D7%93%D7%A8%D7%95%D7%A9%D7%99%D7%9D/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; 1" }),
+  genericSource("ganeytikva-muni", "גני תקווה — מכרזים", "עיריית גני תקווה", [
+    "https://www.ganeytikva.org.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("even-yehuda-muni", "אבן יהודה — מכרזים", "מועצה מקומית אבן יהודה", [
+    "https://www.even-yehuda.muni.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress /bids/; ~16" }),
+  genericSource("tel-mond-muni", "תל מונד — מכרזים", "מועצה מקומית תל מונד", [
+    "https://tel-mond.muni.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("kyair-muni", "כוכב יאיר-צור יגאל — מכרזים", "מועצה מקומית כוכב יאיר-צור יגאל", [
+    "https://kyair.org.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("ktv-muni", "קריית טבעון — מכרזים", "מועצה מקומית קריית טבעון", [
+    "https://www.ktv.org.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("nesher-muni", "נשר — מכרזים", "עיריית נשר", [
+    "https://www.nesher.muni.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("beitdagan-muni", "בית דגן — מכרזים", "מועצה מקומית בית דגן", [
+    "https://www.beitdagan.muni.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress /bids/; ~20" }),
+  genericSource("azor-muni", "אזור — מכרזים", "מועצה מקומית אזור", [
+    "https://azor.muni.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("savyon-muni", "סביון — מכרזים", "מועצה מקומית סביון", [
+    "https://savyon.muni.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — בינה /bids/; ~130 בארכיון" }),
+  genericSource("ramat-yishay-muni", "רמת ישי — מכרזים", "מועצה מקומית רמת ישי", [
+    "https://ramat-yishay.com/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("katsrin-muni", "קצרין — מכרזים", "מועצה מקומית קצרין", [
+    "https://katsrin.com/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("metulla-muni", "מטולה — מכרזים", "מועצה מקומית מטולה", [
+    "https://www.metulla.muni.il/bids/?archive=1",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; 0 פעילים" }),
+  genericSource("hatzorg-muni", "חצור הגלילית — מכרזים", "מועצה מקומית חצור הגלילית", [
+    "https://hatzorg.co.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("yeroham-muni", "ירוחם — מכרזים", "מועצה מקומית ירוחם", [
+    "https://forms.yeroham.muni.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — בינה (hub); 0; קישורים בלבד" }),
+  genericSource("mitzpe-ramon-muni", "מצפה רמון — מכרזים", "מועצה מקומית מצפה רמון", [
+    "https://mitzpe-ramon.muni.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%95%D7%93%D7%A8%D7%95%D7%A9%D7%99%D7%9D/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress, PDF; ~6" }),
+  genericSource("omer-muni", "עומר — מכרזים", "מועצה מקומית עומר", [
+    "https://www.omer.muni.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99-%D7%A9%D7%99%D7%A8%D7%95%D7%AA/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; ~13" }),
+  genericSource("lehavim-muni", "להבים — מכרזים", "מועצה מקומית להבים", [
+    "https://app.lehavim.muni.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — בינה /bids/; ~44 בארכיון" }),
+  genericSource("tel-sheva-muni", "תל שבע — מכרזים", "מועצה מקומית תל שבע", [
+    "https://tel-sheva.muni.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; ~7" }),
+  genericSource("segev-shalom-muni", "שגב שלום — מכרזים", "מועצה מקומית שגב שלום", [
+    "https://www.segev-shalom.muni.il/info/bids/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; 2 (כ\"א)" }),
+  genericSource("laqye-muni", "לקיה — מכרזים", "מועצה מקומית לקיה", [
+    "https://www.laqye.muni.il/he/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /he/bids/; ?" }),
+  genericSource("kfarvradim-muni", "כפר ורדים — מכרזים", "מועצה מקומית כפר ורדים", [
+    "https://kfarvradim.com/council/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; 0; טקסט בלבד" }),
+  genericSource("matte-asher-region-rc", "מטה אשר — מכרזים", "מועצה אזורית מטה אשר", [
+    "https://www.matte-asher-region.muni.il/he/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /he/bids/; ?; חכ\"ל: kalkalitma.co.il/bids/" }),
+  genericSource("misgav-rc", "משגב — מכרזים", "מועצה אזורית משגב", [
+    "https://www.misgav.org.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("golan-rc", "גולן — מכרזים", "מועצה אזורית גולן", [
+    "https://www.golan.org.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("mvhr-rc", "מבואות החרמון — מכרזים", "מועצה אזורית מבואות החרמון", [
+    "https://www.mvhr.org.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("galil-elion-rc", "הגליל העליון — מכרזים", "מועצה אזורית הגליל העליון", [
+    "https://www.galil-elion.org.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-2021",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — עמוד ייעודי; ?; כתובת ישנה — לבדוק" }),
+  genericSource("mrg-rc", "מרום הגליל — מכרזים", "מועצה אזורית מרום הגליל", [
+    "https://www.mrg.org.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("j-v-rc", "עמק הירדן — מכרזים", "מועצה אזורית עמק הירדן", [
+    "https://www.j-v.org.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("zvulun-rc", "זבולון — מכרזים", "מועצה אזורית זבולון", [
+    "https://www.zvulun.org.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("alona-rc", "אלונה — מכרזים", "מועצה אזורית אלונה", [
+    "https://www.alona.org.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("dsharon-rc", "דרום השרון — מכרזים", "מועצה אזורית דרום השרון", [
+    "https://www.dsharon.org.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?; חכ\"ל: dsharon.co.il/auction/" }),
+  genericSource("modiin-region-rc", "חבל מודיעין — מכרזים", "מועצה אזורית חבל מודיעין", [
+    "https://www.modiin-region.muni.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?; חכ\"ל: calcalit.co.il/auction/" }),
+  genericSource("ma-soreq-rc", "נחל שורק — מכרזים", "מועצה אזורית נחל שורק", [
+    "https://www.ma-soreq.org.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?; חכ\"ל: soreq-cal.org.il/bids/" }),
+  genericSource("sdotnegev-rc", "שדות נגב — מכרזים", "מועצה אזורית שדות נגב", [
+    "https://www.sdotnegev.org.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("merchavim-rc", "מרחבים — מכרזים", "מועצה אזורית מרחבים", [
+    "https://www.merchavim.org.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("sng-rc", "שער הנגב — מכרזים", "מועצה אזורית שער הנגב", [
+    "https://www.sng.org.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — בינה /bids/; 1" }),
+  genericSource("rng-rc", "רמת הנגב — מכרזים", "מועצה אזורית רמת הנגב", [
+    "https://www.rng.org.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — בינה /bids/; 2" }),
+  genericSource("eilot-rc", "חבל אילות — מכרזים", "מועצה אזורית חבל אילות", [
+    "https://www.eilot.org.il/%D7%90%D7%A8%D7%9B%D7%99%D7%95%D7%9F-%D7%94%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — WordPress; ?" }),
+  genericSource("nevemidbar-rc", "נווה מדבר — מכרזים", "מועצה אזורית נווה מדבר", [
+    "https://nevemidbar.org.il/gd_tenders/category/tenders/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — WordPress; ?" }),
+  genericSource("alqasoum-rc", "אל-קסום — מכרזים", "מועצה אזורית אל-קסום", [
+    "https://www.alqasoum.org.il/he/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /he/bids/; ?" }),
+  genericSource("baitisraeli-rc", "גוש עציון — מכרזים", "מועצה אזורית גוש עציון", [
+    "https://baitisraeli.co.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — בינה /bids/; 1" }),
+  genericSource("binyamin-rc", "מטה בנימין — מכרזים", "מועצה אזורית מטה בנימין", [
+    "https://www.binyamin.org.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?; חכ\"ל: cbinyamin.org.il" }),
+  genericSource("shomron-rc", "שומרון — מכרזים", "מועצה אזורית שומרון", [
+    "https://form.shomron.org.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/ (form.); ?; www/bids/ = כ\"א" }),
+  genericSource("jordanvalley-rc", "בקעת הירדן — מכרזים", "מועצה אזורית בקעת הירדן", [
+    "https://www.jordanvalley.org.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("dead-sea-rc", "מגילות ים המלח — מכרזים", "מועצה אזורית מגילות ים המלח", [
+    "https://dead-sea.org.il/bids/",
+  ], { enabled: false, hrefMatch: /\/bids\/(\d|\?id=)|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — בינה /bids/; ?" }),
+  genericSource("myosef-rc", "מעלה יוסף — מכרזים", "מועצה אזורית מעלה יוסף", [
+    "https://www.myosef.org.il/council_services/info/bids/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; ~15" }),
+  genericSource("el-batouf-region-rc", "אל-בטוף — מכרזים", "מועצה אזורית אל-בטוף", [
+    "https://el-batouf-region.muni.il/tenders",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — CMS ייעודי; ~37 סגורים" }),
+  genericSource("hiriya-eshkol", "איגוד ערים דן לתברואה — מכרזים", "איגוד ערים דן לתברואה", [
+    "https://www.hiriya.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D_%D7%95%D7%93%D7%A8%D7%95%D7%A9%D7%99%D7%9D",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; 3" }),
+  genericSource("sviva-sc-eshkol", "איגוד ערים לאיכות הסביבה שרון-כרמל — מכרזים", "איגוד ערים לאיכות הסביבה שרון-כרמל", [
+    "https://www.sviva-sc.org.il/bids/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — CMS ייעודי; 0 כרגע" }),
+  genericSource("wegalil-eshkol", "אשכול גליל מערבי — מכרזים", "אשכול גליל מערבי", [
+    "https://wegalil.org/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%95%D7%94%D7%AA%D7%A7%D7%A9%D7%A8%D7%95%D7%99%D7%95%D7%AA/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — WordPress; ?; דפי /tender/<slug>" }),
+  genericSource("eastgalil-eshkol", "אשכול גליל מזרחי — מכרזים", "אשכול גליל מזרחי", [
+    "https://eastgalil.org.il/%D7%9E%D7%99%D7%93%D7%A2-%D7%9C%D7%AA%D7%95%D7%A9%D7%91/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; ~14" }),
+  genericSource("bkerem-eshkol", "אשכול בית הכרם — מכרזים", "אשכול בית הכרם", [
+    "https://bkerem.org.il/tender/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress טבלה; 20+" }),
+  genericSource("kineretamakim-eshkol", "אשכול כנרת עמקים — מכרזים", "אשכול כנרת עמקים", [
+    "https://kineretamakim.co.il/tenders/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; 9 לעמוד, דפדוף" }),
+  genericSource("eshkolsd-eshkol", "אשכול שורק דרומי — מכרזים", "אשכול שורק דרומי", [
+    "https://eshkolsd.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%A4%D7%A2%D7%99%D7%9C%D7%99%D7%9D/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; 4" }),
+  genericSource("eastnegev-eshkol", "אשכול נגב מזרחי — מכרזים", "אשכול נגב מזרחי", [
+    "https://eastnegev.org/%D7%90%D7%95%D7%93%D7%95%D7%AA/%D7%93%D7%A8%D7%95%D7%A9%D7%99%D7%9D-%D7%95%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress (WooCommerce); ~2" }),
+  genericSource("esharon-eshkol", "אשכול השרון — מכרזים", "אשכול השרון", [
+    "https://esharon.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%A4%D7%A2%D7%99%D7%9C%D7%99%D7%9D/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; 2" }),
+  genericSource("galilamakim-eshkol", "אשכול הגליל והעמקים — מכרזים", "אשכול הגליל והעמקים", [
+    "https://www.galilamakim.org.il/he/bids/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — טבלה; 2 ישנים; מתעדכן לעיתים רחוקות" }),
+  genericSource("hamifrats-eshkol", "אשכול רשויות המפרץ — מכרזים", "אשכול רשויות המפרץ", [
+    "https://hamifrats.org.il/?page_id=245",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; 30+" }),
+  genericSource("hof-eshkol", "אשכול מישור החוף — מכרזים", "אשכול מישור החוף", [
+    "https://hof.org.il/tender/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; 40+" }),
+  genericSource("rashut2", "הרשות השנייה לטלוויזיה ורדיו — מכרזים", "הרשות השנייה לטלוויזיה ורדיו", [
+    "https://www.rashut2.org.il/%D7%97%D7%93%D7%A9%D7%95%D7%AA-%D7%95%D7%A2%D7%93%D7%9B%D7%95%D7%A0%D7%99%D7%9D/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%95%D7%94%D7%AA%D7%A7%D7%A9%D7%A8%D7%95%D7%99%D7%95%D7%AA",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — CMS ייעודי; 8–9" }),
+  genericSource("che", "המועצה להשכלה גבוהה / ות\"ת — מכרזים", "המועצה להשכלה גבוהה / ות\"ת", [
+    "https://che.org.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — WordPress; ?; דפי /mihraz/<slug>/" }),
+  genericSource("haganot", "החברה הממשלתית להגנות ים המלח — מכרזים", "החברה הממשלתית להגנות ים המלח", [
+    "https://www.haganot.co.il/%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D-%D7%A4%D7%A2%D7%99%D7%9C%D7%99%D7%9D/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — CMS ייעודי; 8" }),
+  genericSource("arim", "ערים – חברה לפיתוח עירוני — מכרזים", "ערים – חברה לפיתוח עירוני", [
+    "https://www.arim.co.il/%D7%A2%D7%A8%D7%99%D7%9D_%D7%9E%D7%9B%D7%A8%D7%96%D7%99%D7%9D_%D7%A4%D7%A2%D7%99%D7%9C%D7%99%D7%9D",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — CMS ייעודי; 2" }),
+  genericSource("plants", "מועצת הצמחים — מכרזים", "מועצת הצמחים", [
+    "http://www.plants.org.il/index.aspx?id=4975",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — ASP.NET; ?; מכרזים כחדשות" }),
+  genericSource("ofot", "המועצה לענף הלול — מכרזים", "המועצה לענף הלול", [
+    "https://www.ofot.org.il/page_14769",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — CMS ייעודי; 6" }),
+  genericSource("milk", "מועצת החלב — מכרזים", "מועצת החלב", [
+    "https://milk.org.il/michrazim/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; ~60" }),
+  genericSource("kkl-2", "הימנותא — מכרזים", "הימנותא", [
+    "https://www.kkl.org.il/about-us/tenders/himanuta/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — אתר קק\"ל; 1" }),
+  genericSource("thejoint", "ג'וינט ישראל — מכרזים", "ג'וינט ישראל", [
+    "https://thejoint.org.il/tenders/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (אומת 24.09.2026) — WordPress; 9" }),
+  genericSource("nli", "הספרייה הלאומית — מכרזים", "הספרייה הלאומית", [
+    "https://www.nli.org.il/he/tenders",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — ?; ?; לא אומת" }),
+  genericSource("szmc", "שערי צדק — מכרזים", "שערי צדק", [
+    "https://www.szmc.org.il/tenders/",
+  ], { enabled: false, hrefMatch: /tender|bid|מכרז|auction|michraz|mihraz|\.pdf/i, note: "גל 7 (לא אומת 24.09.2026) — ?; ?; לא אומת" }),
+
 ];
 
 export interface SourceRunReport {
